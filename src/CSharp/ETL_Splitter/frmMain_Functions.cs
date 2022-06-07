@@ -67,10 +67,6 @@ namespace ETL_Splitter
 
                 using (var relogger = new ETWReloggerTraceEventSource(src_file, out_file))
                 {
-                    //var kernel = relogger.Kernel;
-                    //kernel.AddCallbackForEvents(delegate (TraceEvent data)
-
-
                     relogger.AllEvents += delegate (TraceEvent data)
                     {
                         if ((rule.BeginTime <= data.TimeStampRelativeMSec) &&
@@ -86,7 +82,7 @@ namespace ETL_Splitter
                         if (processed % 10000 == 0)
                             LogOutput("Progress", $"Processed {processed} events.", false);
                         processed++;
-                    });
+                    };
                     relogger.Process();
                 }
 
