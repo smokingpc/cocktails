@@ -35,6 +35,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SetPhyDiskReadonlyTest", "C
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WriteDataToPhysicalDisk", "Cpp\WriteDataToPhysicalDisk\WriteDataToPhysicalDisk.vcxproj", "{B806CF80-513C-40DA-9352-3316A9BE5FB1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueryNQNtoBDF", "Cpp\QueryNQNtoBDF\QueryNQNtoBDF.vcxproj", "{A00EEFA0-ACBA-40CA-A036-736AA3FB6738}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -155,6 +157,14 @@ Global
 		{B806CF80-513C-40DA-9352-3316A9BE5FB1}.Release|x64.Build.0 = Release|x64
 		{B806CF80-513C-40DA-9352-3316A9BE5FB1}.Release|x86.ActiveCfg = Release|Win32
 		{B806CF80-513C-40DA-9352-3316A9BE5FB1}.Release|x86.Build.0 = Release|Win32
+		{A00EEFA0-ACBA-40CA-A036-736AA3FB6738}.Debug|x64.ActiveCfg = Debug|x64
+		{A00EEFA0-ACBA-40CA-A036-736AA3FB6738}.Debug|x64.Build.0 = Debug|x64
+		{A00EEFA0-ACBA-40CA-A036-736AA3FB6738}.Debug|x86.ActiveCfg = Debug|Win32
+		{A00EEFA0-ACBA-40CA-A036-736AA3FB6738}.Debug|x86.Build.0 = Debug|Win32
+		{A00EEFA0-ACBA-40CA-A036-736AA3FB6738}.Release|x64.ActiveCfg = Release|x64
+		{A00EEFA0-ACBA-40CA-A036-736AA3FB6738}.Release|x64.Build.0 = Release|x64
+		{A00EEFA0-ACBA-40CA-A036-736AA3FB6738}.Release|x86.ActiveCfg = Release|Win32
+		{A00EEFA0-ACBA-40CA-A036-736AA3FB6738}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -174,6 +184,7 @@ Global
 		{AF10D92C-8E27-4AEC-825D-E591D5EF1BD8} = {DD95C9B5-A0FC-47CB-80EB-3E5DF4651EBB}
 		{0DD8D48E-CE2A-4EC8-A205-A94504FA0729} = {DD95C9B5-A0FC-47CB-80EB-3E5DF4651EBB}
 		{B806CF80-513C-40DA-9352-3316A9BE5FB1} = {DD95C9B5-A0FC-47CB-80EB-3E5DF4651EBB}
+		{A00EEFA0-ACBA-40CA-A036-736AA3FB6738} = {DD95C9B5-A0FC-47CB-80EB-3E5DF4651EBB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4012B09F-994F-4696-A41A-312226BACC47}

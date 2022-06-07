@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{3bcaa2f2-9180-4213-a6ce-36910da51ce9}</ProjectGuid>
-    <RootNamespace>DriverBindingTest</RootNamespace>
+    <ProjectGuid>{a00eefa0-acba-40ca-a036-736aa3fb6738}</ProjectGuid>
+    <RootNamespace>QueryNQNtoBDF</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -147,7 +147,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DriverBindingTest.cpp" />
+    <ClCompile Include="QueryNQNtoBDF.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="nvme_structure.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
