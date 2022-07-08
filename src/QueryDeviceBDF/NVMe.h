@@ -319,3 +319,4 @@ typedef enum {
 } NVME_IDENTIFY_CNS_CODES;
 
 void BuildNqn(OUT tstring& result, PNVME_IDENTIFY_CONTROLLER_DATA14 identify);
+void QueryNVMeDeviceNqn(tstring& result, tstring &devpath);

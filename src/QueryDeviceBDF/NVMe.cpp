@@ -11,7 +11,6 @@ static inline void string_trim(string& str)
 
 void BuildNqn(OUT tstring &result, PNVME_IDENTIFY_CONTROLLER_DATA14 identify)
 {
-    string ret = "";
     string subnqn = "";
     string model = "";
     string serial = "";
@@ -33,12 +32,89 @@ void BuildNqn(OUT tstring &result, PNVME_IDENTIFY_CONTROLLER_DATA14 identify)
     }
 
     string_trim(subnqn);
-    ret.resize(subnqn.length());
 
 #ifdef _UNICODE
-    WStrToStr(ret, result);
+    StrToWStr(result, subnqn);
 #else
-    result = ret;
+    result = subnqn;
 #endif
 }
 
+void QueryNVMeDeviceNqn(tstring &result, tstring &devpath)
+{
+    result = _T("");
+    HANDLE hDevice = CreateFile(devpath.c_str(),
+        GENERIC_READ | GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL);
+
+    if (hDevice != INVALID_HANDLE_VALUE)
+    {
+        PSTORAGE_PROPERTY_QUERY query = NULL;
+        PSTORAGE_PROTOCOL_SPECIFIC_DATA data = NULL;
+        PSTORAGE_PROTOCOL_DATA_DESCRIPTOR desc = NULL;
+
+        DWORD size = FIELD_OFFSET(STORAGE_PROPERTY_QUERY, AdditionalParameters) +
+            sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA) +
+            sizeof(NVME_IDENTIFY_CONTROLLER_DATA14);
+        DWORD ret_size = 0;
+
+        PBYTE buffer = new BYTE[size];
+        ZeroMemory(buffer, size);
+
+        query = (PSTORAGE_PROPERTY_QUERY)buffer;
+        desc = (PSTORAGE_PROTOCOL_DATA_DESCRIPTOR)buffer;
+        data = (PSTORAGE_PROTOCOL_SPECIFIC_DATA)query->AdditionalParameters;
+
+        query->PropertyId = StorageAdapterProtocolSpecificProperty;
+        query->QueryType = PropertyStandardQuery;
+
+        data->ProtocolType = ProtocolTypeNvme;
+        data->DataType = NVMeDataTypeIdentify;
+        data->ProtocolDataRequestValue = NVME_IDENTIFY_CNS_CONTROLLER;
+        data->ProtocolDataRequestSubValue = 0;
+        data->ProtocolDataOffset = sizeof(STORAGE_PROTOCOL_SPECIFIC_DATA);
+        data->ProtocolDataLength = sizeof(NVME_IDENTIFY_CONTROLLER_DATA14);
+
+        BOOL ok = DeviceIoControl(hDevice,
+            IOCTL_STORAGE_QUERY_PROPERTY,
+            buffer,
+            size,
+            buffer,
+            size,
+            &ret_size,
+            NULL);
+
+
+        if (!ok)
+            _tprintf(_T("DeviceIoControl failed, LastError=%d\n"), GetLastError());
+
+        if ((desc->Version != sizeof(STORAGE_PROTOCOL_DATA_DESCRIPTOR)) ||
+            (desc->Size != sizeof(STORAGE_PROTOCOL_DATA_DESCRIPTOR)))
+        {
+            _tprintf(_T("Invalid return data from DeviceIoControl\n"));
+            ok = FALSE;
+        }
+
+        data = &desc->ProtocolSpecificData;
+
+        PNVME_IDENTIFY_CONTROLLER_DATA14 identify = (PNVME_IDENTIFY_CONTROLLER_DATA14)((PCHAR)data + data->ProtocolDataOffset);
+
+        if ((identify->VID == 0) || (identify->NN == 0))
+        {
+            _tprintf(_T("Invalid NVME_IDENTIFY_CONTROLLER_DATA\n"));
+            ok = FALSE;
+        }
+
+        if (ok)
+            BuildNqn(result, identify);
+
+        delete[] buffer;
+        CloseHandle(hDevice);
+    }
+    else
+        wprintf(L"failed to open %s, skip...\n", devpath.c_str());
+}

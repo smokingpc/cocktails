@@ -16,6 +16,15 @@ inline int WStrToStr(char* outbuf, int outbuf_len, wchar_t* src, int src_len)
     return WideCharToMultiByte(CP_ACP, WC_ERR_INVALID_CHARS, src, src_len, outbuf, outbuf_len, NULL, &use_defchar);
 }
 
+inline void ParseEnumeratorByInstanceid(OUT tstring& enumerator, tstring& id)
+{
+    enumerator = _T("");
+    size_t found = id.find(_T('\\'), 0);
+    if (tstring::npos != found)
+    {
+        enumerator = id.substr(0, found);
+    }
+}
 inline void ParseEnumeratorByHwid(OUT tstring& enumerator, tstring& hwid)
 {
     enumerator = _T("");

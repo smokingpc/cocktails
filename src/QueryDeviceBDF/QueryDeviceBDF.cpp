@@ -167,7 +167,7 @@ void ParsePropertyToString(BYTE* data, DEVPROPTYPE type, wstring& result)
 
 }
 void GetDevicePropertry(HDEVINFO infoset, PSP_DEVINFO_DATA infodata,
-    CONST DEVPROPKEY* key, DEVPROPTYPE type, tstring& result)
+    CONST DEVPROPKEY* key, DEVPROPTYPE &type, tstring& result)
 {
     BYTE buffer[BIG_BUFFER_SIZE] = { 0 };
     BOOL ok = SetupDiGetDeviceProperty(infoset, infodata, key, &type, buffer, BIG_BUFFER_SIZE, NULL, 0);
@@ -208,11 +208,11 @@ BOOL ParseCmd(CMD_OPTION& option, int argc, TCHAR* argv[])
 
     option.Id = argv[2];
 
-    if (0 == _tcsnicmp(argv[1], _T("hwid"), 4))
+    if (0 == _tcsnicmp(argv[1], _T("-hwid"), 4))
         option.Type = HWID;
-    else if (0 == _tcsnicmp(argv[1], _T("defif"), 5))
+    else if (0 == _tcsnicmp(argv[1], _T("-devif"), 5))
         option.Type = DEV_IF;
-    else if (0 == _tcsnicmp(argv[1], _T("nqn"), 3))
+    else if (0 == _tcsnicmp(argv[1], _T("-nqn"), 3))
         option.Type = NQN;
     else
         return FALSE;
@@ -222,12 +222,12 @@ void Usage()
 {
     _tprintf(_T("QueryDeviceBDF [option] [option arguments]\n"));
     _tprintf(_T("Options:\n"));
-    _tprintf(_T("\t-devif=[device interface name]\n"));
-    _tprintf(_T("\t  e.g. -devif=\\\\?\\pci#ven_8086&dev_f1a6&subsys_390b8086&rev_03#4&304661e1&0&0008#{2accfe60-c130-11d2-b082-00a0c91efb8b}\n"));
-    _tprintf(_T("\t-hwid=[hardware id of device]\n"));
-    _tprintf(_T("\t  e.g. -hwid=PCI\\VEN_8086&DEV_F1A6&SUBSYS_390B8086&REV_03\n"));
-    _tprintf(_T("\t-nqn=[nqn of disk]\n"));
-    _tprintf(_T("\t  e.g. -nqn=nqn.1994-11.com.samsung:nvme:980PRO:M.2:S5GXNF0R743809V\n"));
+    _tprintf(_T("\t-devif [device interface name of StorPort HBA]\n"));
+    _tprintf(_T("\t  e.g. -devif \\\\?\\pci#ven_8086&dev_f1a6&subsys_390b8086&rev_03#4&304661e1&0&0008#{2accfe60-c130-11d2-b082-00a0c91efb8b}\n"));
+    _tprintf(_T("\t-hwid [hardware id of device]\n"));
+    _tprintf(_T("\t  e.g. -hwid PCI\\VEN_8086&DEV_F1A6&SUBSYS_390B8086&REV_03\n"));
+    _tprintf(_T("\t-nqn [nqn of disk]\n"));
+    _tprintf(_T("\t  e.g. -nqn nqn.1994-11.com.samsung:nvme:980PRO:M.2:S5GXNF0R743809V\n"));
     _tprintf(_T("\tNotice: the -nqn option is used to query adapter BDF of NQN specified disk.\n"));
     _tprintf(_T("\t\n"));
 
@@ -316,14 +316,9 @@ void QueryDeviceByDevInterface(OUT DEV_INFO& result, tstring devif)
 {
     HDEVINFO infoset;
     tstring enum_str = _T("");
-    TCHAR* enumerator = NULL;
-
-    if (enum_str.size() > 0)
-        enumerator = (TCHAR*)enum_str.c_str();
-
     DWORD flag = DIGCF_DEVICEINTERFACE | DIGCF_PRESENT;
-    infoset = SetupDiGetClassDevs(NULL, NULL, NULL, flag);
-
+    infoset = SetupDiGetClassDevs(&GUID_DEVINTERFACE_STORAGEPORT, NULL, NULL, flag);
+    
     if (INVALID_HANDLE_VALUE != infoset && NULL != infoset)
     {
         DWORD id = 0;
@@ -340,7 +335,7 @@ void QueryDeviceByDevInterface(OUT DEV_INFO& result, tstring devif)
             SP_DEVICE_INTERFACE_DATA ifdata = {0};
             BYTE buffer[BIG_BUFFER_SIZE] = {0};
             ifdata.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-            if (!SetupDiEnumDeviceInterfaces(infoset, &infodata, &infodata.ClassGuid, 0, &ifdata))
+            if (!SetupDiEnumDeviceInterfaces(infoset, &infodata, &GUID_DEVINTERFACE_STORAGEPORT, 0, &ifdata))
                 continue;
             
             ifdetail = (PSP_DEVICE_INTERFACE_DETAIL_DATA) buffer;
@@ -350,15 +345,16 @@ void QueryDeviceByDevInterface(OUT DEV_INFO& result, tstring devif)
                 continue;
             
             found_devif = ifdetail->DevicePath;
-            if(found_devif != devif)
+            if(!StrCompare(found_devif, devif))
                 continue;
-
-
+            
+            list<tstring> found_hwids;
             //In old windows, we should use CfgMgr API to retrieve these information from registry.
             //Since VISTA, all information of device and driver are unified to [Unified Device Property Model].
             //https://docs.microsoft.com/en-us/windows-hardware/drivers/install/unified-device-property-model--windows-vista-and-later-
-            type = DEVPROP_TYPE_STRING;    //not use DEVPROP_TYPE_STRING_LIST. because returned data sometimes have garbage after string.
-            GetDevicePropertry(infoset, &infodata, &DEVPKEY_Device_HardwareIds, type, result.Hwid);
+            type = DEVPROP_TYPE_STRING_LIST;
+            GetDevicePropertryStringList(infoset, &infodata, &DEVPKEY_Device_HardwareIds, found_hwids);
+            result.Hwid = found_hwids.front();
 
             type = DEVPROP_TYPE_STRING;
             GetDevicePropertry(infoset, &infodata, &DEVPKEY_Device_LocationInfo, type, bdf_str);
@@ -368,36 +364,92 @@ void QueryDeviceByDevInterface(OUT DEV_INFO& result, tstring devif)
             GetDevicePropertry(infoset, &infodata, &DEVPKEY_Device_Parent, type, result.ParentId);
             break;
         }
+        SetupDiDestroyDeviceInfoList(infoset);
+    }        
+    if (result.Hwid.empty())
+        return;
 
-        if (!result.Hwid.empty())
+    flag = DIGCF_ALLCLASSES | DIGCF_PRESENT;
+    ParseEnumeratorByInstanceid(enum_str, result.ParentId);
+    infoset = SetupDiGetClassDevs(NULL, NULL, NULL, flag);
+    if (INVALID_HANDLE_VALUE != infoset && NULL != infoset)
+    {
+        DWORD id = 0;
+        tstring found_devif = _T("");
+        SP_DEVINFO_DATA infodata = { 0 };
+        infodata.cbSize = sizeof(SP_DEVINFO_DATA);
+
+        while (SetupDiEnumDeviceInfo(infoset, id, &infodata))
         {
-            id = 0;
-            while (SetupDiEnumDeviceInfo(infoset, id, &infodata))
-            {
-                id++;
-                DEVPROPTYPE type = 0;
-                tstring bdf_str = _T(""), found_id = _T("");
-                //In old windows, we should use CfgMgr API to retrieve these information from registry.
-                //Since VISTA, all information of device and driver are unified to [Unified Device Property Model].
-                //https://docs.microsoft.com/en-us/windows-hardware/drivers/install/unified-device-property-model--windows-vista-and-later-
-                type = DEVPROP_TYPE_STRING;    //not use DEVPROP_TYPE_STRING_LIST. because returned data sometimes have garbage after string.
-                GetDevicePropertry(infoset, &infodata, &DEVPKEY_Device_InstanceId, type, found_id);
+            id++;
+            DEVPROPTYPE type = 0;
+            tstring bdf_str = _T(""), found_id = _T("");
+            //In old windows, we should use CfgMgr API to retrieve these information from registry.
+            //Since VISTA, all information of device and driver are unified to [Unified Device Property Model].
+            //https://docs.microsoft.com/en-us/windows-hardware/drivers/install/unified-device-property-model--windows-vista-and-later-
+            type = DEVPROP_TYPE_STRING;    //not use DEVPROP_TYPE_STRING_LIST. because returned data sometimes have garbage after string.
+            GetDevicePropertry(infoset, &infodata, &DEVPKEY_Device_InstanceId, type, found_id);
 
-                if (found_id != result.ParentId)
-                    continue;
+            if (found_id != result.ParentId)
+                continue;
 
-                type = DEVPROP_TYPE_STRING;
-                GetDevicePropertry(infoset, &infodata, &DEVPKEY_Device_LocationInfo, type, bdf_str);
-                ParseBDF((TCHAR*)bdf_str.c_str(), result.ParentBDF);
-            }
+            type = DEVPROP_TYPE_STRING;
+            GetDevicePropertry(infoset, &infodata, &DEVPKEY_Device_LocationInfo, type, bdf_str);
+            ParseBDF((TCHAR*)bdf_str.c_str(), result.ParentBDF);
         }
         SetupDiDestroyDeviceInfoList(infoset);
     }
-    else
-        _tprintf(_T("SetupDiGetClassDevs() failed, LastError=%d\n"), GetLastError());
 }
 void QueryDeviceByNqn(OUT DEV_INFO& result, tstring nqn)
-{}
+{
+    HDEVINFO infoset;
+    BOOL target_found = FALSE;
+    tstring enum_str = _T(""), found_nqn = _T("");
+
+    DWORD flag = DIGCF_DEVICEINTERFACE | DIGCF_PRESENT;
+    infoset = SetupDiGetClassDevs(&GUID_DEVINTERFACE_STORAGEPORT, NULL, NULL, flag);
+
+    if (INVALID_HANDLE_VALUE != infoset && NULL != infoset)
+    {
+        DWORD id = 0;
+        tstring found_devif = _T("");
+        SP_DEVINFO_DATA infodata = { 0 };
+        infodata.cbSize = sizeof(SP_DEVINFO_DATA);
+        while (SetupDiEnumDeviceInfo(infoset, id, &infodata))
+        {
+            id++;
+            DEVPROPTYPE type = 0;
+            tstring bdf_str = _T(""), found_hwid = _T("");
+
+            PSP_DEVICE_INTERFACE_DETAIL_DATA ifdetail = NULL;
+            SP_DEVICE_INTERFACE_DATA ifdata = { 0 };
+            BYTE buffer[BIG_BUFFER_SIZE] = { 0 };
+            ifdata.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+            if (!SetupDiEnumDeviceInterfaces(infoset, &infodata, &GUID_DEVINTERFACE_STORAGEPORT, 0, &ifdata))
+                continue;
+
+            ifdetail = (PSP_DEVICE_INTERFACE_DETAIL_DATA)buffer;
+            ifdetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+            if (!SetupDiGetDeviceInterfaceDetail(
+                infoset, &ifdata, ifdetail, BIG_BUFFER_SIZE, NULL, NULL))
+                continue;
+
+            found_devif = ifdetail->DevicePath;
+
+            QueryNVMeDeviceNqn(found_nqn, found_devif);
+
+            if (!StrCompare(found_nqn, nqn))
+                continue;
+
+            target_found = TRUE;
+            break;
+        }
+        SetupDiDestroyDeviceInfoList(infoset);
+
+        if(target_found)
+            QueryDeviceByDevInterface(result, found_devif);
+    }
+}
 
 void PrintResult(DEV_INFO result, tstring id, ID_TYPE type)
 {
