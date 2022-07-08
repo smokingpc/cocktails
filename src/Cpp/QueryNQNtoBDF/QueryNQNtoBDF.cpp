@@ -7,16 +7,31 @@
 #include <devpkey.h>
 #include <string>
 #include <list>
+#include <regex>
 #include "nvme_structure.h"
 using namespace std;
 
 #pragma comment(lib, "setupapi.lib")
 
+using namespace std;
+static void ParseBDF(wchar_t* src, uint32_t& bus, uint32_t& dev, uint32_t& func)
+{
+    //wregex test(L"^PCI[^[0-9]]*(\\d+).*(\\d+).*(\\d+)$");
+    wregex test(L"^PCI[^0-9]*(\\d+)[^0-9]*(\\d+)[^0-9]*(\\d+)$");
+    wsmatch match;
+    wstring src_str = src;
+    if (regex_search(src_str, match, test))
+    {
+        bus = _wtol(match[1].str().c_str());
+        dev = _wtol(match[2].str().c_str());
+        func = _wtol(match[3].str().c_str());
+    }
+}
+
 void Usage()
 {
     printf("Usage: QueryNQNtoBDF.exe [keyword in nvme device manufacturer] \n");
 }
-
 static inline void string_trim(string& str)
 {
     std::size_t found = str.find_last_not_of(" ");
@@ -25,8 +40,6 @@ static inline void string_trim(string& str)
     else
         str.clear();            // str is all whitespace
 }
-
-
 wstring BuildNqn(PNVME_IDENTIFY_CONTROLLER_DATA14 identify)
 {
     wstring ret = L"";
@@ -55,7 +68,6 @@ wstring BuildNqn(PNVME_IDENTIFY_CONTROLLER_DATA14 identify)
     mbstowcs(&ret[0], &subnqn[0], subnqn.length());
     return ret;
 }
-
 wstring QueryNVMeDeviceNqn(const wchar_t *devpath)
 {
     wstring ret = L"";
@@ -190,6 +202,11 @@ void ListNvmeNqnWithPciBDF(wchar_t *keyword)
             {
                 wprintf(L"SetupDiGetDevicePropertyW failed(error=%d), try next device...\n", GetLastError());
             }
+
+            uint32_t bus=0,dev=0, func=0;
+            ParseBDF(buffer, bus,dev,func);
+            wprintf(L"bus=%d, device=%d, function=%d\n", bus, dev, func);
+
             locinfo = buffer;
 
             if (!SetupDiEnumDeviceInterfaces(infoset, &infodata, class_guid, 0, &ifdata))
@@ -221,7 +238,7 @@ void ListNvmeNqnWithPciBDF(wchar_t *keyword)
                 wprintf(L"Allocate Buffer Failed, try next device...\n");
                 continue;
             }
-            //wprintf(L"required buffer size = %d\n", need_size);
+
             ZeroMemory(detail, need_size);
             detail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
 
