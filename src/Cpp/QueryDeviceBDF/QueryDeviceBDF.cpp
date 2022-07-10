@@ -373,7 +373,10 @@ void QueryDeviceByDevInterface(OUT DEV_INFO& result, tstring devif)
 
     flag = DIGCF_ALLCLASSES | DIGCF_PRESENT;
     ParseEnumeratorByInstanceid(enum_str, result.ParentId);
-    infoset = SetupDiGetClassDevs(NULL, enum_str.c_str(), NULL, flag);
+    //infoset = SetupDiGetClassDevs(NULL, enum_str.c_str(), NULL, flag);
+
+    infoset = SetupDiCreateDeviceInfoList(NULL, NULL);
+
     WCHAR buffer[256] = {0};
     DWORD need_size = 0;
     if (INVALID_HANDLE_VALUE != infoset && NULL != infoset)
