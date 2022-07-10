@@ -39,9 +39,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueryNQNtoBDF", "Cpp\QueryN
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ETL_Splitter", "CSharp\ETL_Splitter\ETL_Splitter.csproj", "{4F96E852-3191-4164-94E4-E3F2DE945133}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ListPhysicalDiskPartitions", "ListPhysicalDiskPartitions\ListPhysicalDiskPartitions.vcxproj", "{5F169C72-48B2-4159-9BA9-C6ADC718FF2F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ListPhysicalDiskPartitions", "Cpp\ListPhysicalDiskPartitions\ListPhysicalDiskPartitions.vcxproj", "{5F169C72-48B2-4159-9BA9-C6ADC718FF2F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueryDeviceBDF", "QueryDeviceBDF\QueryDeviceBDF.vcxproj", "{EA90D20A-419D-4931-8CE2-A2291A462404}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueryDeviceBDF", "Cpp\QueryDeviceBDF\QueryDeviceBDF.vcxproj", "{EA90D20A-419D-4931-8CE2-A2291A462404}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

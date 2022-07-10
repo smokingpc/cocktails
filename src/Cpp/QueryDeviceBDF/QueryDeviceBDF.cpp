@@ -224,7 +224,7 @@ void Usage()
     _tprintf(_T("Options:\n"));
     _tprintf(_T("\t-devif [device interface name of StorPort HBA]\n"));
     _tprintf(_T("\t  e.g. -devif \\\\?\\pci#ven_8086&dev_f1a6&subsys_390b8086&rev_03#4&304661e1&0&0008#{2accfe60-c130-11d2-b082-00a0c91efb8b}\n"));
-    _tprintf(_T("\t-hwid [hardware id of device]\n"));
+    _tprintf(_T("\t-hwid [hardware id of any device]\n"));
     _tprintf(_T("\t  e.g. -hwid PCI\\VEN_8086&DEV_F1A6&SUBSYS_390B8086&REV_03\n"));
     _tprintf(_T("\t-nqn [nqn of disk]\n"));
     _tprintf(_T("\t  e.g. -nqn nqn.1994-11.com.samsung:nvme:980PRO:M.2:S5GXNF0R743809V\n"));
@@ -317,6 +317,8 @@ void QueryDeviceByDevInterface(OUT DEV_INFO& result, tstring devif)
     HDEVINFO infoset;
     tstring enum_str = _T("");
     DWORD flag = DIGCF_DEVICEINTERFACE | DIGCF_PRESENT;
+    DEVPROPTYPE type = DEVPROP_TYPE_STRING;
+
     infoset = SetupDiGetClassDevs(&GUID_DEVINTERFACE_STORAGEPORT, NULL, NULL, flag);
     
     if (INVALID_HANDLE_VALUE != infoset && NULL != infoset)
@@ -371,6 +373,22 @@ void QueryDeviceByDevInterface(OUT DEV_INFO& result, tstring devif)
 
     flag = DIGCF_ALLCLASSES | DIGCF_PRESENT;
     ParseEnumeratorByInstanceid(enum_str, result.ParentId);
+    infoset = SetupDiGetClassDevs(NULL, enum_str.c_str(), NULL, flag);
+    WCHAR buffer[256] = {0};
+    DWORD need_size = 0;
+    if (INVALID_HANDLE_VALUE != infoset && NULL != infoset)
+    {
+        SP_DEVINFO_DATA infodata = { 0 };
+        infodata.cbSize = sizeof(SP_DEVINFO_DATA);
+        SetupDiOpenDeviceInfo(infoset, result.ParentId.c_str(), NULL, 0, &infodata);
+
+        SetupDiGetDevicePropertyW(infoset, &infodata, &DEVPKEY_Device_LocationInfo, &type,(PBYTE) buffer, 256*sizeof(WCHAR), &need_size, 0);
+        ParseBDF((WCHAR*)buffer, result.ParentBDF);
+        SetupDiDestroyDeviceInfoList(infoset);
+    }
+#if 0
+    flag = DIGCF_ALLCLASSES | DIGCF_PRESENT;
+    ParseEnumeratorByInstanceid(enum_str, result.ParentId);
     infoset = SetupDiGetClassDevs(NULL, NULL, NULL, flag);
     if (INVALID_HANDLE_VALUE != infoset && NULL != infoset)
     {
@@ -399,6 +417,7 @@ void QueryDeviceByDevInterface(OUT DEV_INFO& result, tstring devif)
         }
         SetupDiDestroyDeviceInfoList(infoset);
     }
+#endif
 }
 void QueryDeviceByNqn(OUT DEV_INFO& result, tstring nqn)
 {
