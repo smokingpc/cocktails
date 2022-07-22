@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ETL_Splitter")]
+[assembly: AssemblyTitle("SimpleAudioPlayer")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ETL_Splitter")]
+[assembly: AssemblyProduct("SimpleAudioPlayer")]
 [assembly: AssemblyCopyright("Copyright ©  2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("4f96e852-3191-4164-94e4-e3f2de945133")]
+[assembly: Guid("372902fb-c621-4b67-b48a-1822fd6be1ab")]
 
 // Version information for an assembly consists of the following four values:
 //
