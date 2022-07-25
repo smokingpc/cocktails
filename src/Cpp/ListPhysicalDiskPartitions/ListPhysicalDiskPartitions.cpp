@@ -119,7 +119,11 @@ void PrintMbrLayoutInfo(DRIVE_LAYOUT_INFORMATION_MBR* mbr)
 
 void PrintPartitionInfoGpt(PARTITION_INFORMATION_GPT *gpt)
 {
-    _tprintf(_T("\tPartitionType\n"));
+    _tprintf(_T("\tPartitionType=%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X\n"),
+        gpt->PartitionType.Data1, gpt->PartitionType.Data2, gpt->PartitionType.Data3,
+        gpt->PartitionType.Data4[0], gpt->PartitionType.Data4[1], gpt->PartitionType.Data4[2], gpt->PartitionType.Data4[3],
+        gpt->PartitionType.Data4[4], gpt->PartitionType.Data4[5], gpt->PartitionType.Data4[6], gpt->PartitionType.Data4[7]);
+
     _tprintf(_T("\tPartitionId=%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X\n"),
         gpt->PartitionId.Data1, gpt->PartitionId.Data2, gpt->PartitionId.Data3,
         gpt->PartitionId.Data4[0], gpt->PartitionId.Data4[1], gpt->PartitionId.Data4[2], gpt->PartitionId.Data4[3],
