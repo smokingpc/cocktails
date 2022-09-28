@@ -74,7 +74,7 @@ static size_t EnumVolumes(list<tstring> &vol_list)
     SP_DEVINFO_DATA infodata;
     SP_DEVICE_INTERFACE_DATA ifdata;
     DWORD id = 0;
-    const GUID* class_guid = GUID_DEVINTERFACE_VOLUME;
+    const GUID* class_guid = &GUID_DEVINTERFACE_VOLUME;
 
     DWORD flag = DIGCF_DEVICEINTERFACE | DIGCF_PRESENT;
     infoset = SetupDiGetClassDevsW(
