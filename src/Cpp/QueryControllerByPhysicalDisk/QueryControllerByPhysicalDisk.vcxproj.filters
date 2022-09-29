@@ -18,6 +18,9 @@
     <ClCompile Include="QueryControllerByPhysicalDisk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EnumDiskInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">

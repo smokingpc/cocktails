@@ -43,6 +43,9 @@ int _tmain(int argc, TCHAR* argv[])
             else
                 _tprintf(_T("\n"));
 
+            if(IsVolumeMounted(volume.VolumeName))
+                _tprintf(_T("\t => Volume is already mounted. \n"));
+
             if (volume.PhyDisks.size() > 0)
             {
                 _tprintf(_T("\tPhysical disk span list: \n"));

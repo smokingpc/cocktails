@@ -32,6 +32,31 @@ BOOL IsVolumeReady(tstring vol_name)
     return FALSE;
 }
 
+BOOL IsVolumeMounted(tstring vol_name)
+{
+    tstring temp = vol_name;
+    //if (temp.back() == _T('\\'))
+    //    temp.pop_back();
+
+    HANDLE device = CreateFile(temp.c_str(), 0,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+    BOOL mounted = FALSE;
+    if (device != INVALID_HANDLE_VALUE)
+    {
+        DWORD ret_size = 0;
+        //this IOCTL returns FALSE if volume is locked and mount.
+        BOOL ok = DeviceIoControl(device, FSCTL_IS_VOLUME_MOUNTED,
+                        NULL, 0, NULL, 0, &ret_size, NULL);
+        DWORD error = GetLastError();
+        mounted = !ok;
+        CloseHandle(device);
+    }
+
+    return mounted;
+}
+
 static void QueryVolumeMountFolders(tstring vol_name, list<tstring> &mount_list)
 {
     TCHAR buffer[BIG_BUFFER_SIZE] = {0};
@@ -253,6 +278,7 @@ size_t EnumPhysicalDisks(list<tstring> &devpath_list)
 //    return volume_list.size();
 //}
 
+//volume name example:  "\\?\Volume{8b035f6c-d8c1-4671-b2c2-69d4f75f6787}\"
 size_t EnumVolumes(list<VOLUME_INFO>& volume_list)
 {
     volume_list.clear();

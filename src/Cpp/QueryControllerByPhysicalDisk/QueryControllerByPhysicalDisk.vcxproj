@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EnumDiskInfo.cpp" />
     <ClCompile Include="QueryControllerByPhysicalDisk.cpp" />
   </ItemGroup>
   <ItemGroup>

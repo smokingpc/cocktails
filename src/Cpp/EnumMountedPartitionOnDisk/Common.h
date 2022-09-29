@@ -40,3 +40,4 @@ size_t EnumPhysicalDisks(list<tstring>& devpath_list);
 size_t EnumVolumes(list<VOLUME_INFO>& volume_list);
 BOOL IsVolumeReady(tstring vol_name);
 BOOL GetPartitionList(IN OUT BYTE* buffer, DWORD buf_size, tstring& devpath);
+BOOL IsVolumeMounted(tstring vol_name);

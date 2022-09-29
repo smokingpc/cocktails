@@ -3,72 +3,9 @@
 
 #include "Common.h"
 
-static bool QueryParentController(tstring phydisk, tstring &ctrl)
-{
-    HDEVINFO infoset;
-    SP_DEVINFO_DATA infodata;
-    SP_DEVICE_INTERFACE_DATA devif;
-
-    DWORD need_size = 0;
-    bool ret = false;
-    DWORD error = 0;
-    DEVPROPTYPE type = 0;
-    WCHAR buffer[BIG_BUFFER_SIZE] = { 0 };
-
-    infoset = SetupDiCreateDeviceInfoList(NULL, NULL);
-    if (INVALID_HANDLE_VALUE == infoset) 
-    {
-        error = GetLastError();
-        goto out;
-    }
-
-    ZeroMemory(&devif, sizeof(SP_DEVICE_INTERFACE_DATA));
-    devif.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-    if (!SetupDiOpenDeviceInterface(infoset, phydisk.c_str(), 0, &devif))
-    {
-        error = GetLastError();
-        goto out;
-    }
-
-    ZeroMemory(&infodata, sizeof(SP_DEVINFO_DATA));
-    infodata.cbSize = sizeof(SP_DEVINFO_DATA);
-    if (!SetupDiGetDeviceInterfaceDetail(infoset, &devif, NULL, 0, &need_size, &infodata)) 
-    {
-        error = GetLastError();
-        //if (error != ERROR_INSUFFICIENT_BUFFER) 
-        //{
-            goto out;
-        //}
-    }
-
-    if (!SetupDiGetDeviceProperty(
-        infoset,
-        &infodata,
-        &DEVPKEY_Device_Parent,
-        &type,
-        (BYTE*)buffer,
-        sizeof(buffer),
-        NULL, 0) || type != DEVPROP_TYPE_STRING) {
-
-        error = GetLastError();
-        goto out;
-    }
-
-    ctrl = buffer;
-
-    SetupDiDeleteDeviceInterfaceData(infoset, &devif);
-    error = 0;
-    ret = true;
-
-out:
-    if (error != 0)
-        _tprintf(L"error occurred, LastError=0x%08X\n", error);
-    if (infoset != NULL && infoset != INVALID_HANDLE_VALUE)
-        SetupDiDestroyDeviceInfoList(infoset);
-    return ret;
-}
-
-static size_t EnumVolumes(list<tstring> &vol_list)
+//found volume interface name in result example =>
+//  "\\?\storage#volume#{2904e7e5-d0c4-11eb-8357-806e6f6e6963}#00000076fda00000#{53f5630d-b6bf-11d0-94f2-00a0c91efb8b}"
+static size_t EnumVolumes(list<tstring> &result)
 {
     HDEVINFO infoset;
     SP_DEVINFO_DATA infodata;
@@ -83,84 +20,64 @@ static size_t EnumVolumes(list<tstring> &vol_list)
         NULL,
         DIGCF_DEVICEINTERFACE);
 
-    
-    return vol_list.size();
-}
+    if(INVALID_HANDLE_VALUE == infoset)
+        return 0;
 
-//devpath example : "\\.\PhysicalDrive4"
-static size_t EnumPhysicalDisks(list<tstring>& devpath_list)
-{
-    HDEVINFO devinfo = NULL;
-    GUID disk_class_guid = GUID_DEVINTERFACE_DISK;
-    GUID* debug = &disk_class_guid;
-    devinfo = SetupDiGetClassDevs(&disk_class_guid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
-
-    if (INVALID_HANDLE_VALUE != devinfo)
+    ZeroMemory(&infodata, sizeof(SP_DEVINFO_DATA));
+    infodata.cbSize = sizeof(SP_DEVINFO_DATA);
+    id = 0;
+    while (SetupDiEnumDeviceInfo(infoset, id++, &infodata))
     {
-        SP_DEVICE_INTERFACE_DATA ifdata = { 0 };
+        ZeroMemory(&ifdata, sizeof(SP_DEVICE_INTERFACE_DATA));
         ifdata.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-        DWORD devid = 0;
-        while (TRUE == SetupDiEnumDeviceInterfaces(devinfo, NULL, &disk_class_guid, devid, &ifdata))
-        {
-            DWORD need_size = 0;
-            DWORD return_size = 0;
-            BOOL ok = FALSE;
-            PSP_DEVICE_INTERFACE_DETAIL_DATA ifdetail = NULL;
-            devid++;
-            SetupDiGetDeviceInterfaceDetail(devinfo, &ifdata, NULL, 0, &need_size, NULL);
-            need_size = need_size * 2;
-            BYTE* buffer = new BYTE[need_size];
-            unique_ptr<BYTE> bufptr(buffer);
-            ZeroMemory(buffer, need_size);
 
-            ifdetail = (PSP_DEVICE_INTERFACE_DETAIL_DATA)buffer;
-            ifdetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-            ok = SetupDiGetDeviceInterfaceDetail(devinfo, &ifdata, ifdetail, need_size, &need_size, NULL);
-            if (TRUE == ok)
-            {
-                HANDLE device = CreateFile(ifdetail->DevicePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-                    NULL, OPEN_EXISTING, 0, NULL);
-                if (INVALID_HANDLE_VALUE != device)
-                {
-                    STORAGE_DEVICE_NUMBER disk_number = { 0 };
-                    return_size = 0;
-                    ok = DeviceIoControl(device,
-                        IOCTL_STORAGE_GET_DEVICE_NUMBER,
-                        NULL,
-                        0,
-                        &disk_number,
-                        sizeof(STORAGE_DEVICE_NUMBER),
-                        &return_size,
-                        NULL);
-                    CloseHandle(device);
+        if (!SetupDiEnumDeviceInterfaces(infoset, &infodata, class_guid, 0, &ifdata))
+            continue;
 
-                    TCHAR temp[TINY_BUFFER_SIZE] = { 0 };
-                    _stprintf_s(temp, TINY_BUFFER_SIZE, PHYSICAL_DISK_FORMAT, disk_number.DeviceNumber);
-                    devpath_list.push_back(temp);
-                }
-                else
-                    printf("CreateFile() failed, LastError=%d\n", GetLastError());
-            }
-            else
-                printf("SetupDiGetDeviceInterfaceDetail() failed, LastError=%d\n", GetLastError());
-        }
+        if ((ifdata.Flags & SPINT_ACTIVE) == 0)
+            continue;
+
+        PSP_DEVICE_INTERFACE_DETAIL_DATA detail;
+        DWORD need_size = 0;
+
+        SetupDiGetDeviceInterfaceDetail(
+            infoset,
+            &ifdata,
+            NULL,
+            0,
+            &need_size,
+            NULL);
+
+        detail = (SP_DEVICE_INTERFACE_DETAIL_DATA*) new BYTE[need_size];
+        if (NULL == detail)
+            continue;
+
+        ZeroMemory(detail, need_size);
+        detail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+        if (!SetupDiGetDeviceInterfaceDetail(
+            infoset, &ifdata, detail, need_size,
+            NULL, NULL))
+            continue;
+
+        result.push_back(detail->DevicePath);
+        delete[] detail;
     }
-
-    printf("EnumPhysicalDisk() Finished....\n");
-
-    return devpath_list.size();
+    
+    SetupDiDestroyDeviceInfoList(infoset);
+    return result.size();
 }
-
 
 int _tmain(int argc, TCHAR* argv[])
 {
-    list<tstring> disklist;
-    EnumPhysicalDisks(disklist);
-    for(auto &disk : disklist)
+    list<DISK_INFO> result;
+    EnumDiskInfo(result);
+
+    for(auto &info : result)
     {
-        tstring ctrl;
-        QueryParentController(disk, ctrl);
-        _tprintf(_T("disk (%s) => parent (%s)\n"), disk.c_str(), ctrl.c_str());
+        _tprintf(_T("found disk: %s\n"), info.PhyDiskName.c_str());
+        _tprintf(_T("\tDevPath=%s\n"), info.DevPath.c_str());
+        _tprintf(_T("\tParent Controller=%s\n"), info.CtrlDevPath.c_str());
     }
 
     return 0;
