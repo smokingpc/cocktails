@@ -3,82 +3,127 @@
 
 #include "Common.h"
 
-//found volume interface name in result example =>
-//  "\\?\storage#volume#{2904e7e5-d0c4-11eb-8357-806e6f6e6963}#00000076fda00000#{53f5630d-b6bf-11d0-94f2-00a0c91efb8b}"
-static size_t EnumVolumes(list<tstring> &result)
+//typedef struct _VOLUME_INFO {
+//    bool IsReady;
+//    tstring VolumeName;
+//    list<tstring> MountPointList;   //mount point of this volume
+//    list<tstring> PhyDisks;      //physical disk which contains this volume. A volume could span to multiple disks.
+//}VOLUME_INFO, * PVOLUME_INFO;
+//
+//typedef struct _DISK_INFO {
+//    tstring DevPath;            //(Device Interface name) Device Path of this PhysicalDisk.
+//    tstring PhyDiskName;
+//    tstring CtrlDevPath;        //(Device Interface name) Controller of this PhysicalDisk.
+//}DISK_INFO, * PDISK_INFO;
+//
+//typedef struct _DISK_VOLUME_INFO {
+//    tstring DevPath;            //(Device Interface name) Device Path of this PhysicalDisk.
+//    tstring PhyDiskName;
+//    list<tstring> Volumes;      //list volume names(not device interface name of volume) which belong this disk
+//}DISK_VOLUME_INFO, * PDISK_VOLUME_INFO;
+//
+//typedef struct _CONTROLLER_INFO {
+//    tstring DevPath;            //Device Interface Name of Controller (not PCI location)
+//    list<DISK_VOLUME_INFO> Disks;
+//}CONTROLLER_INFO, * PCONTROLLER_INFO;
+
+//static bool FindCtrl(list<CONTROLLER_INFO>::iterator &found, list<CONTROLLER_INFO>& ctrllist, tstring &devpath)
+static bool FindCtrl(CONTROLLER_INFO *found, list<CONTROLLER_INFO>& ctrllist, tstring& devpath)
 {
-    HDEVINFO infoset;
-    SP_DEVINFO_DATA infodata;
-    SP_DEVICE_INTERFACE_DATA ifdata;
-    DWORD id = 0;
-    const GUID* class_guid = &GUID_DEVINTERFACE_VOLUME;
 
-    DWORD flag = DIGCF_DEVICEINTERFACE | DIGCF_PRESENT;
-    infoset = SetupDiGetClassDevsW(
-        class_guid,
-        NULL,
-        NULL,
-        DIGCF_DEVICEINTERFACE);
+}
 
-    if(INVALID_HANDLE_VALUE == infoset)
-        return 0;
-
-    ZeroMemory(&infodata, sizeof(SP_DEVINFO_DATA));
-    infodata.cbSize = sizeof(SP_DEVINFO_DATA);
-    id = 0;
-    while (SetupDiEnumDeviceInfo(infoset, id++, &infodata))
+//find volumes which build on specified physical disk.
+//result stores "volume names" of search result.
+static size_t FindVolumes(list<tstring> &result, list<VOLUME_INFO>& vollist, tstring phydisk)
+{
+    for(auto & volume : vollist)
     {
-        ZeroMemory(&ifdata, sizeof(SP_DEVICE_INTERFACE_DATA));
-        ifdata.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-
-        if (!SetupDiEnumDeviceInterfaces(infoset, &infodata, class_guid, 0, &ifdata))
-            continue;
-
-        if ((ifdata.Flags & SPINT_ACTIVE) == 0)
-            continue;
-
-        PSP_DEVICE_INTERFACE_DETAIL_DATA detail;
-        DWORD need_size = 0;
-
-        SetupDiGetDeviceInterfaceDetail(
-            infoset,
-            &ifdata,
-            NULL,
-            0,
-            &need_size,
-            NULL);
-
-        detail = (SP_DEVICE_INTERFACE_DETAIL_DATA*) new BYTE[need_size];
-        if (NULL == detail)
-            continue;
-
-        ZeroMemory(detail, need_size);
-        detail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-
-        if (!SetupDiGetDeviceInterfaceDetail(
-            infoset, &ifdata, detail, need_size,
-            NULL, NULL))
-            continue;
-
-        result.push_back(detail->DevicePath);
-        delete[] detail;
+        list<tstring>::iterator found = std::find(volume.PhyDisks.begin(), volume.PhyDisks.end(), phydisk);
+        if(found != volume.PhyDisks.end())
+            result.push_back(volume.VolumeName);
     }
-    
-    SetupDiDestroyDeviceInfoList(infoset);
+
     return result.size();
+}
+
+static bool IsDiskUnderController(PCONTROLLER_INFO ctrl, tstring phydisk)
+{}
+
+static size_t BuildControllerInfoList(list<CONTROLLER_INFO>& result, list<DISK_INFO>& disklist, list<VOLUME_INFO>& vollist)
+{
+    for(auto &disk : disklist)
+    {
+    //first search if this controller exist? if exist then search current disk.
+    //if current not exist , build a new disk volume info and push it.
+        //list<CONTROLLER_INFO>::iterator iter = result.end();
+        PCONTROLLER_INFO found;
+        if(FindCtrl(found, result, disk.CtrlDevPath))
+        {
+            if(false == IsDiskUnderController(found, disk.PhyDiskName))
+            {
+                DISK_VOLUME_INFO diskinfo;
+                diskinfo.DevPath = disk.DevPath;
+                diskinfo.PhyDiskName = disk.PhyDiskName;
+                FindVolumes(diskinfo.Volumes, vollist, disk.PhyDiskName);
+                found->Disks.push_back(diskinfo);
+            }
+        }
+        else
+        {
+            CONTROLLER_INFO ctrlinfo;
+            ctrlinfo.DevPath = disk.CtrlDevPath;
+            result.push_back(ctrlinfo);
+        }
+        //if(IsCtrllerExist(result, disk.CtrlDevPath))
+
+    }
+
+    return 0;
 }
 
 int _tmain(int argc, TCHAR* argv[])
 {
-    list<DISK_INFO> result;
-    EnumDiskInfo(result);
+    list<DISK_INFO> disklist;
+    EnumDiskInfo(disklist);
 
-    for(auto &info : result)
+    list<VOLUME_INFO>vollist;
+    EnumVolumeInfo(vollist);
+
+    list<CONTROLLER_INFO> ctrllist;
+    BuildControllerInfoList(ctrllist, disklist, vollist);
+
+    _tprintf(_T("======================== Volume list ========================\n"));
+    for(auto &info : vollist)
     {
-        _tprintf(_T("found disk: %s\n"), info.PhyDiskName.c_str());
-        _tprintf(_T("\tDevPath=%s\n"), info.DevPath.c_str());
-        _tprintf(_T("\tParent Controller=%s\n"), info.CtrlDevPath.c_str());
+        _tprintf(_T("Volume [%s]\n"), info.VolumeName.c_str());
+        _tprintf(_T("\tBuilt on Phydisk : "));
+        for(auto &disk : info.PhyDisks)
+            _tprintf(_T("%s, "), disk.c_str());
+        _tprintf(_T("\n"));
+
+        _tprintf(_T("\tVolume mount points : "));
+        for (auto& mount : info.MountPointList)
+            _tprintf(_T("%s, "), mount.c_str());
+        _tprintf(_T("\n"));
     }
+
+    _tprintf(_T("======================== Controller list ========================\n"));
+    for(auto &ctrl : ctrllist)
+    {
+        _tprintf(_T("Controller [%s]\n"), ctrl.DevPath.c_str());
+        _tprintf(_T("\tHas Phydisks : \n"));
+        for (auto& disk : ctrl.Disks)
+        {
+            _tprintf(_T("\tPhysicalDisk (%s)\n"), disk.PhyDiskName.c_str());
+            _tprintf(_T("\tDevPath (%s)\n"), disk.DevPath.c_str());
+            _tprintf(_T("\tHas Volumes:\n"));
+            for(auto &vol : disk.Volumes)
+                _tprintf(_T("\t\t%s\n"), vol.c_str());
+        }
+        _tprintf(_T("\n"));
+    }
+    //_tprintf(_T("========================  ========================\n"));
 
     return 0;
 }

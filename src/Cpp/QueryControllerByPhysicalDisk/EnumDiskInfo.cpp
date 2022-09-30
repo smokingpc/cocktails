@@ -1,13 +1,5 @@
 #include "Common.h"
 
-const unsigned char upper_diff = (_T('z') - _T('Z'));
-TCHAR tcsupper(TCHAR in)
-{
-    if (in <= _T('z') && in >= _T('a'))
-        return in - upper_diff;
-    return in;
-}
-
 //disk => dev interface of disk
 static ULONG GetPhysicalDiskNumber(tstring &disk)
 {
@@ -45,6 +37,8 @@ static void GetPhyDiskName(tstring &devpath, tstring &phydisk)
         phydisk = buffer;
     }
 }
+
+//EnumDisks() get a Device Interface list by iterate all disks in DevManager
 static size_t EnumDisks(list<tstring>& result)
 {
     HDEVINFO infoset;
@@ -149,7 +143,7 @@ static void GetStorportDevPathByLocation(tstring& inst_path, tstring& devpath)
 
         ZeroMemory(&ifdata, sizeof(SP_DEVICE_INTERFACE_DATA));
         ifdata.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-        wprintf(L"[Enum Next DeviceInterface]\n");
+        //wprintf(L"[Enum Next DeviceInterface]\n");
 
         if (!SetupDiEnumDeviceInterfaces(infoset, &infodata, class_guid, 0, &ifdata))
             continue;
@@ -254,8 +248,6 @@ out:
         SetupDiDestroyDeviceInfoList(infoset);
     return ret;
 }
-
-
 //devpath example : "\\.\PhysicalDrive4"
 size_t EnumPhysicalDisks(list<tstring>& devpath_list)
 {
@@ -340,3 +332,4 @@ size_t EnumDiskInfo(list<DISK_INFO> &result)
 
     return result.size();
 }
+

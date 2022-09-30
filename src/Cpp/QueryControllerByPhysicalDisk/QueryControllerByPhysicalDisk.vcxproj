@@ -140,7 +140,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="EnumDiskInfo.cpp" />
+    <ClCompile Include="EnumVolumeInfo.cpp" />
     <ClCompile Include="QueryControllerByPhysicalDisk.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />

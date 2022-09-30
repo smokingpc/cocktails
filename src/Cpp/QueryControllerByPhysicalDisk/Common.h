@@ -26,27 +26,37 @@ typedef std::basic_string<TCHAR> tstring;
 #define DOSDRIVE_FORMAT         _T("\\\\.\\%s\\")
 
 typedef struct _VOLUME_INFO {
+    bool IsReady;
     tstring VolumeName;
-    list<tstring> MountPointList;
-    list<tstring> PhyDisks;      //physical disk which contains this volume. A volume could span to multiple physical disks.
+    list<tstring> MountPointList;   //mount point of this volume
+    list<tstring> PhyDisks;      //physical disk which contains this volume. A volume could span to multiple disks.
 }VOLUME_INFO, * PVOLUME_INFO;
 
 typedef struct _DISK_INFO {
-    tstring DevPath;
-    tstring PhyDiskName;
-    tstring CtrlDevPath;
+    tstring DevPath;            //(Device Interface name) Device Path of this PhysicalDisk.
+    tstring PhyDiskName;        
+    tstring CtrlDevPath;        //(Device Interface name) Controller of this PhysicalDisk.
 }DISK_INFO, * PDISK_INFO;
 
-typedef struct _MOUNTED_VOLUME_INFO {
-    tstring VolumeName;
-    list<DISK_INFO> BelongDisks;
-}MOUNTED_VOLUME_INFO, * PMOUNTED_VOLUME_INFO;
+typedef struct _DISK_VOLUME_INFO {
+    tstring DevPath;            //(Device Interface name) Device Path of this PhysicalDisk.
+    tstring PhyDiskName;
+    list<tstring> Volumes;      //list volume names(not device interface name of volume) which belong this disk
+}DISK_VOLUME_INFO, * PDISK_VOLUME_INFO;
 
+typedef struct _CONTROLLER_INFO {
+    tstring DevPath;            //Device Interface Name of Controller (not PCI location)
+    list<DISK_VOLUME_INFO> Disks;
+}CONTROLLER_INFO, * PCONTROLLER_INFO;
 
+typedef struct _DRIVE_MOUNT_INFO {
+    tstring DriveName;      //e.g. "C:" , "D:"
+    tstring MountVolume;
+}DRIVE_MOUNT_INFO, * PDRIVE_MOUNT_INFO;
+
+TCHAR tcsupper(TCHAR in);
 size_t EnumPhysicalDisks(list<tstring>& devpath_list);
-//size_t EnumVolumesByDriveLetter(list<VOLUME_INFO>& volume_list);
-size_t EnumVolumes(list<VOLUME_INFO>& volume_list);
 BOOL IsVolumeReady(tstring vol_name);
 BOOL GetPartitionList(IN OUT BYTE* buffer, DWORD buf_size, tstring& devpath);
 size_t EnumDiskInfo(list<DISK_INFO>& result);
-size_t EnumPhysicalDisks(list<tstring>& devpath_list);
+size_t EnumVolumeInfo(list<VOLUME_INFO>& result);
