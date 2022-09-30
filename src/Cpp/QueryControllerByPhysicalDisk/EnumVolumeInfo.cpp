@@ -201,7 +201,6 @@ static BOOL BuildVolumeInfo(VOLUME_INFO& info, list<DRIVE_MOUNT_INFO>& drive_lis
     return TRUE;
 }
 
-
 //volume name example:  "\\?\Volume{8b035f6c-d8c1-4671-b2c2-69d4f75f6787}\"
 size_t EnumVolumeInfo(list<VOLUME_INFO>& result)
 {
@@ -234,6 +233,70 @@ size_t EnumVolumeInfo(list<VOLUME_INFO>& result)
             find_ok = FindNextVolume(find, buffer, BIG_BUFFER_SIZE);
         }
         FindVolumeClose(find);
+    }
+
+    return result.size();
+}
+
+//vol_name is DeviceInterface name of specified volume, not regular volume name in disk manager.
+BOOL IsVolumeMounted(tstring vol_name)
+{
+    DWORD ret_size = 0;
+    HANDLE device = CreateFile(vol_name.c_str(), 0, 
+                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+                    NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if(INVALID_HANDLE_VALUE == device)
+        return FALSE;
+
+    BOOL ok = DeviceIoControl(
+        device,             // handle to device
+        FSCTL_IS_VOLUME_MOUNTED,      // dwIoControlCode
+        NULL,                         // lpInBuffer
+        0,                            // nInBufferSize
+        NULL,                         // lpOutBuffer
+        0,                            // nOutBufferSize
+        &ret_size,    // number of bytes returned
+        NULL   // OVERLAPPED structure
+    );
+    CloseHandle(device);
+
+    return !ok; 
+}
+
+size_t EnumVolume(list<tstring> &result)
+{
+    HDEVINFO devinfo = NULL;
+    GUID disk_class_guid = GUID_DEVINTERFACE_VOLUME;
+    GUID* debug = &disk_class_guid;
+    devinfo = SetupDiGetClassDevs(&disk_class_guid, NULL, NULL, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
+
+    if (INVALID_HANDLE_VALUE != devinfo)
+    {
+        SP_DEVICE_INTERFACE_DATA ifdata = { 0 };
+        ifdata.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+        DWORD devid = 0;
+        while (TRUE == SetupDiEnumDeviceInterfaces(devinfo, NULL, &disk_class_guid, devid, &ifdata))
+        {
+            DWORD need_size = 0;
+            DWORD return_size = 0;
+            BOOL ok = FALSE;
+            PSP_DEVICE_INTERFACE_DETAIL_DATA ifdetail = NULL;
+            devid++;
+            SetupDiGetDeviceInterfaceDetail(devinfo, &ifdata, NULL, 0, &need_size, NULL);
+            need_size = need_size * 2;
+            BYTE* buffer = new BYTE[need_size];
+            unique_ptr<BYTE> bufptr(buffer);
+            ZeroMemory(buffer, need_size);
+
+            ifdetail = (PSP_DEVICE_INTERFACE_DETAIL_DATA)buffer;
+            ifdetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+            ok = SetupDiGetDeviceInterfaceDetail(devinfo, &ifdata, ifdetail, need_size, &need_size, NULL);
+            if (TRUE == ok)
+            {
+                tstring temp = ifdetail->DevicePath;
+                result.push_back(temp);
+            }
+        }
     }
 
     return result.size();

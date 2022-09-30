@@ -57,6 +57,8 @@ typedef struct _DRIVE_MOUNT_INFO {
 TCHAR tcsupper(TCHAR in);
 size_t EnumPhysicalDisks(list<tstring>& devpath_list);
 BOOL IsVolumeReady(tstring vol_name);
+BOOL IsVolumeMounted(tstring vol_name);
 BOOL GetPartitionList(IN OUT BYTE* buffer, DWORD buf_size, tstring& devpath);
 size_t EnumDiskInfo(list<DISK_INFO>& result);
 size_t EnumVolumeInfo(list<VOLUME_INFO>& result);
+size_t EnumVolume(list<tstring> &result);

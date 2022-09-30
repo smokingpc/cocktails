@@ -28,9 +28,9 @@
 //}CONTROLLER_INFO, * PCONTROLLER_INFO;
 
 //static bool FindCtrl(list<CONTROLLER_INFO>::iterator &found, list<CONTROLLER_INFO>& ctrllist, tstring &devpath)
-static bool FindCtrl(CONTROLLER_INFO *found, list<CONTROLLER_INFO>& ctrllist, tstring& devpath)
+static bool FindCtrl(PCONTROLLER_INFO *found, list<CONTROLLER_INFO>& ctrllist, tstring& devpath)
 {
-
+    return false;
 }
 
 //find volumes which build on specified physical disk.
@@ -48,7 +48,9 @@ static size_t FindVolumes(list<tstring> &result, list<VOLUME_INFO>& vollist, tst
 }
 
 static bool IsDiskUnderController(PCONTROLLER_INFO ctrl, tstring phydisk)
-{}
+{
+    return false;
+}
 
 static size_t BuildControllerInfoList(list<CONTROLLER_INFO>& result, list<DISK_INFO>& disklist, list<VOLUME_INFO>& vollist)
 {
@@ -58,7 +60,7 @@ static size_t BuildControllerInfoList(list<CONTROLLER_INFO>& result, list<DISK_I
     //if current not exist , build a new disk volume info and push it.
         //list<CONTROLLER_INFO>::iterator iter = result.end();
         PCONTROLLER_INFO found;
-        if(FindCtrl(found, result, disk.CtrlDevPath))
+        if(FindCtrl(&found, result, disk.CtrlDevPath))
         {
             if(false == IsDiskUnderController(found, disk.PhyDiskName))
             {
@@ -99,6 +101,17 @@ int _tmain(int argc, TCHAR* argv[])
     list<CONTROLLER_INFO> ctrllist;
     BuildControllerInfoList(ctrllist, disklist, vollist);
 
+    list<tstring> test;
+    EnumVolume(test);
+
+    for(auto &vol : test)
+    {
+        BOOL ok = IsVolumeMounted(vol);
+        _tprintf(_T("Volume[%s] mount result = %s\n"), vol.c_str(),
+                    ok?_T("TRUE") : _T("FALSE"));
+    }
+
+#if 0
     _tprintf(_T("======================== Volume list ========================\n"));
     for(auto &info : vollist)
     {
@@ -130,7 +143,7 @@ int _tmain(int argc, TCHAR* argv[])
         _tprintf(_T("\n"));
     }
     //_tprintf(_T("========================  ========================\n"));
-
+#endif
     return 0;
 }
 
