@@ -73,6 +73,12 @@ static size_t BuildControllerInfoList(list<CONTROLLER_INFO>& result, list<DISK_I
         {
             CONTROLLER_INFO ctrlinfo;
             ctrlinfo.DevPath = disk.CtrlDevPath;
+
+            DISK_VOLUME_INFO diskinfo;
+            diskinfo.DevPath = disk.DevPath;
+            diskinfo.PhyDiskName = disk.PhyDiskName;
+            FindVolumes(diskinfo.Volumes, vollist, disk.PhyDiskName);
+
             result.push_back(ctrlinfo);
         }
         //if(IsCtrllerExist(result, disk.CtrlDevPath))
