@@ -238,6 +238,7 @@ size_t EnumVolumeInfo(list<VOLUME_INFO>& result)
     return result.size();
 }
 
+#if 0
 //vol_name is DeviceInterface name of specified volume, not regular volume name in disk manager.
 BOOL IsVolumeMounted(tstring vol_name)
 {
@@ -262,6 +263,7 @@ BOOL IsVolumeMounted(tstring vol_name)
 
     return !ok; 
 }
+#endif 
 
 size_t EnumVolume(list<tstring> &result)
 {

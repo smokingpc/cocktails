@@ -3,33 +3,17 @@
 
 #include "Common.h"
 
-//typedef struct _VOLUME_INFO {
-//    bool IsReady;
-//    tstring VolumeName;
-//    list<tstring> MountPointList;   //mount point of this volume
-//    list<tstring> PhyDisks;      //physical disk which contains this volume. A volume could span to multiple disks.
-//}VOLUME_INFO, * PVOLUME_INFO;
-//
-//typedef struct _DISK_INFO {
-//    tstring DevPath;            //(Device Interface name) Device Path of this PhysicalDisk.
-//    tstring PhyDiskName;
-//    tstring CtrlDevPath;        //(Device Interface name) Controller of this PhysicalDisk.
-//}DISK_INFO, * PDISK_INFO;
-//
-//typedef struct _DISK_VOLUME_INFO {
-//    tstring DevPath;            //(Device Interface name) Device Path of this PhysicalDisk.
-//    tstring PhyDiskName;
-//    list<tstring> Volumes;      //list volume names(not device interface name of volume) which belong this disk
-//}DISK_VOLUME_INFO, * PDISK_VOLUME_INFO;
-//
-//typedef struct _CONTROLLER_INFO {
-//    tstring DevPath;            //Device Interface Name of Controller (not PCI location)
-//    list<DISK_VOLUME_INFO> Disks;
-//}CONTROLLER_INFO, * PCONTROLLER_INFO;
-
-//static bool FindCtrl(list<CONTROLLER_INFO>::iterator &found, list<CONTROLLER_INFO>& ctrllist, tstring &devpath)
 static bool FindCtrl(PCONTROLLER_INFO *found, list<CONTROLLER_INFO>& ctrllist, tstring& devpath)
 {
+    for(auto &item : ctrllist)
+    {
+        if(0==devpath.compare(item.DevPath))
+        {
+            *found = &item;
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -49,6 +33,12 @@ static size_t FindVolumes(list<tstring> &result, list<VOLUME_INFO>& vollist, tst
 
 static bool IsDiskUnderController(PCONTROLLER_INFO ctrl, tstring phydisk)
 {
+    for(auto &disk:ctrl->Disks)
+    {
+        if(0==disk.PhyDiskName.compare(phydisk))
+            return true;
+    }
+
     return false;
 }
 
@@ -56,6 +46,8 @@ static size_t BuildControllerInfoList(list<CONTROLLER_INFO>& result, list<DISK_I
 {
     for(auto &disk : disklist)
     {
+        if(disk.CtrlDevPath.size() == 0)
+            continue;
     //first search if this controller exist? if exist then search current disk.
     //if current not exist , build a new disk volume info and push it.
         //list<CONTROLLER_INFO>::iterator iter = result.end();
@@ -75,16 +67,15 @@ static size_t BuildControllerInfoList(list<CONTROLLER_INFO>& result, list<DISK_I
         {
             CONTROLLER_INFO ctrlinfo;
             ctrlinfo.DevPath = disk.CtrlDevPath;
-
             DISK_VOLUME_INFO diskinfo;
             diskinfo.DevPath = disk.DevPath;
             diskinfo.PhyDiskName = disk.PhyDiskName;
+            
             FindVolumes(diskinfo.Volumes, vollist, disk.PhyDiskName);
+            ctrlinfo.Disks.push_back(diskinfo);
 
             result.push_back(ctrlinfo);
         }
-        //if(IsCtrllerExist(result, disk.CtrlDevPath))
-
     }
 
     return 0;
@@ -101,17 +92,6 @@ int _tmain(int argc, TCHAR* argv[])
     list<CONTROLLER_INFO> ctrllist;
     BuildControllerInfoList(ctrllist, disklist, vollist);
 
-    list<tstring> test;
-    EnumVolume(test);
-
-    for(auto &vol : test)
-    {
-        BOOL ok = IsVolumeMounted(vol);
-        _tprintf(_T("Volume[%s] mount result = %s\n"), vol.c_str(),
-                    ok?_T("TRUE") : _T("FALSE"));
-    }
-
-#if 0
     _tprintf(_T("======================== Volume list ========================\n"));
     for(auto &info : vollist)
     {
@@ -143,7 +123,7 @@ int _tmain(int argc, TCHAR* argv[])
         _tprintf(_T("\n"));
     }
     //_tprintf(_T("========================  ========================\n"));
-#endif
+
     return 0;
 }
 
