@@ -46,7 +46,7 @@ typedef struct _PHYDISK_INFO {
     tstring PhyDisk;
 }PHYDISK_INFO, * PPHYDISK_INFO;
 
-size_t EnumPhysicalDisks(list<PHYDISK_INFO>& disk_list);
+size_t EnumPhysicalDisks(list<tstring>& disk_list);
 size_t EnumVolumes(list<VOLUME_INFO>& volume_list);
 BOOL IsVolumeReady(tstring vol_name);
 BOOL GetPartitionList(IN OUT BYTE* buffer, DWORD buf_size, tstring& devpath);

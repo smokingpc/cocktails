@@ -14,4 +14,4 @@ inline int WStrToStr(char* outbuf, int outbuf_len, wchar_t* src, int src_len)
 }
 TCHAR tcsupper(TCHAR in);
 
-
+bool StrCompare(tstring str1, tstring str2);

@@ -27,3 +27,19 @@ int WStrToStr(OUT string& result, wstring& src)
         result = temp;
     return count;
 }
+
+bool StrCompare(tstring str1, tstring str2)
+{
+    if (str1.size() != str2.size())
+        return false;
+    tstring temp1 = str1;
+    tstring temp2 = str2;
+
+    std::transform(temp1.begin(), temp1.end(), temp1.begin(), tcsupper);
+    std::transform(temp2.begin(), temp2.end(), temp2.begin(), tcsupper);
+    if (0 != temp1.compare(temp2))
+        return false;
+
+    return true;
+
+}

@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <string>
 #include <memory>
-
+#include <map>
 #include "Utils.h"
 
 using namespace std;
@@ -34,12 +34,13 @@ typedef struct _VOLUME_INFO {
 
 typedef struct _DRIVE_MOUNT_INFO {
     tstring DriveName;
-    tstring MountVolume;
-}DRIVE_MOUNT_INFO, * PDRIVE_MOUNT_INFO;
+    tstring VolumeName;
+}DRIVE_MOUNT_INFO, *PDRIVE_MOUNT_INFO;
 
 typedef struct _CONTROLLER_INFO {
     tstring DevPath;
-    list<tstring> PhyDisks;      //physical disk belongs to this controller
+    tstring HwId;
+    bool IsBusy;
 }CONTROLLER_INFO, * PCONTROLLER_INFO;
 
 typedef struct _PHYDISK_INFO {
@@ -48,3 +49,6 @@ typedef struct _PHYDISK_INFO {
     tstring PhyDisk;
 }PHYDISK_INFO, * PPHYDISK_INFO;
 
+size_t ListBusyControllers(list<CONTROLLER_INFO>& result);
+size_t EnumVolumes(list<VOLUME_INFO>& result);
+size_t EnumPhysicalDisks(list<PHYDISK_INFO>& result);

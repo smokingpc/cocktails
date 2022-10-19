@@ -24,7 +24,7 @@
     <ClCompile Include="EnumStorageControllers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EnumMountedVolumes.cpp">
+    <ClCompile Include="EnumVolumeInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

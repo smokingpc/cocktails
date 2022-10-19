@@ -139,7 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="EnumMountedVolumes.cpp" />
+    <ClCompile Include="EnumVolumeInfo.cpp" />
     <ClCompile Include="EnumStorageControllers.cpp" />
     <ClCompile Include="ListBusyStorageController.cpp" />
     <ClCompile Include="Utils.cpp" />
