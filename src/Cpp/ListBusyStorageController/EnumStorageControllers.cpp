@@ -79,9 +79,9 @@ static BOOL QueryParentController(OUT PHYDISK_INFO& info, IN HDEVINFO infoset, I
         return FALSE;
     }
 
-    info.ParentHwID = (wchar_t*)buffer;
+    info.ParentInstanceID = (wchar_t*)buffer;
     tstring devpath;
-    if (QueryDevInterfaceByInstanceId(info.ParentDevPath, info.ParentHwID))
+    if (QueryDevInterfaceByInstanceId(info.ParentDevPath, info.ParentInstanceID))
         return TRUE;
 
     return FALSE;
@@ -155,7 +155,7 @@ BOOL EnumControllers(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_I
 
                         CONTROLLER_INFO ctrlinfo;
                         ctrlinfo.DevPath = diskinfo.ParentDevPath;
-                        ctrlinfo.HwId = diskinfo.ParentHwID;
+                        ctrlinfo.InstanceId = diskinfo.ParentInstanceID;
                         if (IsPhyDiskMounted(diskinfo.PhyDisk, vol_list))
                         {
                             ctrlinfo.IsBusy = true;

@@ -45,6 +45,33 @@ typedef struct _VOLUME_INFO {
     {
         return (MountPointList.size()>0)? TRUE : FALSE;
     }
+
+#if 0
+    BOOL IsDriveMountedByVolume(tstring drive_name)
+    {
+        tstring temp = drive_name;
+        if (temp.back() == _T('\\'))
+            temp.pop_back();
+
+        HANDLE device = CreateFile(temp.c_str(), 0,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+        BOOL mounted = FALSE;
+        if (device != INVALID_HANDLE_VALUE)
+        {
+            DWORD ret_size = 0;
+            //this IOCTL returns FALSE if volume is locked and mount.
+            BOOL ok = DeviceIoControl(device, FSCTL_IS_VOLUME_MOUNTED,
+                NULL, 0, NULL, 0, &ret_size, NULL);
+            DWORD error = GetLastError();
+            mounted = !ok;
+            CloseHandle(device);
+        }
+
+        return mounted;
+    }
+#endif
 }VOLUME_INFO, * PVOLUME_INFO;
 
 typedef struct _DRIVE_MOUNT_INFO {
@@ -54,13 +81,13 @@ typedef struct _DRIVE_MOUNT_INFO {
 
 typedef struct _CONTROLLER_INFO {
     tstring DevPath;
-    tstring HwId;
+    tstring InstanceId;
     bool IsBusy;
 }CONTROLLER_INFO, * PCONTROLLER_INFO;
 
 typedef struct _PHYDISK_INFO {
     tstring ParentDevPath;            //CONTROLLER DevPath
-    tstring ParentHwID;               //CONTROLLER HardwareId
+    tstring ParentInstanceID;               //CONTROLLER HardwareId
     tstring PhyDisk;
 }PHYDISK_INFO, * PPHYDISK_INFO;
 

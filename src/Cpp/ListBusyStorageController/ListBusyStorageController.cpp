@@ -10,7 +10,7 @@ void PrintInfo(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_INFO>& 
     _tprintf(_T("[Busy Controller List]\n"));
     for(auto &ctrl:busy_list)
     {
-        _tprintf(_T("HwId=%s\n"), ctrl.HwId.c_str());
+        _tprintf(_T("HwId=%s\n"), ctrl.InstanceId.c_str());
         _tprintf(_T("DevPath=%s\n"), ctrl.DevPath.c_str());
         _tprintf(_T("Has mounted volumes? (%s)\n"), ctrl.IsBusy? _T("TRUE") : _T("FALSE"));
 
@@ -21,7 +21,7 @@ void PrintInfo(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_INFO>& 
     _tprintf(_T("[Free Controller List]\n"));
     for (auto& ctrl : free_list)
     {
-        _tprintf(_T("HwId=%s\n"), ctrl.HwId.c_str());
+        _tprintf(_T("HwId=%s\n"), ctrl.InstanceId.c_str());
         _tprintf(_T("DevPath=%s\n"), ctrl.DevPath.c_str());
         _tprintf(_T("Has mounted volumes? (%s)\n"), ctrl.IsBusy ? _T("TRUE") : _T("FALSE"));
 
@@ -33,7 +33,7 @@ void PrintInfo(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_INFO>& 
     for (auto& disk : disk_list)
     {
         _tprintf(_T("DiskName=%s\n"), disk.PhyDisk.c_str());
-        _tprintf(_T("Parent HwId=%s\n"), disk.ParentHwID.c_str());
+        _tprintf(_T("Parent HwId=%s\n"), disk.ParentInstanceID.c_str());
         _tprintf(_T("Parent DevPath=%s\n"), disk.ParentDevPath.c_str());
 
         _tprintf(_T("\n"));
