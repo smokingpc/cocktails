@@ -13,11 +13,11 @@
 #include <string>
 #include <memory>
 #include <map>
-#include "Utils.h"
 
 using namespace std;
 typedef std::basic_string<TCHAR> tstring;
 
+#include "Utils.h"
 #pragma comment(lib, "setupapi.lib")
 
 #define BIG_BUFFER_SIZE     1024
@@ -30,6 +30,17 @@ typedef struct _VOLUME_INFO {
     tstring VolumeName;
     list<tstring> MountPointList;
     list<tstring> PhyDisks;      //physical disk which contains this volume. A volume could span to multiple physical disks.
+
+    //check if the specified physical disk contains this volume?
+    BOOL IsDiskHasThisVolume(tstring diskname)
+    {
+        for (auto& disk : PhyDisks)
+        {
+            if (0 == StrCompare(diskname, disk))
+                return TRUE;
+        }
+        return FALSE;
+    }
 }VOLUME_INFO, * PVOLUME_INFO;
 
 typedef struct _DRIVE_MOUNT_INFO {
@@ -49,6 +60,7 @@ typedef struct _PHYDISK_INFO {
     tstring PhyDisk;
 }PHYDISK_INFO, * PPHYDISK_INFO;
 
-size_t ListBusyControllers(list<CONTROLLER_INFO>& result);
-size_t EnumVolumes(list<VOLUME_INFO>& result);
-size_t EnumPhysicalDisks(list<PHYDISK_INFO>& result);
+BOOL EnumControllers(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_INFO>& free_list,
+                    OUT list<PHYDISK_INFO>& disk_list, IN list<VOLUME_INFO>& vol_list);
+size_t EnumVolumes(OUT list<VOLUME_INFO>& result);
+
