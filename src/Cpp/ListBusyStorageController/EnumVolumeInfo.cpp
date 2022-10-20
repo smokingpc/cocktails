@@ -37,23 +37,25 @@ static void QueryVolumeMountFolders(tstring volume, list<tstring>& result)
 
 //query  volume name(DOSNAME) to drive name mapping list
 //e.g.  "C:" mapped from "\\?\Volume{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}\"
-static void EnumDriveMountInfo(list< DRIVE_MOUNT_INFO> result)
+static void EnumDriveMountInfo(list< DRIVE_MOUNT_INFO> &result)
 {
     for (const TCHAR* drive : DriveLetters)
     {
         TCHAR buffer[SMALL_BUFFER_SIZE] = { 0 };
-        tstring drive_name = drive;
-        tstring volume_name = _T("");
+        tstring drive_name = drive;     //drive == "c:" , "d:" ....etc.
         drive_name += _T("\\");
         BOOL ok = GetVolumeNameForVolumeMountPoint(drive_name.c_str(), buffer, SMALL_BUFFER_SIZE);
         if (ok)
         {
-            TCHAR buffer2[TINY_BUFFER_SIZE] = { 0 };
-            _stprintf_s(buffer2, TINY_BUFFER_SIZE, DOSDRIVE_FORMAT, drive);
-            volume_name = buffer2;
+            //volume_name = buffer;
             DRIVE_MOUNT_INFO info;
-            info.DriveName = drive_name;
-            info.VolumeName = volume_name;
+            info.VolumeName = buffer;
+
+        //before save into DRIVE_MOUNT_INFO, convert drive name to DOSDRIVE_FORMAT format.
+        //e.g. "\\.\C:\"
+            RtlZeroMemory(buffer, SMALL_BUFFER_SIZE);
+            _stprintf_s(buffer, SMALL_BUFFER_SIZE, DOSDRIVE_FORMAT, drive);
+            info.DriveName = buffer;
             result.push_back(info);
         }
     }
@@ -69,7 +71,7 @@ static void QueryDriveMountOfVolume(tstring volume, list<tstring> &result)
 
     for(auto &drive : drive_list)
     {
-        if(0 == StrCompare(drive.VolumeName, volume))
+        if(true == StrCompare(drive.VolumeName, volume))
             result.push_back(drive.DriveName);
     }
 }

@@ -24,7 +24,7 @@ typedef std::basic_string<TCHAR> tstring;
 #define SMALL_BUFFER_SIZE   256
 #define TINY_BUFFER_SIZE    64
 #define PHYSICAL_DISK_FORMAT    _T("\\\\.\\PhysicalDrive%d")
-#define DOSDRIVE_FORMAT         _T("\\\\.\\%s\\")
+#define DOSDRIVE_FORMAT         _T("\\\\.\\%s\\")               //this is DOS DEVICE NAME format in NT system.
 
 typedef struct _VOLUME_INFO {
     tstring VolumeName;
@@ -36,10 +36,14 @@ typedef struct _VOLUME_INFO {
     {
         for (auto& disk : PhyDisks)
         {
-            if (0 == StrCompare(diskname, disk))
+            if (true == StrCompare(diskname, disk))
                 return TRUE;
         }
         return FALSE;
+    }
+    BOOL IsVolumeMounted()
+    {
+        return (MountPointList.size()>0)? TRUE : FALSE;
     }
 }VOLUME_INFO, * PVOLUME_INFO;
 

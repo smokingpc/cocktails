@@ -12,7 +12,7 @@ int StrToWStr(OUT wstring& result, string& src)
 {
     result = _T("");
     wchar_t temp[BIG_BUFFER_SIZE] = { 0 };
-    int count = StrToWStr((wchar_t*)temp, BIG_BUFFER_SIZE, (char*)src.c_str(), src.size());
+    int count = StrToWStr((wchar_t*)temp, BIG_BUFFER_SIZE, (char*)src.c_str(), (int)src.size());
     if (count > 0)
         result = temp;
     return count;
@@ -22,7 +22,7 @@ int WStrToStr(OUT string& result, wstring& src)
 {
     result = "";
     char temp[BIG_BUFFER_SIZE] = { 0 };
-    int count = WStrToStr((char*)temp, BIG_BUFFER_SIZE, (wchar_t*)src.c_str(), src.size());
+    int count = WStrToStr((char*)temp, BIG_BUFFER_SIZE, (wchar_t*)src.c_str(), (int)src.size());
     if (count > 0)
         result = temp;
     return count;

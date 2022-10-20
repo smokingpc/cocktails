@@ -1,21 +1,21 @@
 #include "Common.h"
 
-static BOOL IsPhyDiskHasVolume(tstring phydisk, list<VOLUME_INFO>& vol_list)
+static BOOL IsPhyDiskMounted(tstring phydisk, list<VOLUME_INFO>& vol_list)
 {
     for (auto& volume : vol_list)
     {
-        if (volume.IsDiskHasThisVolume(phydisk))
+        if (volume.IsDiskHasThisVolume(phydisk) && volume.IsVolumeMounted())
             return TRUE;
     }
     return FALSE;
 }
-static BOOL QueryDevInterfaceByHwId(OUT tstring& devpath, IN tstring& hwid)
+static BOOL QueryDevInterfaceByInstanceId(OUT tstring& devpath, IN tstring& instance_id)
 {
     HDEVINFO infoset;
     tstring enum_str = _T("");
     DWORD flag = DIGCF_DEVICEINTERFACE | DIGCF_PRESENT;
     DEVPROPTYPE type = DEVPROP_TYPE_STRING;
-
+    BOOL found = FALSE;
     infoset = SetupDiGetClassDevs(&GUID_DEVINTERFACE_STORAGEPORT, NULL, NULL, flag);
 
     if (INVALID_HANDLE_VALUE != infoset && NULL != infoset)
@@ -37,16 +37,16 @@ static BOOL QueryDevInterfaceByHwId(OUT tstring& devpath, IN tstring& hwid)
             if (!SetupDiEnumDeviceInterfaces(infoset, &infodata, &GUID_DEVINTERFACE_STORAGEPORT, 0, &ifdata))
                 continue;
 
-            BOOL ok = SetupDiGetDeviceProperty(infoset, &infodata, &DEVPKEY_Device_HardwareIds,
+            BOOL ok = SetupDiGetDeviceProperty(infoset, &infodata, &DEVPKEY_Device_InstanceId,
                 &type, buffer, BIG_BUFFER_SIZE, NULL, 0);
 
             if (!ok)
                 continue;
             found_hwid = (wchar_t*)buffer;
 
-            std::transform(hwid.begin(), hwid.end(), hwid.begin(), tcsupper);
+            std::transform(instance_id.begin(), instance_id.end(), instance_id.begin(), tcsupper);
             std::transform(found_hwid.begin(), found_hwid.end(), found_hwid.begin(), tcsupper);
-            if (0 != hwid.compare(found_hwid))
+            if (0 != instance_id.compare(found_hwid))
                 continue;
 
             RtlZeroMemory(buffer, BIG_BUFFER_SIZE);
@@ -57,10 +57,13 @@ static BOOL QueryDevInterfaceByHwId(OUT tstring& devpath, IN tstring& hwid)
                 continue;
 
             devpath = ifdetail->DevicePath;
+            found = TRUE;
             break;
         }
         SetupDiDestroyDeviceInfoList(infoset);
     }
+
+    return found;
 }
 
 static BOOL QueryParentController(OUT PHYDISK_INFO& info, IN HDEVINFO infoset, IN PSP_DEVINFO_DATA infodata)
@@ -78,7 +81,7 @@ static BOOL QueryParentController(OUT PHYDISK_INFO& info, IN HDEVINFO infoset, I
 
     info.ParentHwID = (wchar_t*)buffer;
     tstring devpath;
-    if (QueryDevInterfaceByHwId(info.ParentDevPath, info.ParentHwID))
+    if (QueryDevInterfaceByInstanceId(info.ParentDevPath, info.ParentHwID))
         return TRUE;
 
     return FALSE;
@@ -95,25 +98,33 @@ BOOL EnumControllers(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_I
     if (INVALID_HANDLE_VALUE != infoset)
     {
         SP_DEVICE_INTERFACE_DATA ifdata = { 0 };
-        SP_DEVINFO_DATA infodata = { 0 };
         ifdata.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
         DWORD devid = 0;
-        while (TRUE == SetupDiEnumDeviceInterfaces(infoset, &infodata, &disk_class_guid, devid, &ifdata))
+        while (TRUE == SetupDiEnumDeviceInterfaces(infoset, NULL, &disk_class_guid, devid, &ifdata))
+        //while (TRUE == SetupDiEnumDeviceInfo(infoset, devid, &infodata))
         {
             DWORD need_size = 0;
             DWORD return_size = 0;
             BOOL ok = FALSE;
             PSP_DEVICE_INTERFACE_DETAIL_DATA ifdetail = NULL;
             devid++;
+
+            //if(!SetupDiEnumDeviceInterfaces(infoset, &infodata, &disk_class_guid, 0, &ifdata))
+            //    continue;
+
             SetupDiGetDeviceInterfaceDetail(infoset, &ifdata, NULL, 0, &need_size, NULL);
             need_size = need_size * 2;
             BYTE* buffer = new BYTE[need_size];
             unique_ptr<BYTE> bufptr(buffer);
             ZeroMemory(buffer, need_size);
-    
+
+            SP_DEVINFO_DATA infodata = { 0 };
+            infodata.cbSize = sizeof(SP_DEVINFO_DATA);
+
             ifdetail = (PSP_DEVICE_INTERFACE_DETAIL_DATA)buffer;
             ifdetail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
-            ok = SetupDiGetDeviceInterfaceDetail(infoset, &ifdata, ifdetail, need_size, &need_size, NULL);
+            //ok = SetupDiGetDeviceInterfaceDetail(infoset, &ifdata, ifdetail, need_size, &need_size, NULL);
+            ok = SetupDiGetDeviceInterfaceDetail(infoset, &ifdata, ifdetail, need_size, &need_size, &infodata);
             if (TRUE == ok)
             {
                 HANDLE device = CreateFile(ifdetail->DevicePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
@@ -145,7 +156,7 @@ BOOL EnumControllers(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_I
                         CONTROLLER_INFO ctrlinfo;
                         ctrlinfo.DevPath = diskinfo.ParentDevPath;
                         ctrlinfo.HwId = diskinfo.ParentHwID;
-                        if (IsPhyDiskHasVolume(diskinfo.PhyDisk, vol_list))
+                        if (IsPhyDiskMounted(diskinfo.PhyDisk, vol_list))
                         {
                             ctrlinfo.IsBusy = true;
                             busy_list.push_back(ctrlinfo);
@@ -168,7 +179,8 @@ BOOL EnumControllers(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_I
     }
     
     printf("EnumPhysicalDisk() Finished....\n");
-    
+    if(busy_list.size() == 0 && free_list.size() == 0)
+        return FALSE;
     return TRUE;
 }
 
