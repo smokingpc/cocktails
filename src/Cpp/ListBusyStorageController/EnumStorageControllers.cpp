@@ -4,7 +4,8 @@ static BOOL IsPhyDiskBusy(tstring phydisk, list<VOLUME_INFO>& vol_list)
 {
     for (auto& volume : vol_list)
     {
-        if (volume.IsDiskHasThisVolume(phydisk) && volume.IsVolumeMounted())
+        //If a controller has physical disk which contains a volume, this controller is busy.
+        if (volume.IsDiskHasThisVolume(phydisk))// && volume.IsVolumeMounted())
             return TRUE;
     }
     return FALSE;
@@ -156,6 +157,8 @@ BOOL EnumControllers(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_I
                         CONTROLLER_INFO ctrlinfo;
                         ctrlinfo.DevPath = diskinfo.ParentDevPath;
                         ctrlinfo.InstanceId = diskinfo.ParentInstanceID;
+                        
+                        //If a controller has physical disk which contains a volume, this controller is busy.
                         if (IsPhyDiskBusy(diskinfo.PhyDisk, vol_list))
                         {
                             ctrlinfo.IsBusy = true;

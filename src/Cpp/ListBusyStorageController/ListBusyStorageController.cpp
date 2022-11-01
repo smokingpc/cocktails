@@ -12,7 +12,7 @@ void PrintInfo(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_INFO>& 
     {
         _tprintf(_T("HwId=%s\n"), ctrl.InstanceId.c_str());
         _tprintf(_T("DevPath=%s\n"), ctrl.DevPath.c_str());
-        _tprintf(_T("Has mounted volumes? (%s)\n"), ctrl.IsBusy? _T("TRUE") : _T("FALSE"));
+        _tprintf(_T("Has volumes? (%s)\n"), ctrl.IsBusy? _T("TRUE") : _T("FALSE"));
 
         _tprintf(_T("\n"));
     }
