@@ -43,7 +43,9 @@ typedef struct _VOLUME_INFO {
     }
     BOOL IsVolumeMounted()
     {
-        return (MountPointList.size()>0)? TRUE : FALSE;
+        if (MountPointList.size() > 0 || PhyDisks.size() > 0)
+            return TRUE;
+        return FALSE;
     }
 
 #if 0

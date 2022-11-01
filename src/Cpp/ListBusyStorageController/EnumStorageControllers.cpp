@@ -1,6 +1,6 @@
 #include "Common.h"
 
-static BOOL IsPhyDiskMounted(tstring phydisk, list<VOLUME_INFO>& vol_list)
+static BOOL IsPhyDiskBusy(tstring phydisk, list<VOLUME_INFO>& vol_list)
 {
     for (auto& volume : vol_list)
     {
@@ -156,7 +156,7 @@ BOOL EnumControllers(OUT list<CONTROLLER_INFO>& busy_list, OUT list<CONTROLLER_I
                         CONTROLLER_INFO ctrlinfo;
                         ctrlinfo.DevPath = diskinfo.ParentDevPath;
                         ctrlinfo.InstanceId = diskinfo.ParentInstanceID;
-                        if (IsPhyDiskMounted(diskinfo.PhyDisk, vol_list))
+                        if (IsPhyDiskBusy(diskinfo.PhyDisk, vol_list))
                         {
                             ctrlinfo.IsBusy = true;
                             busy_list.push_back(ctrlinfo);

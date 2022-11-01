@@ -1,5 +1,6 @@
 #include "Common.h"
 
+#if 0
 const TCHAR* DriveLetters[] = {
     _T("A:"), _T("B:"), _T("C:"), _T("D:"), _T("E:"),
     _T("F:"), _T("G:"), _T("H:"), _T("I:"), _T("J:"),
@@ -16,8 +17,8 @@ static void QueryVolumeMountFolders(tstring volume, list<tstring>& result)
 {
     TCHAR buffer[BIG_BUFFER_SIZE] = { 0 };
     tstring temp = volume;
-    if (temp.back() != _T('\\'))
-        temp += _T('\\');
+    //if (temp.back() != _T('\\'))
+    //    temp += _T('\\');
 
     HANDLE find = FindFirstVolumeMountPoint(temp.c_str(), buffer, BIG_BUFFER_SIZE);
     BOOL find_ok = TRUE;
@@ -60,7 +61,6 @@ static void EnumDriveMountInfo(list< DRIVE_MOUNT_INFO> &result)
         }
     }
 }
-
 //query the Mounted Drive Name by specified volume name.
 //volume name example:"\\?\Volume{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}\"
 //drive name example: "\\?\C:\"
@@ -73,6 +73,29 @@ static void QueryDriveMountOfVolume(tstring volume, list<tstring> &result)
     {
         if(true == StrCompare(drive.VolumeName, volume))
             result.push_back(drive.DriveName);
+    }
+}
+#endif
+
+//get a multi-string mount point list of specified volume.
+//volume name example:  "\\?\Volume{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}\"
+static void EnumVolumeMountPoints(tstring& volume, list<tstring>& result)
+{
+    TCHAR buffer[BIG_BUFFER_SIZE] = { 0 };
+    DWORD ret_size = 0;
+    BOOL ok = GetVolumePathNamesForVolumeName(volume.c_str(), buffer, BIG_BUFFER_SIZE, &ret_size);
+
+    if (ok)
+    {
+        TCHAR* ptr = buffer;
+        int i = 0;
+
+        while (_tcslen(ptr) > 0)
+        {
+            result.push_back(ptr);
+            i++;
+            ptr = ptr + _tcslen(ptr) + 1;
+        }
     }
 }
 
@@ -139,8 +162,7 @@ size_t EnumVolumes(OUT list<VOLUME_INFO>& result)
             VOLUME_INFO info;
             //volume name example:  "\\?\Volume{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}\"
             info.VolumeName = buffer;
-            QueryDriveMountOfVolume(info.VolumeName, info.MountPointList);
-            QueryVolumeMountFolders(info.VolumeName, info.MountPointList);
+            EnumVolumeMountPoints(info.VolumeName, info.MountPointList);
             QueryDiskExtent(info.VolumeName, info.PhyDisks);
             result.push_back(info);
 
