@@ -1,9 +1,12 @@
 #pragma once
 
+#define _NTSCSI_USER_MODE_
+
 #include <tchar.h>
 #include <windows.h>
 #include <ntddscsi.h>
 #include <ntddstor.h>
+#include <scsi.h>
 
 #include <string>
 #include "TCG_OPAL_SSC.h"
