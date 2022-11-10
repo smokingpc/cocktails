@@ -144,6 +144,7 @@
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="TCG_OPAL_SSC.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

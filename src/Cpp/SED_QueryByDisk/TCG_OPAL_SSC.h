@@ -11,27 +11,29 @@ enum FEATURE_CODE : UINT16 {
     OPAL_V100 = 0x0200,
     SINGLE_USER = 0x0201,
     DATASTORE =  0x0202,
-    SSC_V2 = 0x0203,
+    OPAL_V200 = 0x0203,
 };
 
-
-
+#pragma pack(push)
+#pragma pack(1)
 //The Discovery 0 Header. defined in Opal SSC Documentation
 //WARN: ParamLength and Revision are BIG ENDIAN!!
 typedef struct _DISCOVERY0_HEADER {
-    UINT32 ParamLength;   /**< the lenght of the header 48 in 2.00.100*/
+    UINT32 ParamLength;   // total length of (DISCOVERY0_HEADER + following FEATURE_DESCRIPTORs)
     UINT32 Revision;      /**< revision of the header 1 in 2.00.100 */
     UINT64 Reserved;
     UINT64 VendorSpecific[4];
+
+    inline UINT32 GetParamLength(){return SwapEndian(ParamLength);}
+    inline UINT32 GetRevision() { return SwapEndian(Revision); }
+
 } DISCOVERY0_HEADER, *PDISCOVERY0_HEADER;
 
 typedef struct _FEATURE_DESC_HEADER{
-    UINT16 Code;        //note: this is Big Endian value.
+    UINT16 Code;            //note: this is Little Endian value.
     UINT8 NotUSed : 4;
     UINT8 Version : 4;      //shall be 0x01 in spec 2.0.1
     UINT8 Length;           //shall be 0x0C in spec 2.0.1
-
-    inline FEATURE_CODE GetFeatureCode(){ return (FEATURE_CODE)_byteswap_ushort(Code);}
 }FEATURE_DESC_HEADER, *PFEATURE_DESC_HEADER;
 
 typedef struct _FEATURE_DESC_TPer{
@@ -139,3 +141,5 @@ typedef struct _FEATURE_DESCRIPTOR
         FEATURE_DESC_DATASTORE          Datastore;
     }DUMMYSTRUCTNAME;
 }FEATURE_DESCRIPTOR, *PFEATURE_DESCRIPTOR;
+#pragma pack(pop)
+

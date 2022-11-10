@@ -9,11 +9,19 @@
 #include <scsi.h>
 
 #include <string>
+#include "Utils.h"
 #include "TCG_OPAL_SSC.h"
 
 #define BIG_BUFFER_SIZE         4096
 #define SMALL_BUFFER_SIZE       256
 #define TINY_BUFFER_SIZE        128
+
+typedef enum _ATACOMMAND {
+    IF_RECV = 0x5c,
+    IF_SEND = 0x5e,
+    IDENTIFY = 0xec,
+} ATACOMMAND;
+
 
 using namespace std;
 typedef basic_string<TCHAR> tstring;
