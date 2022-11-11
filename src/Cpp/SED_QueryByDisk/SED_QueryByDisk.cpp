@@ -118,16 +118,6 @@ void PrintDiscoveryResult(BYTE buffer[])
 
 int _tmain(int argc, TCHAR* argv[])
 {
-
-    //if(argc<2)
-    //{
-    //    Usage();
-    //    return -1;
-    //}
-
-    //tstring diskname = argv[1];
-    //ShowStructureSizes();
-
     list<tstring> disklist;
     EnumPhysicalDisks(disklist);
     for(auto &diskname : disklist)
