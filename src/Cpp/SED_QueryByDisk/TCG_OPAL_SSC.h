@@ -2,6 +2,13 @@
 
 #include <intrin.h>
 
+
+typedef enum _ATACOMMAND {
+    IF_RECV = 0x5c,
+    IF_SEND = 0x5e,
+    IDENTIFY = 0xec,
+} ATACOMMAND;
+
 enum FEATURE_CODE : UINT16 {
     UNKNOWN = 0,
     TPer = 0x0001,
@@ -143,3 +150,6 @@ typedef struct _FEATURE_DESCRIPTOR
 }FEATURE_DESCRIPTOR, *PFEATURE_DESCRIPTOR;
 #pragma pack(pop)
 
+void ShowStructureSizes();
+bool Discovery0_NVMe(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskname);
+bool Discovery0_SATA(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskname);

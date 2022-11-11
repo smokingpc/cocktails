@@ -18,6 +18,12 @@
     <ClCompile Include="SED_QueryByDisk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TCG_OPAL_SSC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Win32_StorageDisk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -27,6 +33,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Win32_StorageDisk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

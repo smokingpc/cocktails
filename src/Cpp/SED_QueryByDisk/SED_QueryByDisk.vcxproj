@@ -140,11 +140,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="SED_QueryByDisk.cpp" />
+    <ClCompile Include="TCG_OPAL_SSC.cpp" />
+    <ClCompile Include="Win32_StorageDisk.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="TCG_OPAL_SSC.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="Win32_StorageDisk.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
