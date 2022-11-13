@@ -49,6 +49,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StorageHBAGetFirmwareInfo",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SED_QueryByDisk", "SED_QueryByDisk\SED_QueryByDisk.vcxproj", "{FDD43999-BF55-4BE4-9526-DE4D613B2A4D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SED_DiscoveryByController", "SED_DiscoveryByController\SED_DiscoveryByController.vcxproj", "{C2F2F1F1-52BC-4F93-9427-62F48C5C7BDD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -241,6 +243,14 @@ Global
 		{FDD43999-BF55-4BE4-9526-DE4D613B2A4D}.Release|x64.Build.0 = Release|x64
 		{FDD43999-BF55-4BE4-9526-DE4D613B2A4D}.Release|x86.ActiveCfg = Release|Win32
 		{FDD43999-BF55-4BE4-9526-DE4D613B2A4D}.Release|x86.Build.0 = Release|Win32
+		{C2F2F1F1-52BC-4F93-9427-62F48C5C7BDD}.Debug|x64.ActiveCfg = Debug|x64
+		{C2F2F1F1-52BC-4F93-9427-62F48C5C7BDD}.Debug|x64.Build.0 = Debug|x64
+		{C2F2F1F1-52BC-4F93-9427-62F48C5C7BDD}.Debug|x86.ActiveCfg = Debug|Win32
+		{C2F2F1F1-52BC-4F93-9427-62F48C5C7BDD}.Debug|x86.Build.0 = Debug|Win32
+		{C2F2F1F1-52BC-4F93-9427-62F48C5C7BDD}.Release|x64.ActiveCfg = Release|x64
+		{C2F2F1F1-52BC-4F93-9427-62F48C5C7BDD}.Release|x64.Build.0 = Release|x64
+		{C2F2F1F1-52BC-4F93-9427-62F48C5C7BDD}.Release|x86.ActiveCfg = Release|Win32
+		{C2F2F1F1-52BC-4F93-9427-62F48C5C7BDD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
