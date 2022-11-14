@@ -3,13 +3,6 @@
 
 #include "Common.h"
 
-void Usage()
-{
-    _tprintf(_T("Usage: SED_QueryByDisk.exe <physical disk devpath>\n"));
-    _tprintf(_T("example: SED_QueryByDisk.exe \\\\.\\PhysicalDrive3\n"));
-    _tprintf(_T("\n"));
-}
-
 void PrintFeatureData(PFEATURE_DESC_TPer data)
 {
     _tprintf(_T("[TPer]\n"));

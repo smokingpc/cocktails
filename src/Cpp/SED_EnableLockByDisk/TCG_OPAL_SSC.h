@@ -2,6 +2,7 @@
 
 #include <intrin.h>
 
+#define OPAL_BUFFER_SIZE    61440       //why 61440??
 
 typedef enum _ATACOMMAND {
     IF_RECV = 0x5c,
@@ -153,3 +154,4 @@ typedef struct _FEATURE_DESCRIPTOR
 void ShowStructureSizes();
 bool Discovery0_NVMe(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskname);
 bool Discovery0_SATA(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskname);
+bool EnableGlobalLockingRange_NVMe(IN tstring& diskname, IN string& adm1_pwd);

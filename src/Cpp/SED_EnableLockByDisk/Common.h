@@ -18,13 +18,13 @@ typedef basic_string<TCHAR> tstring;
 
 #include "Utils.h"
 #include "TCG_OPAL_SSC.h"
-#include "Win32_EnumStorageControllers.h"
+#include "Win32_StorageDisk.h"
 
 #define BIG_BUFFER_SIZE         4096
 #define SMALL_BUFFER_SIZE       256
 #define TINY_BUFFER_SIZE        128
 
 //physical drive name example:  "\\.\PhysicalDrive2"
-//#define PHYSICAL_DISK_FORMAT    L"\\\\.\\PhysicalDrive%d"
+#define PHYSICAL_DISK_FORMAT    L"\\\\.\\PhysicalDrive%d"
 
 

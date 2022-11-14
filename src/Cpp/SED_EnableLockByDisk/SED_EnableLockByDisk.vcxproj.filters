@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SED_DiscoveryByController.cpp">
+    <ClCompile Include="SED_EnableLockByDisk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TCG_OPAL_SSC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Win32_EnumStorageControllers.cpp">
+    <ClCompile Include="Win32_StorageDisk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,7 +32,10 @@
     <ClInclude Include="TCG_OPAL_SSC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Win32_EnumStorageControllers.h">
+    <ClInclude Include="Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Win32_StorageDisk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
