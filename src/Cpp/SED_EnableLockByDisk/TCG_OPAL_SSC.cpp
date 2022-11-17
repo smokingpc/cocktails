@@ -260,13 +260,13 @@ void ShowStructureSizes()
     _tprintf(_T("sizeof(FEATURE_DESC_DATASTORE) = %lld\n"), sizeof(FEATURE_DESC_DATASTORE));
 }
 
-//Discovery0 is TCG defined "device discovery layer0" behavior.
-bool Discovery0_NVMe(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskname)
+//NVMe and SATA using different commands to communicate with devices.
+bool SendNVMeSedCommand(IN tstring diskname, IN BYTE *cmd, IN DWORD cmd_size)//, IN OUT BYTE* result, OUT DWORD *ret_size)
 {
-    UCHAR protocol = 1;
-    USHORT comid = 1;
-    bool ok = false;
+    //NVMe SED command should send to disk by SCSI_PASSTHRU command.
+    //so diskname is PhysicalDrive name. e.g. "\\.\PhysicalDrive4"
     DWORD ret_size = 0;
+
     HANDLE device = CreateFile(diskname.c_str(),
         GENERIC_WRITE | GENERIC_READ,
         FILE_SHARE_WRITE | FILE_SHARE_READ,
@@ -281,35 +281,7 @@ bool Discovery0_NVMe(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskna
         return false;
     }
 
-    PSCSI_PASS_THROUGH_DIRECT cmd = (PSCSI_PASS_THROUGH_DIRECT) new BYTE[SMALL_BUFFER_SIZE];
-    RtlZeroMemory(cmd, SMALL_BUFFER_SIZE);
-    cmd->Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
-    cmd->PathId = 0;
-    cmd->TargetId = 1;
-    cmd->Lun = 0;
-    cmd->SenseInfoLength = 32;
-    cmd->DataTransferLength = buf_size;
-    cmd->TimeOutValue = 5;      //in seconds
-    cmd->DataBuffer = buffer;
-    cmd->SenseInfoOffset = (cmd->Length + (sizeof(DWORD) - 1) / sizeof(DWORD)) * sizeof(DWORD);   //align to DWORD
-
-    PCDB cdb = (PCDB)cmd->Cdb;
-    cdb->SECURITY_PROTOCOL_IN.OperationCode = SCSIOP_SECURITY_PROTOCOL_IN;
-    cdb->SECURITY_PROTOCOL_IN.SecurityProtocol = protocol;
-
-    //SecurityProtocolSpecific and AllocationLength field are BIG-ENDIAN
-    SwapEndian(&comid, (USHORT*)cdb->SECURITY_PROTOCOL_IN.SecurityProtocolSpecific);
-    SwapEndian(&buf_size, (ULONG*)cdb->SECURITY_PROTOCOL_IN.AllocationLength);
-    //cdb->SECURITY_PROTOCOL_IN.SecurityProtocolSpecific[0] = (comid&0xFF00)>>8;
-    //cdb->SECURITY_PROTOCOL_IN.SecurityProtocolSpecific[1] = (comid & 0x00FF);
-    //cdb->SECURITY_PROTOCOL_IN.AllocationLength[0] = (UCHAR)((buf_size & 0xFF000000) >> 24);
-    //cdb->SECURITY_PROTOCOL_IN.AllocationLength[1] = (UCHAR)((buf_size & 0x00FF0000) >> 16);
-    //cdb->SECURITY_PROTOCOL_IN.AllocationLength[2] = (UCHAR)((buf_size & 0x0000FF00) >> 8);
-    //cdb->SECURITY_PROTOCOL_IN.AllocationLength[3] = (UCHAR)((buf_size & 0x000000FF));
-    cmd->CdbLength = sizeof(cdb->SECURITY_PROTOCOL_IN);
-    cmd->DataIn = SCSI_IOCTL_DATA_IN;
-
-    ok = DeviceIoControl(device,
+    bool ok = DeviceIoControl(device,
         IOCTL_SCSI_PASS_THROUGH_DIRECT,
         cmd,
         SMALL_BUFFER_SIZE,
@@ -324,8 +296,64 @@ bool Discovery0_NVMe(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskna
 
     if (INVALID_HANDLE_VALUE != device && NULL != device)
         CloseHandle(device);
+
     return ok;
 }
+
+//Discovery0 is TCG defined "device discovery layer0" behavior.
+bool Discovery0_NVMe(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskname)
+{
+    UCHAR protocol = 1;
+    USHORT comid = 1;
+    bool ok = false;
+    //DWORD ret_size = 0;
+    //HANDLE device = CreateFile(diskname.c_str(),
+    //    GENERIC_WRITE | GENERIC_READ,
+    //    FILE_SHARE_WRITE | FILE_SHARE_READ,
+    //    NULL,
+    //    OPEN_EXISTING,
+    //    0,
+    //    NULL);
+
+    //if (INVALID_HANDLE_VALUE == device)
+    //{
+    //    _tprintf(_T("Open %s failed, error = %d\n"), diskname.c_str(), GetLastError());
+    //    return false;
+    //}
+    DWORD cmd_size = SMALL_BUFFER_SIZE;
+    PSCSI_PASS_THROUGH_DIRECT cmd = (PSCSI_PASS_THROUGH_DIRECT) new BYTE[cmd_size];
+    RtlZeroMemory(cmd, cmd_size);
+    cmd->Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
+    cmd->PathId = 0;
+    cmd->TargetId = 1;
+    cmd->Lun = 0;
+    cmd->SenseInfoLength = 32;
+    cmd->DataTransferLength = buf_size;
+    cmd->TimeOutValue = 5;      //in seconds
+    cmd->DataBuffer = buffer;
+
+    //sense info should be placed at address which is DWORD aligned.
+    cmd->SenseInfoOffset = (cmd->Length + (sizeof(DWORD) - 1) / sizeof(DWORD)) * sizeof(DWORD);   //align to DWORD
+
+    PCDB cdb = (PCDB)cmd->Cdb;
+    cdb->SECURITY_PROTOCOL_IN.OperationCode = SCSIOP_SECURITY_PROTOCOL_IN;
+    cdb->SECURITY_PROTOCOL_IN.SecurityProtocol = protocol;
+    //SecurityProtocolSpecific and AllocationLength field are BIG-ENDIAN
+    SwapEndian(&comid, (USHORT*)cdb->SECURITY_PROTOCOL_IN.SecurityProtocolSpecific);
+    SwapEndian(&buf_size, (ULONG*)cdb->SECURITY_PROTOCOL_IN.AllocationLength);
+    //cdb->SECURITY_PROTOCOL_IN.SecurityProtocolSpecific[0] = (comid&0xFF00)>>8;
+    //cdb->SECURITY_PROTOCOL_IN.SecurityProtocolSpecific[1] = (comid & 0x00FF);
+    //cdb->SECURITY_PROTOCOL_IN.AllocationLength[0] = (UCHAR)((buf_size & 0xFF000000) >> 24);
+    //cdb->SECURITY_PROTOCOL_IN.AllocationLength[1] = (UCHAR)((buf_size & 0x00FF0000) >> 16);
+    //cdb->SECURITY_PROTOCOL_IN.AllocationLength[2] = (UCHAR)((buf_size & 0x0000FF00) >> 8);
+    //cdb->SECURITY_PROTOCOL_IN.AllocationLength[3] = (UCHAR)((buf_size & 0x000000FF));
+    cmd->CdbLength = sizeof(cdb->SECURITY_PROTOCOL_IN);
+    cmd->DataIn = SCSI_IOCTL_DATA_IN;
+
+    return SendNVMeSedCommand(diskname, (BYTE*)cmd, cmd_size);
+}
+
+#if 0
 bool Discovery0_SATA(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskname)
 {
     //UCHAR protocol = 1;
@@ -381,40 +409,40 @@ bool Discovery0_SATA(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskna
         CloseHandle(device);
     return ok;
 }
+#endif
 
-
-bool StartOpalSession(IN tstring& diskname, IN string& adm1_pwd)
+bool StartOpalSession(IN tstring& diskname, IN string& adm1_pwd, UINT16 basecom_id)
 {
 //    (OPAL_UID::OPAL_LOCKINGSP_UID, adm1_pwd.c_str(), OPAL_UID::OPAL_ADMIN1_UID)
     BYTE *cmdbuf = new BYTE[OPAL_BUFFER_SIZE];
     BYTE* respbuf = new BYTE[OPAL_BUFFER_SIZE];
-    int cmd_cursor = sizeof(OPALHeader);
+    UINT32 cmd_len = sizeof(OPALHeader);
     RtlZeroMemory(cmdbuf, OPAL_BUFFER_SIZE);
     RtlZeroMemory(respbuf, OPAL_BUFFER_SIZE);
     
     //fill start session command bytes
-    cmdbuf[cmd_cursor++] = OPAL_TOKEN::CALL;
-    cmdbuf[cmd_cursor++] = OPAL_UID::OPAL_LOCKINGSP_UID;
-    cmdbuf[cmd_cursor++] = OPAL_SHORT_ATOM::BYTESTRING8;
-    RtlCopyMemory((cmdbuf+cmd_cursor), OPALMETHOD[OPAL_METHOD::STARTSESSION], 8);
-    cmd_cursor+=8;
+    cmdbuf[cmd_len++] = OPAL_TOKEN::CALL;
+    cmdbuf[cmd_len++] = OPAL_UID::OPAL_LOCKINGSP_UID;
+    cmdbuf[cmd_len++] = OPAL_SHORT_ATOM::BYTESTRING8;
+    RtlCopyMemory((cmdbuf+cmd_len), OPALMETHOD[OPAL_METHOD::STARTSESSION], 8);
+    cmd_len+=8;
 
-    cmdbuf[cmd_cursor++] = OPAL_TOKEN::STARTLIST;
-    cmdbuf[cmd_cursor++] = 105;
-    cmdbuf[cmd_cursor++] = OPAL_UID::OPAL_LOCKINGSP_UID;
-    cmdbuf[cmd_cursor++] = OPAL_TINY_ATOM::UINT_01; // "write" cmd
-    cmdbuf[cmd_cursor++] = OPAL_TOKEN::STARTNAME;
-    cmdbuf[cmd_cursor++] = OPAL_TINY_ATOM::UINT_00;
+    cmdbuf[cmd_len++] = OPAL_TOKEN::STARTLIST;
+    cmdbuf[cmd_len++] = 105;
+    cmdbuf[cmd_len++] = OPAL_UID::OPAL_LOCKINGSP_UID;
+    cmdbuf[cmd_len++] = OPAL_TINY_ATOM::UINT_01; // "write" cmd
+    cmdbuf[cmd_len++] = OPAL_TOKEN::STARTNAME;
+    cmdbuf[cmd_len++] = OPAL_TINY_ATOM::UINT_00;
 
     //todo: hash pwd
 
-    cmdbuf[cmd_cursor++] = OPAL_TOKEN::ENDNAME;
-    cmdbuf[cmd_cursor++] = OPAL_TOKEN::STARTNAME;
-    cmdbuf[cmd_cursor++] = OPAL_TINY_ATOM::UINT_03;
+    cmdbuf[cmd_len++] = OPAL_TOKEN::ENDNAME;
+    cmdbuf[cmd_len++] = OPAL_TOKEN::STARTNAME;
+    cmdbuf[cmd_len++] = OPAL_TINY_ATOM::UINT_03;
 
-    RtlCopyMemory((cmdbuf + cmd_cursor), OPALUID[OPAL_UID::OPAL_ADMIN1_UID], 8);
-    cmd_cursor += 8;
-    cmdbuf[cmd_cursor++] = OPAL_TOKEN::ENDNAME;
+    RtlCopyMemory((cmdbuf + cmd_len), OPALUID[OPAL_UID::OPAL_ADMIN1_UID], 8);
+    cmd_len += 8;
+    cmdbuf[cmd_len++] = OPAL_TOKEN::ENDNAME;
 
     //if (d->isEprise()) {
     //    cmd->addToken(OPAL_TOKEN::STARTNAME);
@@ -423,8 +451,26 @@ bool StartOpalSession(IN tstring& diskname, IN string& adm1_pwd)
     //    cmd->addToken(OPAL_TOKEN::ENDNAME);
     //}
 
-    cmdbuf[cmd_cursor++] = OPAL_TOKEN::ENDLIST;
-    //send command
+    cmdbuf[cmd_len++] = OPAL_TOKEN::ENDLIST;
+    cmdbuf[cmd_len++] = OPAL_TOKEN::ENDOFDATA;
+    cmdbuf[cmd_len++] = OPAL_TOKEN::STARTLIST;
+    cmdbuf[cmd_len++] = 0x00;
+    cmdbuf[cmd_len++] = 0x00;
+    cmdbuf[cmd_len++] = 0x00;
+    cmdbuf[cmd_len++] = OPAL_TOKEN::ENDLIST;    //send command
+
+    OPALHeader* header = (OPALHeader*)cmdbuf;
+    header->subpkt.length = SwapEndian((UINT32)(cmd_len - sizeof(OPALHeader)));
+
+    //add padding to make buffer align to DWORD
+    while (cmd_len % 4 != 0) {
+        cmdbuf[cmd_len++] = 0x00;
+    }
+
+    header->pkt.length = SwapEndian((UINT32)(cmd_len-sizeof(OPALComPacket) - sizeof(OPALPacket)));
+    header->cp.length = SwapEndian((UINT32)(cmd_len - sizeof(OPALComPacket)));
+    SwapEndian(&basecom_id, (UINT16*)header->cp.extendedComID);
+
 
     delete[] cmdbuf;
     delete[] respbuf;
@@ -476,5 +522,8 @@ bool EnableGlobalLockingRange_NVMe(IN tstring& diskname, IN string &adm1_pwd)
         return false;
     }
     //send command
+
+
     //END session
+    EndOpalSession();
 }
