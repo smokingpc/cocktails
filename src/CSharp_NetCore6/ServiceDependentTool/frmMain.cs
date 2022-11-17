@@ -14,17 +14,31 @@ public partial class frmMain : Form
         InitializeComponent();
     }
 
-    private void frmMain_Load(object sender, EventArgs e)
+    private void ReloadPrimaryServiceList()
     {
         //I only want to show fields which I designed on UI.
         //Don't auto create new column for me....
         dataGridView1.AutoGenerateColumns = false;
-
         List<ServiceController> result = new List<ServiceController>();
         result.AddRange(ServiceController.GetServices());
-
         BindingList<ServiceController> binding = new BindingList<ServiceController>(result);
         dataGridView1.DataSource = binding;
+    }
+    private void ReloadChildServiceList()
+    {
+        //I only want to show fields which I designed on UI.
+        //Don't auto create new column for me....
+        dataGridView2.AutoGenerateColumns = false;
+        List<ServiceController> result = new List<ServiceController>();
+        result.AddRange(ServiceController.GetServices());
+        BindingList<ServiceController> binding = new BindingList<ServiceController>(result);
+        dataGridView2.DataSource = binding;
+    }
+
+    private void frmMain_Load(object sender, EventArgs e)
+    {
+        ReloadPrimaryServiceList();
+        ReloadChildServiceList();
     }
 
     private void dataGridView1_SelectionChanged(object sender, EventArgs e)
