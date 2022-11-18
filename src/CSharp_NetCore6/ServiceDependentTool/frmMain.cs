@@ -20,7 +20,7 @@ public partial class frmMain : Form
         //Don't auto create new column for me....
         dataGridView1.AutoGenerateColumns = false;
         List<ServiceController> result = new List<ServiceController>();
-        result.AddRange(ServiceController.GetServices());
+        result.AddRange(ServiceController.GetServices().OrderBy(o => o.DisplayName));
         BindingList<ServiceController> binding = new BindingList<ServiceController>(result);
         dataGridView1.DataSource = binding;
     }
@@ -30,7 +30,7 @@ public partial class frmMain : Form
         //Don't auto create new column for me....
         dataGridView2.AutoGenerateColumns = false;
         List<ServiceController> result = new List<ServiceController>();
-        result.AddRange(ServiceController.GetServices());
+        result.AddRange(ServiceController.GetServices().OrderBy(o => o.DisplayName));
         BindingList<ServiceController> binding = new BindingList<ServiceController>(result);
         dataGridView2.DataSource = binding;
     }
@@ -59,9 +59,9 @@ public partial class frmMain : Form
     private void dataGridView2_SelectionChanged(object sender, EventArgs e)
     {
         ChildSvcList.Clear();
-        foreach (DataGridViewRow row in dataGridView1.Rows)
+        foreach (DataGridViewRow row in dataGridView2.Rows)
         {
-            if (dataGridView1.SelectedRows.Count > 0 && dataGridView1.SelectedRows[0] == row)
+            if (dataGridView2.SelectedRows.Count > 0 && dataGridView2.SelectedRows[0] == row)
             {
                 row.Cells[0].Value = true;
                 ChildSvcList.Add((ServiceController)row.DataBoundItem);
@@ -82,6 +82,7 @@ public partial class frmMain : Form
                 Process shell = new Process();
                 shell.StartInfo.FileName = "cmd.exe";
                 shell.StartInfo.RedirectStandardOutput = true;
+                shell.StartInfo.Arguments = $" /c {cmd}";
                 shell.StartInfo.CreateNoWindow = true;
                 shell.StartInfo.UseShellExecute = false;
                 shell.Start();
