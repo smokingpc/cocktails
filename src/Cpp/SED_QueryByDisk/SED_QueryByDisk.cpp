@@ -24,8 +24,9 @@ void PrintFeatureData(PFEATURE_DESC_LOCKING data)
 void PrintFeatureData(PFEATURE_DESC_GEOMETRY data) 
 {
     _tprintf(_T("[Geometry]\n"));
-    _tprintf(_T("LogicalBlockSize(%d), AlignmentGranularity(%lld), LowestAlignedLBA(%lld)\n"),
-                data->GetLogicalBlockSize(), data->GetAlignmentGranularity(), data->GetLowestAlignedLBA());
+    _tprintf(_T("Algined(%d), LogicalBlockSize(%d), AlignmentGranularity(%lld), LowestAlignedLBA(%lld)\n"),
+                data->Aligned, data->GetLogicalBlockSize(), 
+                data->GetAlignmentGranularity(), data->GetLowestAlignedLBA());
     _tprintf(_T("\n"));
 }
 void PrintFeatureData(PFEATURE_DESC_ENTERPRISE_SSC data)

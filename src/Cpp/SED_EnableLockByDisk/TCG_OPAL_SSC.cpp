@@ -330,10 +330,6 @@ bool SendNVMeSedCommand(IN tstring& diskname, IN UINT16 basecom_id, IN BYTE *pay
     SwapEndian(&basecom_id, (USHORT*)cdb->SECURITY_PROTOCOL_IN.SecurityProtocolSpecific);
     SwapEndian(&payload_size, (ULONG*)cdb->SECURITY_PROTOCOL_IN.AllocationLength);
 
-    //cmd->ScsiCmd.Cdb[0] = 0xb5;
-    //cmd->ScsiCmd.Cdb[1] = 1;
-    //SwapEndian(&basecom_id, (UINT16*)&cmd->ScsiCmd.Cdb[2]);
-    //SwapEndian(&payload_size, (DWORD*)&cmd->ScsiCmd.Cdb[6]);
     cmd->ScsiCmd.CdbLength = 12;
     cmd->ScsiCmd.DataIn = SCSI_IOCTL_DATA_OUT;
 
