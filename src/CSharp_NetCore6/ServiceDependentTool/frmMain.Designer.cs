@@ -53,7 +53,7 @@ partial class frmMain
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 9);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(291, 24);
+            this.label1.Size = new System.Drawing.Size(457, 39);
             this.label1.TabIndex = 1;
             this.label1.Text = "Please select your primary service";
             // 
@@ -61,9 +61,9 @@ partial class frmMain
             // 
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 345);
+            this.label2.Location = new System.Drawing.Point(12, 64);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(568, 24);
+            this.label2.Size = new System.Drawing.Size(891, 39);
             this.label2.TabIndex = 1;
             this.label2.Text = "Please select service(s) which you want depend on primary service.";
             // 
@@ -79,14 +79,14 @@ partial class frmMain
             this.Column3,
             this.Column4,
             this.Column5});
-            this.dataGridView1.Location = new System.Drawing.Point(12, 36);
+            this.dataGridView1.Location = new System.Drawing.Point(12, 51);
             this.dataGridView1.MultiSelect = false;
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowHeadersVisible = false;
             this.dataGridView1.RowHeadersWidth = 51;
             this.dataGridView1.RowTemplate.Height = 29;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(960, 290);
+            this.dataGridView1.Size = new System.Drawing.Size(1000, 290);
             this.dataGridView1.TabIndex = 2;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.dataGridView1_SelectionChanged);
             // 
@@ -147,13 +147,13 @@ partial class frmMain
             this.dataGridViewTextBoxColumn2,
             this.dataGridViewTextBoxColumn3,
             this.dataGridViewTextBoxColumn4});
-            this.dataGridView2.Location = new System.Drawing.Point(12, 372);
+            this.dataGridView2.Location = new System.Drawing.Point(12, 386);
             this.dataGridView2.Name = "dataGridView2";
             this.dataGridView2.RowHeadersVisible = false;
             this.dataGridView2.RowHeadersWidth = 51;
             this.dataGridView2.RowTemplate.Height = 29;
             this.dataGridView2.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView2.Size = new System.Drawing.Size(960, 290);
+            this.dataGridView2.Size = new System.Drawing.Size(1000, 290);
             this.dataGridView2.TabIndex = 3;
             this.dataGridView2.SelectionChanged += new System.EventHandler(this.dataGridView2_SelectionChanged);
             // 
@@ -204,9 +204,9 @@ partial class frmMain
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(799, 668);
+            this.button1.Location = new System.Drawing.Point(726, 682);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(173, 41);
+            this.button1.Size = new System.Drawing.Size(246, 41);
             this.button1.TabIndex = 4;
             this.button1.Text = "SET Dependency";
             this.button1.UseVisualStyleBackColor = true;
@@ -214,18 +214,18 @@ partial class frmMain
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(982, 36);
+            this.textBox1.Location = new System.Drawing.Point(1018, 12);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(354, 673);
+            this.textBox1.Size = new System.Drawing.Size(354, 711);
             this.textBox1.TabIndex = 5;
             // 
             // frmMain
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 24F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(16F, 39F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1348, 721);
+            this.ClientSize = new System.Drawing.Size(1384, 739);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.dataGridView2);
