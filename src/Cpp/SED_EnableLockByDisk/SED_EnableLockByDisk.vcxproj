@@ -88,6 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -102,6 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -116,6 +118,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,6 +134,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,12 +144,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="pbkdf2\blockwise.c" />
+    <ClCompile Include="pbkdf2\chash.c" />
+    <ClCompile Include="pbkdf2\hmac.c" />
+    <ClCompile Include="pbkdf2\pbkdf2.c" />
+    <ClCompile Include="pbkdf2\sha1.c" />
+    <ClCompile Include="RFC2898-PBKDF2-HMAC.cpp" />
     <ClCompile Include="SED_EnableLockByDisk.cpp" />
     <ClCompile Include="TCG_OPAL_SSC.cpp" />
     <ClCompile Include="Win32_StorageDisk.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
+    <ClInclude Include="pbkdf2\bitops.h" />
+    <ClInclude Include="pbkdf2\blockwise.h" />
+    <ClInclude Include="pbkdf2\chash.h" />
+    <ClInclude Include="pbkdf2\handy.h" />
+    <ClInclude Include="pbkdf2\hmac.h" />
+    <ClInclude Include="pbkdf2\pbkdf2.h" />
+    <ClInclude Include="pbkdf2\sha1.h" />
+    <ClInclude Include="pbkdf2\tassert.h" />
+    <ClInclude Include="RFC2898-PBKDF2-HMAC.h" />
     <ClInclude Include="TCG_OPAL_SSC.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Win32_StorageDisk.h" />

@@ -12,11 +12,21 @@
 #include <stdio.h>
 #include <string>
 #include <list>
+#include <vector>
 
 using namespace std;
 typedef basic_string<TCHAR> tstring;
+#include "pbkdf2\bitops.h"
+#include "pbkdf2\blockwise.h"
+#include "pbkdf2\chash.h"
+#include "pbkdf2\handy.h"
+#include "pbkdf2\hmac.h"
+#include "pbkdf2\pbkdf2.h"
+#include "pbkdf2\sha1.h"
+#include "pbkdf2\tassert.h"
 
 #include "Utils.h"
+#include "RFC2898-PBKDF2-HMAC.h"
 #include "TCG_OPAL_SSC.h"
 #include "Win32_StorageDisk.h"
 

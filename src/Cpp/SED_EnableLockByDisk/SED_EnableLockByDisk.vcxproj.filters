@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="pbkdf2">
+      <UniqueIdentifier>{793918db-51e4-45e5-a92d-faa6e7fd8ecc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SED_EnableLockByDisk.cpp">
@@ -23,6 +26,24 @@
     </ClCompile>
     <ClCompile Include="Win32_StorageDisk.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RFC2898-PBKDF2-HMAC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pbkdf2\blockwise.c">
+      <Filter>pbkdf2</Filter>
+    </ClCompile>
+    <ClCompile Include="pbkdf2\chash.c">
+      <Filter>pbkdf2</Filter>
+    </ClCompile>
+    <ClCompile Include="pbkdf2\hmac.c">
+      <Filter>pbkdf2</Filter>
+    </ClCompile>
+    <ClCompile Include="pbkdf2\pbkdf2.c">
+      <Filter>pbkdf2</Filter>
+    </ClCompile>
+    <ClCompile Include="pbkdf2\sha1.c">
+      <Filter>pbkdf2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -37,6 +58,33 @@
     </ClInclude>
     <ClInclude Include="Win32_StorageDisk.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RFC2898-PBKDF2-HMAC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2\bitops.h">
+      <Filter>pbkdf2</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2\blockwise.h">
+      <Filter>pbkdf2</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2\chash.h">
+      <Filter>pbkdf2</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2\handy.h">
+      <Filter>pbkdf2</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2\hmac.h">
+      <Filter>pbkdf2</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2\pbkdf2.h">
+      <Filter>pbkdf2</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2\sha1.h">
+      <Filter>pbkdf2</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2\tassert.h">
+      <Filter>pbkdf2</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

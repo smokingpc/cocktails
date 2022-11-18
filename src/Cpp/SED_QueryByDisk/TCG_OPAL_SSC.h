@@ -41,6 +41,7 @@ typedef struct _FEATURE_DESC_HEADER{
     UINT8 NotUSed : 4;
     UINT8 Version : 4;      //shall be 0x01 in spec 2.0.1
     UINT8 Length;           //shall be 0x0C in spec 2.0.1
+    inline UINT16 GetCode() { return SwapEndian(Code); }
 }FEATURE_DESC_HEADER, *PFEATURE_DESC_HEADER;
 
 typedef struct _FEATURE_DESC_TPer{
@@ -71,6 +72,10 @@ typedef struct _FEATURE_DESC_GEOMETRY{
     UINT32 LogicalBlockSize;
     UINT64 AlignmentGranularity;
     UINT64 LowestAlignedLBA;
+
+    inline UINT32 GetLogicalBlockSize(){return SwapEndian(LogicalBlockSize);}
+    inline UINT64 GetAlignmentGranularity() { return SwapEndian(AlignmentGranularity); }
+    inline UINT64 GetLowestAlignedLBA() { return SwapEndian(LowestAlignedLBA); }
 }FEATURE_DESC_GEOMETRY, *PFEATURE_DESC_GEOMETRY;
 
 
@@ -88,11 +93,16 @@ typedef struct _FEATURE_DESC_ENTERPRISE_SSC {
     UINT16 Reserved3;
     UINT32 Reserved4;
     UINT32 Reserved5;
+
+    inline UINT16 GetBaseComID() { return SwapEndian(BaseComID); }
+    inline UINT16 GetNumberComIDs() { return SwapEndian(NumberComIDs); }
 } FEATURE_DESC_ENTERPRISE_SSC, *PFEATURE_DESC_ENTERPRISE_SSC;
 
 typedef struct _FEATURE_DESC_OPAL_V100 {
     UINT16 BaseComID;
     UINT16 NumberComIDs;
+    inline UINT16 GetBaseComID() { return SwapEndian(BaseComID); }
+    inline UINT16 GetNumberComIDs() { return SwapEndian(NumberComIDs); }
 } FEATURE_DESC_OPAL_V100, *PFEATURE_DESC_OPAL_V100;
 
 typedef struct _FEATURE_DESC_OPAL_V200 {
@@ -107,6 +117,10 @@ typedef struct _FEATURE_DESC_OPAL_V200 {
     UINT8 RevertedPIN;
     UINT8 Reserved2;
     UINT32 Reserved3;
+    inline UINT16 GetBaseComID() { return SwapEndian(BaseComID); }
+    inline UINT16 GetNumberComIDs() { return SwapEndian(NumberComIDs); }
+    inline UINT16 GetNumlockingAdminAuth() { return SwapEndian(NumlockingAdminAuth); }
+    inline UINT16 GetNumlockingUserAuth() { return SwapEndian(NumlockingUserAuth); }
 } FEATURE_DESC_OPAL_V200, *PFEATURE_DESC_OPAL_V200;
 
 typedef struct _FEATURE_DESC_SINGLE_USER_MODE{
@@ -125,6 +139,7 @@ typedef struct _FEATURE_DESC_SINGLE_USER_MODE{
     UINT8 Reserved2;
     UINT16 Reserved3;
     UINT32 Reserved4;
+    inline UINT32 GetNumberLockingObjects() { return SwapEndian(NumberLockingObjects); }
 } FEATURE_DESC_SINGLE_USER_MODE, *PFEATURE_DESC_SINGLE_USER_MODE;
 
 typedef struct _FEATURE_DATASTORE {
@@ -132,6 +147,9 @@ typedef struct _FEATURE_DATASTORE {
     UINT16 MaxTables;
     UINT32 MaxSizeTables;
     UINT32 TableSizeAlignment;
+    inline UINT16 GetMaxTables() { return SwapEndian(MaxTables); }
+    inline UINT32 GetMaxSizeTables() { return SwapEndian(MaxSizeTables); }
+    inline UINT32 GetTableSizeAlignment() { return SwapEndian(TableSizeAlignment); }
 } FEATURE_DESC_DATASTORE, *PFEATURE_DESC_DATASTORE;
 
 typedef struct _FEATURE_DESCRIPTOR
@@ -150,6 +168,36 @@ typedef struct _FEATURE_DESCRIPTOR
 }FEATURE_DESCRIPTOR, *PFEATURE_DESCRIPTOR;
 #pragma pack(pop)
 
+typedef struct _ATA_IDENTIFY_RESP {
+    uint8_t Reserved0[20];
+    uint8_t SN[20];
+    uint8_t Reserved1[6];
+    uint8_t FirmwareRev[8];
+    uint8_t Model[40];
+} ATA_IDENTIFY_RESP, *PATA_IDENTIFY_RESP;
+
+
+typedef struct _OPAL_DISKINFO
+{
+    FEATURE_DESC_TPer               TPer;
+    FEATURE_DESC_LOCKING            Locking;
+    FEATURE_DESC_GEOMETRY           Geometry;
+    FEATURE_DESC_ENTERPRISE_SSC     Enterprise;
+    FEATURE_DESC_SINGLE_USER_MODE   SingleUserMode;
+    FEATURE_DESC_OPAL_V100          OpalV100;
+    FEATURE_DESC_OPAL_V200          OpalV200;
+    FEATURE_DESC_DATASTORE          Datastore;
+
+    char    SN[20] = {0};
+    char    NullTerm1 = '\0';
+    char    *FirmwareRev[8] = {0};
+    char    NullTerm2 = '\0';
+    char    Model[40] = {0};
+    char    NullTerm3 = '\0';
+}OPAL_DISKINFO, *POPAL_DISKINFO;
+
 void ShowStructureSizes();
-bool Discovery0_NVMe(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskname);
-bool Discovery0_SATA(IN OUT BYTE buffer[], IN ULONG buf_size, IN tstring& diskname);
+bool Discovery0_NVMe(IN OUT OPAL_DISKINFO& info, IN tstring& diskname);
+bool Discovery0_SATA(IN OUT OPAL_DISKINFO& info, IN tstring& diskname);
+bool Identify_NVMe(IN OUT OPAL_DISKINFO& info, IN tstring& diskname);
+bool Identify_SATA(IN OUT OPAL_DISKINFO& info, IN tstring& diskname);

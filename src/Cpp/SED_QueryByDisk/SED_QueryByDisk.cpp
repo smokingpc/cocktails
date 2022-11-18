@@ -25,33 +25,33 @@ void PrintFeatureData(PFEATURE_DESC_GEOMETRY data)
 {
     _tprintf(_T("[Geometry]\n"));
     _tprintf(_T("LogicalBlockSize(%d), AlignmentGranularity(%lld), LowestAlignedLBA(%lld)\n"),
-                data->LogicalBlockSize, data->AlignmentGranularity, data->LowestAlignedLBA);
+                data->GetLogicalBlockSize(), data->GetAlignmentGranularity(), data->GetLowestAlignedLBA());
     _tprintf(_T("\n"));
 }
 void PrintFeatureData(PFEATURE_DESC_ENTERPRISE_SSC data)
 {
     _tprintf(_T("[Enterprise]\n"));
-    _tprintf(_T("BaseComID(%d), NumberComIDs(%d)\n"),data->BaseComID, data->NumberComIDs);
+    _tprintf(_T("BaseComID(%d), NumberComIDs(%d)\n"),data->GetBaseComID(), data->GetNumberComIDs());
     _tprintf(_T("\n"));
 }
 void PrintFeatureData(PFEATURE_DESC_SINGLE_USER_MODE data)
 {
     _tprintf(_T("[SingleUser Mode]\n"));
     _tprintf(_T("NumberLockingObjects(%d), Any(%d), All(%d), Policy(%d)\n"),
-                data->NumberLockingObjects, data->Any, data->All, data->Policy);
+                data->GetNumberLockingObjects(), data->Any, data->All, data->Policy);
     _tprintf(_T("\n"));
 }
 void PrintFeatureData(PFEATURE_DESC_OPAL_V100 data)
 {
     _tprintf(_T("[Opal V100]\n"));
-    _tprintf(_T("BaseComID(%d), NumberComIDs(%d)\n"), data->BaseComID, data->NumberComIDs);
+    _tprintf(_T("BaseComID(%d), NumberComIDs(%d)\n"), data->GetBaseComID(), data->GetNumberComIDs());
     _tprintf(_T("\n"));
 }
 void PrintFeatureData(PFEATURE_DESC_OPAL_V200 data)
 {
     _tprintf(_T("[Opal V200]\n"));
-    _tprintf(_T("BaseComID(%d), NumberComIDs(%d)\n"), data->BaseComID, data->NumberComIDs);
-    _tprintf(_T("NumlockingAdminAuth(%d), NumlockingUserAuth(%d)\n"), data->NumlockingAdminAuth, data->NumlockingUserAuth);
+    _tprintf(_T("BaseComID(%d), NumberComIDs(%d)\n"), data->GetBaseComID(), data->GetNumberComIDs());
+    _tprintf(_T("NumlockingAdminAuth(%d), NumlockingUserAuth(%d)\n"), data->GetNumlockingAdminAuth(), data->GetNumlockingUserAuth());
     _tprintf(_T("InitialPIN(%d), RevertedPIN(%d)\n"), data->InitialPIN, data->RevertedPIN);
     _tprintf(_T("\n"));
 }
@@ -59,54 +59,24 @@ void PrintFeatureData(PFEATURE_DESC_DATASTORE data)
 {
     _tprintf(_T("[Datastore]\n"));
     _tprintf(_T("MaxTables(%d), MaxSizeTables(%d), TableSizeAlignment(%d)\n"),
-                data->MaxTables, data->MaxSizeTables, data->TableSizeAlignment);
+                data->GetMaxTables(), data->GetMaxSizeTables(), data->GetTableSizeAlignment());
     _tprintf(_T("\n"));
 }
-void PrintDiscoveryResult(BYTE buffer[])
+
+
+void PrintDiskInfo(tstring &diskname, OPAL_DISKINFO& diskinfo)
 {
-    PDISCOVERY0_HEADER header = (PDISCOVERY0_HEADER) buffer;
-    PFEATURE_DESCRIPTOR desc = NULL;
-    UCHAR*cursor = buffer;
-    UCHAR* body = NULL;
-    UINT32 total_size = header->GetParamLength();
-    cursor += sizeof(DISCOVERY0_HEADER);
-    body = cursor;
-    desc = (PFEATURE_DESCRIPTOR) cursor;
-
-    while(desc->Header.Length > 0 && (cursor-buffer)< total_size)
-    {
-        switch (desc->Header.Code)
-        {
-            case TPer:
-                PrintFeatureData(&desc->TPer);
-            break;
-            case LOCKING:
-                PrintFeatureData(&desc->Locking);
-                break;
-            case GEOMETRY:
-                PrintFeatureData(&desc->Geometry);
-                break;
-            case ENTERPRISE:
-                PrintFeatureData(&desc->Enterprise);
-                break;
-            case OPAL_V100:
-                PrintFeatureData(&desc->OpalV100);
-                break;
-            case SINGLE_USER:
-                PrintFeatureData(&desc->SingleUserMode);
-                break;
-            case DATASTORE:
-                PrintFeatureData(&desc->Datastore);
-                break;
-            case OPAL_V200:
-                PrintFeatureData(&desc->OpalV200);
-                break;
-        }
-
-        //each block are splitted by a DWORD...
-        cursor = cursor + desc->Header.Length + sizeof(DWORD);
-        desc = (PFEATURE_DESCRIPTOR)cursor;
-    }
+    _tprintf(_T("===> %s\n"), diskname.c_str());
+    _tprintf(_T("Model [%S], Rev [%S]\n"), diskinfo.Model, diskinfo.FirmwareRev);
+    _tprintf(_T("SN [%S]\n"), diskinfo.SN);
+    PrintFeatureData(&diskinfo.TPer);
+    PrintFeatureData(&diskinfo.Locking);
+    PrintFeatureData(&diskinfo.Geometry);
+    PrintFeatureData(&diskinfo.Enterprise);
+    PrintFeatureData(&diskinfo.OpalV100);
+    PrintFeatureData(&diskinfo.SingleUserMode);
+    PrintFeatureData(&diskinfo.Datastore);
+    PrintFeatureData(&diskinfo.OpalV200);
 }
 
 int _tmain(int argc, TCHAR* argv[])
@@ -130,24 +100,18 @@ int _tmain(int argc, TCHAR* argv[])
             case BusTypeSata:
             //case BusTypeRAID:   //don't use this cmd in RAID controller, even it is SATA raid. RAID will reply NO DATA.
             {
-                buffer = new BYTE[BIG_BUFFER_SIZE];
-                RtlZeroMemory(buffer, BIG_BUFFER_SIZE);
-                if (Discovery0_SATA(buffer, BIG_BUFFER_SIZE, diskname))
-                {
-                    PrintDiscoveryResult(buffer);
-                }
-                delete[] buffer;
+                OPAL_DISKINFO info = { 0 };
+                Identify_SATA(info, diskname);
+                Discovery0_SATA(info, diskname);
+                PrintDiskInfo(diskname, info);
                 break;
             }
             case BusTypeNvme:
             {
-                buffer = new BYTE[BIG_BUFFER_SIZE];
-                RtlZeroMemory(buffer, BIG_BUFFER_SIZE);
-                if (Discovery0_NVMe(buffer, BIG_BUFFER_SIZE, diskname))
-                {
-                    PrintDiscoveryResult(buffer);
-                }
-                delete[] buffer;
+                OPAL_DISKINFO info = { 0 };
+                Identify_NVMe(info, diskname);
+                Discovery0_NVMe(info, diskname);
+                PrintDiskInfo(diskname, info);
                 break;
             }
         }
