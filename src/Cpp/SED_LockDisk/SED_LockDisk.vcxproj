@@ -139,7 +139,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Opal_Device.cpp" />
+    <ClCompile Include="Opal_Factory.cpp" />
     <ClCompile Include="SED_LockDisk.cpp" />
+    <ClCompile Include="TCG_Opal\TCG_OPAL_SSC.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="Opal_Constant_and_Enum.h" />
+    <ClInclude Include="Opal_Device.h" />
+    <ClInclude Include="Opal_Factory.h" />
+    <ClInclude Include="Opal_Structures.h" />
+    <ClInclude Include="TCG_Opal\TCG_OPAL_SSC.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

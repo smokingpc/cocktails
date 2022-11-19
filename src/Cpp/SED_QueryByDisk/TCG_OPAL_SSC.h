@@ -192,9 +192,9 @@ typedef struct _OPAL_DISKINFO
 
     char    SN[20] = {0};
     char    NullTerm1 = '\0';
-    char    *FirmwareRev[8] = {0};
+    char    ProductRev[4] = {0};
     char    NullTerm2 = '\0';
-    char    Model[40] = {0};
+    char    ProductName[16] = {0};
     char    NullTerm3 = '\0';
 }OPAL_DISKINFO, *POPAL_DISKINFO;
 

@@ -18,9 +18,14 @@ void ShowStructureSizes()
 void ParseIdentifyResult(IN OUT OPAL_DISKINFO& diskinfo, IN PINQUIRYDATA data)
 {
     //INQUIRYDATA
+    RtlCopyMemory(diskinfo.ProductRev, data->ProductRevisionLevel, 4);
+    RtlCopyMemory(diskinfo.ProductName, data->ProductId, 16);
+
 }
 void ParseIdentifyResult(IN OUT OPAL_DISKINFO& diskinfo, IN PVPD_SERIAL_NUMBER_PAGE data)
 {
+    size_t size = data->PageLength - sizeof(VPD_SERIAL_NUMBER_PAGE);
+    RtlCopyMemory(diskinfo.SN, data->SerialNumber, size);
 }
 
 void ParseIdentifyResult(IN OUT OPAL_DISKINFO& diskinfo, IN PATA_IDENTIFY_RESP data)

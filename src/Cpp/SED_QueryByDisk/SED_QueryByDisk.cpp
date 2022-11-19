@@ -68,7 +68,7 @@ void PrintFeatureData(PFEATURE_DESC_DATASTORE data)
 void PrintDiskInfo(tstring &diskname, OPAL_DISKINFO& diskinfo)
 {
     _tprintf(_T("===> %s\n"), diskname.c_str());
-    _tprintf(_T("Model [%S], Rev [%S]\n"), diskinfo.Model, diskinfo.FirmwareRev);
+    _tprintf(_T("Model [%S], Rev [%S]\n"), diskinfo.ProductName, diskinfo.ProductRev);
     _tprintf(_T("SN [%S]\n"), diskinfo.SN);
     PrintFeatureData(&diskinfo.TPer);
     PrintFeatureData(&diskinfo.Locking);
