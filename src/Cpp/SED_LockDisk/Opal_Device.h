@@ -1,5 +1,9 @@
 #pragma once
 
+//Opal Device defines the storage device which support SED features.
+//it should support at least NVMe and ATA devices.
+//COpalDevice should define common behavior of SED. child class defines implementation.
+
 class COpalDevice {
 public:
     COpalDevice(tstring devpath);

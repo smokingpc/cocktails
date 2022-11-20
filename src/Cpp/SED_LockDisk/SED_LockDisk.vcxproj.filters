@@ -50,5 +50,11 @@
     <ClInclude Include="Opal_Factory.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Opal_OS.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Command.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
