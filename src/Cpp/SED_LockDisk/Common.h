@@ -11,11 +11,12 @@
 #include <Setupapi.h>
 #include <stdio.h>
 #include <string>
+#include <map>
+#include <vector>
 #include <list>
 #include <memory>
 
-using namespace std;
-typedef basic_string<TCHAR> tstring;
+typedef std::basic_string<TCHAR> tstring;
 
 #include "Utils.h"
 #include "Opal_Constant_and_Enum.h"

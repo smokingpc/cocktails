@@ -2,7 +2,7 @@
 //
 
 #include "Common.h"
-
+using namespace std;
 int _tmain(int argc, TCHAR* argv[])
 {
 }

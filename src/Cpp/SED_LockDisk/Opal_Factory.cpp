@@ -1,37 +1,13 @@
 #include "Common.h"
+using namespace std;
+#pragma comment( lib, "setupapi.lib" )
 
-DWORD COpalFactory::EnumOpalDevices(IN OUT list<OPAL_DEVICE_INFO>& result)
+namespace OpalFactory
 {
-    list<tstring> disklist;
-    DWORD error = ERROR_SUCCESS;
-    
-    error = EnumDisks(disklist);
-    if (ERROR_SUCCESS != error)
-        return error;
+DWORD EnumOpalDevices(IN OUT std::list<OPAL_DEVICE_INFO>& result) { return ERROR_NOT_SUPPORTED; }
+DWORD QueryOpalDevices(IN tstring& diskname, IN OUT OPAL_DEVICE_INFO& result) { return ERROR_NOT_SUPPORTED; }
 
-    for(tstring &disk : disklist)
-    {
-        OPAL_DEVICE_INFO info = { BusTypeUnknown, 0};
-        error = OpalDiscovery0(disk, info);
-        if (ERROR_SUCCESS == error)
-            result.push_back(info);
-    }
-
-    if(0 == result.size())
-        return ERROR_NOT_FOUND;
-
-    return ERROR_SUCCESS;
-}
-DWORD COpalFactory::QueryOpalDevices(IN tstring& diskname, IN OUT OPAL_DEVICE_INFO& result) 
-{
-}
-DWORD COpalFactory::OpalDiscovery0(IN tstring& diskname, IN OUT OPAL_DEVICE_INFO& result) 
-{
-//check 
-}
-
-
-DWORD COpalFactory::EnumDisks(IN OUT list<tstring> &result)
+DWORD EnumWin32Disks(IN OUT list<tstring> &result)
 {
     HDEVINFO devinfo = NULL;
     GUID class_guid = GUID_DEVINTERFACE_DISK;
@@ -101,3 +77,4 @@ DWORD COpalFactory::EnumDisks(IN OUT list<tstring> &result)
     return ERROR_SUCCESS;
 }
 
+}
