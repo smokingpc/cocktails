@@ -61,7 +61,7 @@ partial class frmMain
             // 
             this.label2.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 64);
+            this.label2.Location = new System.Drawing.Point(12, 344);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(891, 39);
             this.label2.TabIndex = 1;
@@ -148,6 +148,7 @@ partial class frmMain
             this.dataGridViewTextBoxColumn3,
             this.dataGridViewTextBoxColumn4});
             this.dataGridView2.Location = new System.Drawing.Point(12, 386);
+            this.dataGridView2.MultiSelect = false;
             this.dataGridView2.Name = "dataGridView2";
             this.dataGridView2.RowHeadersVisible = false;
             this.dataGridView2.RowHeadersWidth = 51;
