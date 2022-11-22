@@ -44,7 +44,8 @@ void ParseDiscoveryResult(IN OUT OPAL_DISKINFO& diskinfo, IN BYTE buffer[])
 
     while (desc->Header.Length > 0 && (cursor - buffer) < total_size)
     {
-        switch (desc->Header.GetCode())
+        //switch (desc->Header.GetCode())
+        switch (desc->Header.Code)
         {
         case TPer:
             RtlCopyMemory(&diskinfo.TPer, &desc->TPer, sizeof(FEATURE_DESC_TPer));

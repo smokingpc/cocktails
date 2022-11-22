@@ -38,7 +38,7 @@ static void FillScsiCDB_SecurityOut(PCDB cdb, UCHAR protocol, UINT16 comid, ULON
 
 static void FillScsiCmd(PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE cmd, PVOID buffer, ULONG buf_size)
 {
-    cmd->Length = sizeof(PSCSI_PASS_THROUGH_DIRECT);
+    cmd->Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
     cmd->PathId = 0;
     cmd->TargetId = 1;
     cmd->Lun = 0;
@@ -65,6 +65,8 @@ COpalNvme::COpalNvme(tstring devpath) : COpalDevice(devpath)
 {
     Discovery0();
     Identify();
+
+    DevInfo.Type = BusTypeNvme;
 }
 COpalNvme::~COpalNvme(){}
 
@@ -180,6 +182,8 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
 
     while (desc->Header.Length > 0 && (cursor - buffer) < total_size)
     {
+//all data in OPAL response are BIG-ENDIAN.
+//if responsed desc->Header.GetCode() can't be parsed, this device DEFINITELY not support this feature.
         switch (desc->Header.GetCode())
         {
         case TPer:
@@ -192,9 +196,13 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             RtlCopyMemory(&DevInfo.Geometry, &desc->Geometry, sizeof(FEATURE_DESC_GEOMETRY));
             break;
         case ENTERPRISE:
+            if (desc->Header.Code > UseFeature)
+                UseFeature = (FEATURE_CODE)desc->Header.Code;
             RtlCopyMemory(&DevInfo.Enterprise, &desc->Enterprise, sizeof(FEATURE_DESC_ENTERPRISE_SSC));
             break;
         case OPAL_V100:
+            if (desc->Header.Code > UseFeature)
+                UseFeature = (FEATURE_CODE)desc->Header.Code;
             RtlCopyMemory(&DevInfo.OpalV100, &desc->OpalV100, sizeof(FEATURE_DESC_OPAL_V100));
             break;
         case SINGLE_USER:
@@ -204,6 +212,8 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             RtlCopyMemory(&DevInfo.Datastore, &desc->Datastore, sizeof(FEATURE_DESC_DATASTORE));
             break;
         case OPAL_V200:
+            if (desc->Header.Code > UseFeature)
+                UseFeature = (FEATURE_CODE)desc->Header.Code;
             RtlCopyMemory(&DevInfo.OpalV200, &desc->OpalV200, sizeof(FEATURE_DESC_OPAL_V200));
             break;
         }

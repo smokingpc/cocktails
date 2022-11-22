@@ -4,8 +4,84 @@ using namespace std;
 
 namespace OpalFactory
 {
-DWORD EnumOpalDevices(IN OUT std::list<OPAL_DEVICE_INFO>& result) { return ERROR_NOT_SUPPORTED; }
-DWORD QueryOpalDevices(IN tstring& diskname, IN OUT OPAL_DEVICE_INFO& result) { return ERROR_NOT_SUPPORTED; }
+void EnumOpalDevices(IN OUT std::list<COpalDevice*>& result)
+{
+    list<tstring> disklist;
+    EnumWin32Disks(disklist);
+    
+    //disk ==> physical disk name. e.g. "\\.\PhysicalDrive5"
+    for(tstring &disk : disklist)
+    {
+        STORAGE_BUS_TYPE type = QueryStorageType(disk);
+        if (BusTypeNvme != type)
+        {
+            _tprintf(_T("disk[%s] BusType[%d] != %d, skipping...\n"), disk.c_str(), BusTypeNvme, type);
+            continue;
+        }
+
+        COpalDevice *device = new COpalNvme(disk);
+        result.push_back(device);
+    }
+}
+DWORD QueryOpalDevices(IN tstring& diskname, IN OUT OPAL_DEVICE_INFO& result) 
+{ 
+    return ERROR_NOT_SUPPORTED; 
+}
+OPAL_DEVICE_INFO* CreateOpalDevice(IN tstring& diskname)
+{
+    return NULL;
+}
+size_t EnumOpalDevice(IN tstring& diskname, IN OUT list< COpalDevice*> devlist)
+{
+    return 0;
+}
+
+STORAGE_BUS_TYPE QueryStorageType(IN tstring& diskname)
+{
+    bool ok = false;
+    DWORD ret_size = 0;
+    STORAGE_PROPERTY_QUERY cmd;
+    STORAGE_DEVICE_DESCRIPTOR result = { 0 };
+    STORAGE_BUS_TYPE type = BusTypeUnknown;
+
+    HANDLE device = CreateFile(diskname.c_str(),
+        GENERIC_WRITE | GENERIC_READ,
+        FILE_SHARE_WRITE | FILE_SHARE_READ,
+        NULL,
+        OPEN_EXISTING,
+        0,
+        NULL);
+
+    if (INVALID_HANDLE_VALUE == device)
+    {
+        _tprintf(_T("Open %s failed, error = %d\n"), diskname.c_str(), GetLastError());
+        return BusTypeUnknown;
+    }
+
+    cmd.PropertyId = StorageDeviceProperty;
+    cmd.QueryType = PropertyStandardQuery;
+
+    ok = DeviceIoControl(device,
+        IOCTL_STORAGE_QUERY_PROPERTY,
+        &cmd,
+        sizeof(STORAGE_PROPERTY_QUERY),
+        &result,
+        sizeof(STORAGE_DEVICE_DESCRIPTOR),
+        &ret_size,
+        FALSE);
+
+    if (!ok)
+    {
+        type = BusTypeUnknown;
+        _tprintf(_T("DeviceIoControl failed. Error=%d\n"), GetLastError());
+    }
+    else
+        type = result.BusType;
+
+    if (INVALID_HANDLE_VALUE != device && NULL != device)
+        CloseHandle(device);
+    return type;
+}
 
 DWORD EnumWin32Disks(IN OUT list<tstring> &result)
 {

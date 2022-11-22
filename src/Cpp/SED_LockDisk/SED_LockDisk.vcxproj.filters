@@ -20,7 +20,7 @@
     <ClCompile Include="Opal_Device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Opal_Command.cpp">
+    <ClCompile Include="Opal_CmdPacket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -46,7 +46,7 @@
     <ClInclude Include="Opal_OS.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Opal_Command.h">
+    <ClInclude Include="Opal_CmdPacket.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -21,10 +21,10 @@ typedef std::basic_string<TCHAR> tstring;
 #include "Utils.h"
 #include "Opal_Constant_and_Enum.h"
 #include "Opal_Structures.h"
-#include "Opal_Command.h"
+#include "Opal_CmdPacket.h"
 #include "Opal_OS.h"
-#include "Opal_Factory.h"
 #include "Opal_Device.h"
+#include "Opal_Factory.h"
 
 #define BIG_BUFFER_SIZE         2048
 #define SMALL_BUFFER_SIZE       256

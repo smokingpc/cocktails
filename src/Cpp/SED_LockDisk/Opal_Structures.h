@@ -16,7 +16,7 @@ typedef struct _DISCOVERY0_HEADER {
 } DISCOVERY0_HEADER, * PDISCOVERY0_HEADER;
 
 typedef struct _FEATURE_DESC_HEADER {
-    UINT16 Code;            //note: this is Little Endian value.
+    UINT16 Code;
     UINT8 NotUSed : 4;
     UINT8 Version : 4;      //shall be 0x01 in spec 2.0.1
     UINT8 Length;           //shall be 0x0C in spec 2.0.1
@@ -59,6 +59,12 @@ typedef struct _FEATURE_DESC_GEOMETRY {
     inline UINT64 GetLowestAlignedLBA() { return SwapEndian(LowestAlignedLBA); }
 }FEATURE_DESC_GEOMETRY, * PFEATURE_DESC_GEOMETRY;
 
+typedef struct _FEATURE_DESC_OPAL_V100 {
+    UINT16 BaseComID;
+    UINT16 NumberComIDs;
+    inline UINT16 GetBaseComID() { return SwapEndian(BaseComID); }
+    inline UINT16 GetNumberComIDs() { return SwapEndian(NumberComIDs); }
+} FEATURE_DESC_OPAL_V100, * PFEATURE_DESC_OPAL_V100;
 
 typedef struct _FEATURE_DESC_ENTERPRISE_SSC {
     UINT16 BaseComID;
@@ -79,13 +85,7 @@ typedef struct _FEATURE_DESC_ENTERPRISE_SSC {
     inline UINT16 GetNumberComIDs() { return SwapEndian(NumberComIDs); }
 } FEATURE_DESC_ENTERPRISE_SSC, * PFEATURE_DESC_ENTERPRISE_SSC;
 
-typedef struct _FEATURE_DESC_OPAL_V100 {
-    UINT16 BaseComID;
-    UINT16 NumberComIDs;
-    inline UINT16 GetBaseComID() { return SwapEndian(BaseComID); }
-    inline UINT16 GetNumberComIDs() { return SwapEndian(NumberComIDs); }
-} FEATURE_DESC_OPAL_V100, * PFEATURE_DESC_OPAL_V100;
-
+//OPAL_V200 is same as OPAL_ENTERPRISE but use some reserved fields.
 typedef struct _FEATURE_DESC_OPAL_V200 {
     UINT16 BaseComID;
     UINT16 NumberComIDs;
@@ -147,6 +147,16 @@ typedef struct _FEATURE_DESCRIPTOR
         FEATURE_DESC_DATASTORE          Datastore;
     }DUMMYSTRUCTNAME;
 }FEATURE_DESCRIPTOR, * PFEATURE_DESCRIPTOR;
+
+//indicates the data type in Data Payload.
+typedef struct  _OPAL_ATOM_TOKEN {
+    union {
+        UCHAR Length : 4;
+        UCHAR Type : 4;
+    }DUMMYSTRUCTNAME;
+    UCHAR AsByte;
+}OPAL_ATOM_TOKEN;
+
 #pragma pack(pop)
 
 typedef struct _OPAL_DEVICE_INFO
@@ -162,12 +172,6 @@ typedef struct _OPAL_DEVICE_INFO
     FEATURE_DESC_OPAL_V200          OpalV200 = { 0 };
     FEATURE_DESC_DATASTORE          Datastore = { 0 };
 
-    //tstring DevPath = L"";          //physical DiskName to open this disk. e.g. "\\.\PhysicalDrive7"
-    //wstring Controller = L"";
-    //string SN = "";
-    //string Rev = "";
-    //string Model = "";
-
     char    SerialNo[DEVICE_SN_LEN+1] = { 0 };
     char    FirmwareRev[DEVICE_REV_LEN+1] = { 0 };
     char    ModelName[DEVICE_MODEL_LEN+1] = { 0 };
@@ -180,4 +184,5 @@ typedef struct _SCSI_PASS_THROUGH_DIRECT_WITH_SENSE :_SCSI_PASS_THROUGH_DIRECT
     DWORD   AlignReserved = 0;        //enforce this structure to be DWORD aligned.
     BYTE    SenseInfo[64] = {0};
 }SCSI_PASS_THROUGH_DIRECT_WITH_SENSE, *PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE;
+
 
