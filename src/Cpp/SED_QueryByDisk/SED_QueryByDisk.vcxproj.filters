@@ -13,30 +13,48 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="OPAL_Classes">
+      <UniqueIdentifier>{b2b3f471-95c9-43bc-8be9-a4f60d37ba65}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SED_QueryByDisk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TCG_OPAL_SSC.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Opal_CmdPacket.cpp">
+      <Filter>OPAL_Classes</Filter>
     </ClCompile>
-    <ClCompile Include="Win32_StorageDisk.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Opal_Device.cpp">
+      <Filter>OPAL_Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Opal_Factory.cpp">
+      <Filter>OPAL_Classes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TCG_OPAL_SSC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Win32_StorageDisk.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Opal_CmdPacket.h">
+      <Filter>OPAL_Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Constant_and_Enum.h">
+      <Filter>OPAL_Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Device.h">
+      <Filter>OPAL_Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Factory.h">
+      <Filter>OPAL_Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_OS.h">
+      <Filter>OPAL_Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Structures.h">
+      <Filter>OPAL_Classes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -65,11 +65,11 @@ void PrintFeatureData(PFEATURE_DESC_DATASTORE data)
 }
 
 
-void PrintDiskInfo(tstring &diskname, OPAL_DISKINFO& diskinfo)
+void PrintDiskInfo(tstring &diskname, OPAL_DEVICE_INFO& diskinfo)
 {
     _tprintf(_T("===> %s\n"), diskname.c_str());
-    _tprintf(_T("Model [%S], Rev [%S]\n"), diskinfo.ProductName, diskinfo.ProductRev);
-    _tprintf(_T("SN [%S]\n"), diskinfo.SN);
+    _tprintf(_T("Model [%S], Rev [%S]\n"), diskinfo.ModelName, diskinfo.FirmwareRev);
+    _tprintf(_T("SN [%S]\n"), diskinfo.SerialNo);
     PrintFeatureData(&diskinfo.TPer);
     PrintFeatureData(&diskinfo.Locking);
     PrintFeatureData(&diskinfo.Geometry);
@@ -83,38 +83,41 @@ void PrintDiskInfo(tstring &diskname, OPAL_DISKINFO& diskinfo)
 int _tmain(int argc, TCHAR* argv[])
 {
     list<tstring> disklist;
-    EnumPhysicalDisks(disklist);
-    for(auto &diskname : disklist)
-    { 
-        BYTE *buffer = NULL;
-        STORAGE_BUS_TYPE type = BusTypeUnknown;
-        if(!IdentifyStorageType(type, diskname))
-        {
-            _tprintf(_T("Identify storage type of specified disk [%s] failed.\n"), diskname.c_str());
-            return -1;
-        }
 
-        //Identify storage type by "BusType of PhysicalDrive"
-        switch(type)
-        {
-            case BusTypeAta:
-            case BusTypeSata:
-            //case BusTypeRAID:   //don't use this cmd in RAID controller, even it is SATA raid. RAID will reply NO DATA.
-            {
-                OPAL_DISKINFO info = { 0 };
-                Identify_SATA(info, diskname);
-                Discovery0_SATA(info, diskname);
-                PrintDiskInfo(diskname, info);
-                break;
-            }
-            case BusTypeNvme:
-            {
-                OPAL_DISKINFO info = { 0 };
-                Identify_NVMe(info, diskname);
-                Discovery0_NVMe(info, diskname);
-                PrintDiskInfo(diskname, info);
-                break;
-            }
-        }
-    }
+    //EnumPhysicalDisks(disklist);
+    //for(auto &diskname : disklist)
+    //{ 
+    //    BYTE *buffer = NULL;
+    //    STORAGE_BUS_TYPE type = BusTypeUnknown;
+    //    if(!IdentifyStorageType(type, diskname))
+    //    {
+    //        _tprintf(_T("Identify storage type of specified disk [%s] failed.\n"), diskname.c_str());
+    //        return -1;
+    //    }
+
+    //    //Identify storage type by "BusType of PhysicalDrive"
+    //    switch(type)
+    //    {
+    //        case BusTypeAta:
+    //        case BusTypeSata:
+    //        //case BusTypeRAID:   //don't use this cmd in RAID controller, even it is SATA raid. RAID will reply NO DATA.
+    //        {
+    //            OPAL_DISKINFO info = { 0 };
+    //            Identify_SATA(info, diskname);
+    //            Discovery0_SATA(info, diskname);
+    //            PrintDiskInfo(diskname, info);
+    //            break;
+    //        }
+    //        case BusTypeNvme:
+    //        {
+    //            OPAL_DISKINFO info = { 0 };
+    //            Identify_NVMe(info, diskname);
+    //            Discovery0_NVMe(info, diskname);
+    //            PrintDiskInfo(diskname, info);
+    //            break;
+    //        }
+    //    }
+    //}
+
+    return ERROR_SUCCESS;
 }
