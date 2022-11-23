@@ -1,7 +1,7 @@
 #include "Common.h"
 using namespace std;
 
-static const std::map<OPAL_UID_TAG, list<BYTE>> INVOKE_UID_MAP = 
+static const std::map<OPAL_UID_TAG, OPAL_UID> INVOKE_UID_MAP =
 {
     //{SESSION_MGMT,      { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff }},
 
@@ -67,31 +67,58 @@ static const std::map<OPAL_METHOD_TAG, list<BYTE>> METHOD_UID_MAP =
     {ERASE,{ 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x08, 0x03 }}, /**< Erase */
 };
 
-COpalCommand::COpalCommand()
-{}
-COpalCommand::COpalCommand(UINT32 tsn, UINT32 hsn)
+size_t _OPAL_DATA_ATOM::GetOpalDataLen()
 {
-    Packet.SetTSN(tsn);
-    Packet.SetHSN(hsn);
+    //if only 1 byte data, don't output atom token.
+    if(1 == Data.size())
+        return 1;
+    //if data size < 16 => this is short atom => add 1 byte short atom token
+    if(16 > Data.size())
+        return Data.size() + 1;
+    //if data size >= 16 => this is medium atom => add 2 bytes medium atom token
+    return Data.size() + 2;
 }
-COpalCommand::~COpalCommand()
+size_t _OPAL_DATA::GetOpalDataLen()
+{
+    return (sizeof(Start) + sizeof(End));
+}
+
+size_t _OPAL_DATA_PAIR::GetOpalDataLen()
+{
+    return (_OPAL_DATA::GetOpalDataLen() + Name.GetOpalDataLen() + Value.GetOpalDataLen());
+}
+
+size_t _OPAL_DATA_LIST::GetOpalDataLen()
+{
+    size_t ret = _OPAL_DATA::GetOpalDataLen();
+    for(auto &data : List)
+        ret += data.GetOpalDataLen();
+
+    return ret;
+}
+
+size_t _OPAL_SESSION_ARG::GetOpalDataLen()
+{
+    size_t ret = _OPAL_DATA_LIST::GetOpalDataLen();
+    ret += HostSessionID.GetOpalDataLen();
+    ret += SPID.GetOpalDataLen();
+    ret += ReadWrite.GetOpalDataLen();
+}
+
+size_t _OPAL_PAYLOAD_HEADER::GetOpalDataLen()
+{
+    return sizeof(CallToken) + Invoker.GetOpalDataLen() + Method.GetOpalDataLen();
+}
+
+COpalCmdBase::COpalCmdBase()
+{}
+COpalCmdBase::~COpalCmdBase()
 {}
 
-
-void COpalCommand::BeginList(){}
-void COpalCommand::EndList() {}
-void COpalCommand::PushKeypair(char* name, int strlen, UINT8 value) {}
-void COpalCommand::PushKeypair(char* name, int strlen, UINT16 value) {}
-void COpalCommand::PushKeypair(char* name, int strlen, UINT32 value) {}
-void COpalCommand::PushKeypair(char* name, int strlen, UINT64 value) {}
-void COpalCommand::PushString(char* str, int strlen) {}
-void COpalCommand::PushBytes(BYTE* blob, int bloblen) {}
-
-
-void COpalCommand::UpdatePacketLength()
+void COpalSession::UpdatePacketLength()
 {
-//todo: calculate correct padding...
-    SubPacket.SetLength((UINT32)Payload.size());
-    Packet.SetLength((UINT32)(sizeof(OPAL_DATA_SUB_PACKET) + Payload.size() + Padding.size()));
-    ComPacket.SetLength((UINT32)(sizeof(OPAL_PACKET) + Packet.GetLength()));
+////todo: calculate correct padding...
+//    SubPacket.Length = //(UINT32)Payload.size();
+//    Packet.Length = (UINT32)(sizeof(OPAL_DATA_SUB_PACKET) + Payload.size() + Padding.size());
+//    ComPacket.Length = (UINT32)(sizeof(OPAL_PACKET) + Packet.Length);
 }

@@ -156,7 +156,6 @@ typedef struct _FEATURE_DESCRIPTOR
 //    }DUMMYSTRUCTNAME;
 //    UCHAR AsByte;
 //}OPAL_ATOM_TOKEN;
-
 #pragma pack(pop)
 
 typedef struct _OPAL_DEVICE_INFO
