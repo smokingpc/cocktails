@@ -67,6 +67,155 @@ static const std::map<OPAL_METHOD_TAG, list<BYTE>> METHOD_UID_MAP =
     {ERASE,{ 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x08, 0x03 }}, /**< Erase */
 };
 
+static inline void UpdateSizeAndCursor(BYTE* &cursor, size_t &used, size_t &remains)
+{
+    remains -= used;
+    cursor += used;
+}
+
+#pragma region ======== OPAL_COMPACKET ========
+size_t _OPAL_COMPACKET::GetOpalBytes(BYTE* buffer, size_t max_len)
+{
+    BYTE* cursor = buffer;
+    size_t remain_size = max_len;
+    size_t used_size = 0;
+    size_t size = 0;
+
+    size = sizeof(Reserved);
+    if(remain_size < size)
+        goto END;
+    SwapEndian(&Reserved, (UINT32*) cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(ExtComID);
+    if (remain_size < size)
+        goto END;
+    RtlCopyMemory(cursor, ExtComID, size);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(OutstandingData);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&OutstandingData, (UINT32*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(MinTx);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&MinTx, (UINT32*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(Length);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&Length, (UINT32*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+        
+END:    
+    used_size = max_len - remain_size;
+    return used_size;
+}
+void _OPAL_COMPACKET::PutOpalBytes(BYTE* buffer, size_t max_len)
+{
+    BYTE* cursor = buffer;
+    size_t remain_size = max_len;
+    size_t size = 0;
+
+    size = sizeof(Reserved);
+    if (remain_size < size)
+        goto END;
+    SwapEndian((UINT32*)cursor, &Reserved);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(ExtComID);
+    if (remain_size < size)
+        goto END;
+    RtlCopyMemory(ExtComID, cursor, size);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(OutstandingData);
+    if (remain_size < size)
+        goto END;
+    SwapEndian((UINT32*)cursor, &OutstandingData);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(MinTx);
+    if (remain_size < size)
+        goto END;
+    SwapEndian((UINT32*)cursor, &MinTx);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(Length);
+    if (remain_size < size)
+        goto END;
+    SwapEndian((UINT32*)cursor, &Length);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+END:
+}
+size_t _OPAL_COMPACKET::GetOpalDataLen() { return sizeof(_OPAL_COMPACKET); }
+#pragma endregion
+
+#pragma region ======== OPAL_PACKET ========
+size_t _OPAL_PACKET::GetOpalBytes(BYTE* buffer, size_t max_len)
+{
+    BYTE* cursor = buffer;
+    size_t remain_size = max_len;
+    size_t used_size = 0;
+    size_t size = 0;
+
+    size = sizeof(TSN);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&TSN, (UINT32*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(HSN);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&HSN, (UINT32*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(SeqNo);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&SeqNo, (UINT32*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(Reserved);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&Reserved, (UINT16*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(AckType);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&AckType, (UINT16*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(Ack);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&Ack, (UINT32*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = sizeof(Length);
+    if (remain_size < size)
+        goto END;
+    SwapEndian(&Length, (UINT32*)cursor);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+END:
+    used_size = max_len - remain_size;
+    return used_size;
+}
+void _OPAL_PACKET::PutOpalBytes(BYTE* buffer, size_t max_len)
+{}
+size_t _OPAL_PACKET::GetOpalDataLen() { return sizeof(_OPAL_PACKET); }
+#pragma endregion
+
+#pragma region ======== OPAL_DATA_ATOM ========
 size_t _OPAL_DATA_ATOM::GetOpalDataLen()
 {
     //if only 1 byte data, don't output atom token.
@@ -78,16 +227,23 @@ size_t _OPAL_DATA_ATOM::GetOpalDataLen()
     //if data size >= 16 => this is medium atom => add 2 bytes medium atom token
     return Data.size() + 2;
 }
+#pragma endregion
+
+#pragma region ======== OPAL_DATA ========
 size_t _OPAL_DATA::GetOpalDataLen()
 {
     return (sizeof(Start) + sizeof(End));
 }
+#pragma endregion
 
+#pragma region ======== OPAL_DATA_PAIR ========
 size_t _OPAL_DATA_PAIR::GetOpalDataLen()
 {
     return (_OPAL_DATA::GetOpalDataLen() + Name.GetOpalDataLen() + Value.GetOpalDataLen());
 }
+#pragma endregion
 
+#pragma region ======== OPAL_DATA_LIST ========
 size_t _OPAL_DATA_LIST::GetOpalDataLen()
 {
     size_t ret = _OPAL_DATA::GetOpalDataLen();
@@ -96,7 +252,9 @@ size_t _OPAL_DATA_LIST::GetOpalDataLen()
 
     return ret;
 }
+#pragma endregion
 
+#pragma region ======== OPAL_SESSION_ARG ========
 size_t _OPAL_SESSION_ARG::GetOpalDataLen()
 {
     size_t ret = _OPAL_DATA_LIST::GetOpalDataLen();
@@ -104,11 +262,14 @@ size_t _OPAL_SESSION_ARG::GetOpalDataLen()
     ret += SPID.GetOpalDataLen();
     ret += ReadWrite.GetOpalDataLen();
 }
+#pragma endregion
 
+#pragma region ======== OPAL_PAYLOAD_HEADER ========
 size_t _OPAL_PAYLOAD_HEADER::GetOpalDataLen()
 {
     return sizeof(CallToken) + Invoker.GetOpalDataLen() + Method.GetOpalDataLen();
 }
+#pragma endregion
 
 COpalCmdBase::COpalCmdBase()
 {}

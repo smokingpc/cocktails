@@ -2,9 +2,12 @@
 
 interface IOPAL_DATA_INOUT {
     //bytes endian of Opal Data Blob is BIG-ENDIAN
-    size_t GetOpalBytes(vector<BYTE>& result);
+    //size_t GetOpalBytes(list<BYTE>& result);
+    size_t GetOpalBytes(BYTE *buffer, size_t max_len);
+
     //bytes endian of Opal Data Blob is BIG-ENDIAN
-    size_t PutOpalBytes(vector<BYTE>& result);
+    //void PutOpalBytes(list<BYTE>& input);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();     //get total length if output OpalData in BigEndian
 };
 
@@ -27,9 +30,9 @@ typedef struct _OPAL_COMPACKET : public IOPAL_DATA_INOUT {
     UINT32 MinTx = 0;             //big endian
     UINT32 Length;                //(big endian) ==> sizeof(OPAL_PACKET) + OPAL_PACKET::Length
 
-    size_t GetOpalBytes(vector<BYTE>& result);
-    size_t PutOpalBytes(vector<BYTE>& result);
-    size_t GetOpalDataLen(){return sizeof(_OPAL_COMPACKET);}
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
+    size_t GetOpalDataLen();
 }OPAL_COMPACKET;
 
 typedef struct _OPAL_PACKET : public IOPAL_DATA_INOUT {
@@ -47,9 +50,9 @@ typedef struct _OPAL_PACKET : public IOPAL_DATA_INOUT {
     UINT32 Ack = 0;
     UINT32 Length = 0;          //==sizeof(OPAL_DATA_SUB_PACKET) + OPAL_DATA_SUB_PACKET::Length + padding length
 
-    size_t GetOpalBytes(vector<BYTE>& result);
-    size_t PutOpalBytes(vector<BYTE>& result);
-    size_t GetOpalDataLen() { return sizeof(_OPAL_PACKET); }
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
+    size_t GetOpalDataLen();
 }OPAL_PACKET;
 
 typedef struct _OPAL_DATA_SUB_PACKET : public IOPAL_DATA_INOUT {
@@ -57,8 +60,8 @@ typedef struct _OPAL_DATA_SUB_PACKET : public IOPAL_DATA_INOUT {
     UINT16 Kind = 0;        //??
     UINT32 Length = 0;      //total length of following DataPayload block, NOT INCLUDING padding...
 
-    size_t GetOpalBytes(vector<BYTE>& result);
-    size_t PutOpalBytes(vector<BYTE>& result);
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen() { return sizeof(_OPAL_DATA_SUB_PACKET); }
 }OPAL_DATA_SUB_PACKET;
 #pragma pack(pop)
@@ -74,8 +77,8 @@ typedef struct _OPAL_DATA_ATOM : public IOPAL_DATA_ATOM, public IOPAL_DATA_INOUT
     OPAL_ATOM_TOKEN Type;
     list<BYTE> Data;            //if data only have 1 bytes, it is TinyAtom, don't output Type field.
 
-    size_t GetOpalBytes(vector<BYTE>& result);
-    size_t PutOpalBytes(vector<BYTE>& result);
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
 }OPAL_DATA_ATOM;
 
@@ -83,6 +86,8 @@ typedef struct _OPAL_DATA{
     OPAL_DATA_TOKEN Start;
     OPAL_DATA_TOKEN End;
 
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
 } OPAL_DATA;
 
@@ -97,8 +102,8 @@ typedef struct _OPAL_DATA_PAIR : public OPAL_DATA {
 
     void operator= (_OPAL_DATA_PAIR &newdata);
 
-    size_t GetOpalBytes(vector<BYTE>& result);
-    size_t PutOpalBytes(vector<BYTE>& result);
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
 } OPAL_DATA_PAIR;
 
@@ -111,8 +116,8 @@ typedef struct _OPAL_DATA_LIST : public OPAL_DATA, IOPAL_DATA_INOUT {
         End = ENDLIST;
     }
 
-    size_t GetOpalBytes(vector<BYTE>& result);
-    size_t PutOpalBytes(vector<BYTE>& result);
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
 } OPAL_DATA_LIST;
 
@@ -121,8 +126,8 @@ typedef struct _OPAL_SESSION_ARG : public _OPAL_DATA_LIST {
     OPAL_DATA_ATOM SPID;
     OPAL_DATA_ATOM ReadWrite;
 
-    size_t GetOpalBytes(vector<BYTE>& result);
-    size_t PutOpalBytes(vector<BYTE>& result);
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
 } OPAL_SESSION_ARG;
 
@@ -133,8 +138,8 @@ typedef struct _OPAL_PAYLOAD_HEADER : public IOPAL_DATA_INOUT {
     OPAL_DATA_ATOM Invoker;
     OPAL_DATA_ATOM Method;
 
-    size_t GetOpalBytes(vector<BYTE>& result);
-    size_t PutOpalBytes(vector<BYTE>& result);
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
 }OPAL_PAYLOAD_HEADER;
 
@@ -144,8 +149,8 @@ public:
 //    COpalCmdBase(UINT32 tsn, UINT32 hsn);
     ~COpalCmdBase();
 
-    size_t GetOpalBytes(vector<BYTE>& result);
-    size_t PutOpalBytes(vector<BYTE>& result);
+    size_t GetOpalBytes(list<BYTE>& result);
+    void PutOpalBytes(list<BYTE>& input);
     size_t GetOpalDataLen();
 protected:
     //sync Length fields of ComPacket, Packet, and SubPacket.
