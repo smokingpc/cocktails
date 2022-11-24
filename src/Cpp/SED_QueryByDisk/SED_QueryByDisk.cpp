@@ -65,7 +65,7 @@ void PrintFeatureData(PFEATURE_DESC_DATASTORE data)
 }
 
 
-void PrintDiskInfo(tstring &diskname, OPAL_DEVICE_INFO& diskinfo)
+void PrintOpalDeviceInfo(tstring &diskname, OPAL_DEVICE_INFO& diskinfo)
 {
     _tprintf(_T("===> %s\n"), diskname.c_str());
     _tprintf(_T("Model [%S], Rev [%S]\n"), diskinfo.ModelName, diskinfo.FirmwareRev);
@@ -82,8 +82,19 @@ void PrintDiskInfo(tstring &diskname, OPAL_DEVICE_INFO& diskinfo)
 
 int _tmain(int argc, TCHAR* argv[])
 {
-    list<tstring> disklist;
+    list<COpalDevice*> opallist;
+    EnumOpalDevices(opallist);
 
+    for(COpalDevice* dev : opallist)
+    {
+        OPAL_DEVICE_INFO info;
+        dev->GetDeviceInfo(info);
+        PrintOpalDeviceInfo(dev->DevPath, info);
+
+
+    }
+
+    //list<tstring> disklist;
     //EnumPhysicalDisks(disklist);
     //for(auto &diskname : disklist)
     //{ 

@@ -24,16 +24,16 @@ enum OPAL_ATOM_TOKEN : UINT16
     NO_TOKEN = 0,               //if data is only 1 bytes, don't push TOKEN in data payload
 
     SHORT_UINT = 0x80,           //OPAL_ATOM_TOKEN::Type == "UINT"
-    SHORT_UINT1 = 0x81,          //1 byte unsigned int (same as UINT8)
+    //SHORT_UINT1 = 0x81,          //1 byte unsigned int (same as UINT8)
     SHORT_UINT2 = 0x82,          //2 bytes unsigned int (same as UINT16)
-    SHORT_UINT3 = 0x83,          //3 bytes unsigned int
+    //SHORT_UINT3 = 0x83,          //3 bytes unsigned int
     SHORT_UINT4 = 0x84,          //4 bytes unsigned int (same as UINT32)
-    SHORT_UINT5 = 0x85,          //5 bytes unsigned int
-    SHORT_UINT6 = 0x86,          //6 bytes unsigned int
-    SHORT_UINT7 = 0x87,          //7 bytes unsigned int
+    //SHORT_UINT5 = 0x85,          //5 bytes unsigned int
+    //SHORT_UINT6 = 0x86,          //6 bytes unsigned int
+    //SHORT_UINT7 = 0x87,          //7 bytes unsigned int
     SHORT_UINT8 = 0x88,          //8 bytes unsigned int (same as UINT64)
-    SHORT_UINT9 = 0x89,          //9 bytes unsigned int
-    SHORT_UINT10 = 0x8A,         //10 bytes unsigned int
+    //SHORT_UINT9 = 0x89,          //9 bytes unsigned int
+    //SHORT_UINT10 = 0x8A,         //10 bytes unsigned int
 
     SHORT_BYTES = 0xA0,       //OPAL_SHORT_TOKEN::Type == "Byte Sequence"
     SHORT_BYTES_1 = 0xA1,        //1 byte 
@@ -161,7 +161,7 @@ enum OPAL_DATA_TOKEN : BYTE {
 
 enum OPAL_UID_TAG {
     // users
-    SESSION_MGR,                //< session manager
+    SMUID,                //< session manager
     THISSP,                     //< special "thisSP" syntax (SP==Security Provider)
     ADMINSP,                    //< Administrative SP (SP==Security Provider)
     LOCKINGSP,                  //< Locking SP (SP==Security Provider)

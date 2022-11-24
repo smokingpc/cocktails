@@ -55,11 +55,11 @@ COpalDevice::COpalDevice(tstring devpath)
 }
 COpalDevice::~COpalDevice(){}
 
-DWORD COpalDevice::OpenSession()
-{
-    return ERROR_NOT_SUPPORTED; 
-}
-void COpalDevice::CloseSession(){}
+//DWORD COpalDevice::OpenSession()
+//{
+//    return ERROR_NOT_SUPPORTED; 
+//}
+//void COpalDevice::CloseSession(){}
 
 COpalNvme::COpalNvme(tstring devpath) : COpalDevice(devpath)
 {
@@ -124,6 +124,17 @@ DWORD COpalNvme::Identify()
 
     return ERROR_SUCCESS;
 }
+
+bool COpalNvme::QueryTPerProperties(BYTE* buffer, size_t buf_size)
+{
+    //send command directly
+    COpalCommand cmd;
+
+    
+
+    //read response
+}
+
 void COpalNvme::ParseIndentify(PINQUIRYDATA data)
 {
     RtlCopyMemory(DevInfo.ModelName, data->ProductId, sizeof(data->ProductId));

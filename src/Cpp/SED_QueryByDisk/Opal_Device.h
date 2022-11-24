@@ -13,7 +13,7 @@ public:
     tstring DevPath = _T("");
     
     inline void GetDeviceInfo(OPAL_DEVICE_INFO &info){RtlCopyMemory(&info, &DevInfo, sizeof(OPAL_DEVICE_INFO));}
-
+    virtual bool QueryTPerProperties(BYTE *buffer, size_t buf_size) = 0;
 protected:
     //DWORD OpenSession();
     //void CloseSession();
@@ -38,6 +38,7 @@ public:
 
     DWORD Discovery0();
     DWORD Identify();
+    bool QueryTPerProperties(BYTE* buffer, size_t buf_size);
 
 protected:
     void ParseDiscovery0(IN BYTE* buffer);
