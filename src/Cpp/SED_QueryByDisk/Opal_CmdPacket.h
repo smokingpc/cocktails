@@ -1,43 +1,46 @@
 #pragma once
 
-interface IOPAL_DATA_INOUT {
+class COpalDataBase
+{
+public:
+    virtual ~COpalDataBase(){}
     //bytes endian of Opal Data Blob is BIG-ENDIAN
     //size_t GetOpalBytes(list<BYTE>& result);
-    size_t GetOpalBytes(BYTE *buffer, size_t max_len);
+    virtual size_t GetOpalBytes(BYTE* buffer, size_t max_len)=0;
 
     //bytes endian of Opal Data Blob is BIG-ENDIAN
     //void PutOpalBytes(list<BYTE>& input);
-    void PutOpalBytes(BYTE* buffer, size_t max_len);
-    size_t GetOpalDataLen();     //get total length if output OpalData in BigEndian
-};
+    virtual void PutOpalBytes(BYTE* buffer, size_t max_len) = 0;
+    //get total length if output OpalData in BigEndian
+    virtual size_t GetOpalDataLen() = 0;
 
-interface IOPAL_DATA_ATOM {
-    void PutString(char* str, int strlen);
-    void PutBytes(BYTE* blob, int bloblen);
-    void PutUID(BYTE* uid);
-    //void PutUint8(UINT8 data);
-    //void PutUint16(UINT16 data);
-    //void PutUint32(UINT32 data);
-    //void PutUint64(UINT64 data);
-
-    template<typename T> void PutUint(T data);
+    virtual void Reset() = 0;
 };
 
 #pragma pack(push)
 #pragma pack(1)
-typedef struct _OPAL_COMPACKET : public IOPAL_DATA_INOUT {
+class COpalComPacket : public COpalDataBase{
+public:
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
+    size_t GetOpalDataLen();
+    void Reset();
+
     UINT32 Reserved = 0;
     UINT8 ExtComID[4] = { 0x07,0xFE, 0, 0 };//0x07FE0000 in big endian
     UINT32 OutstandingData = 0;   //big endian
     UINT32 MinTx = 0;             //big endian
-    UINT32 Length;                //(big endian) ==> sizeof(OPAL_PACKET) + OPAL_PACKET::Length
+    UINT32 Length = 0;            //(big endian) ==> sizeof(OPAL_PACKET) + OPAL_PACKET::Length
 
+};
+
+class COpalPacket : public COpalDataBase {
+public:
     size_t GetOpalBytes(BYTE* buffer, size_t max_len);
     void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
-}OPAL_COMPACKET;
+    void Reset();
 
-typedef struct _OPAL_PACKET : public IOPAL_DATA_INOUT {
     union
     {
         struct {
@@ -51,158 +54,163 @@ typedef struct _OPAL_PACKET : public IOPAL_DATA_INOUT {
     UINT16 AckType = 0;
     UINT32 Ack = 0;
     UINT32 Length = 0;          //==sizeof(OPAL_DATA_SUB_PACKET) + OPAL_DATA_SUB_PACKET::Length + padding length
+};
 
+class COpalSubPacket : public COpalDataBase {
+public:
     size_t GetOpalBytes(BYTE* buffer, size_t max_len);
     void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
-}OPAL_PACKET;
+    void Reset();
 
-typedef struct _OPAL_DATA_SUB_PACKET : public IOPAL_DATA_INOUT {
     UINT8 Reserved[6] = { 0 };
     UINT16 Kind = 0;        //??
     UINT32 Length = 0;      //total length of following DataPayload block, NOT INCLUDING padding...
-
-    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
-    void PutOpalBytes(BYTE* buffer, size_t max_len);
-    size_t GetOpalDataLen() { return sizeof(_OPAL_DATA_SUB_PACKET); }
-}OPAL_DATA_SUB_PACKET;
+};
 #pragma pack(pop)
 
-typedef struct _OPAL_UID {
-    BYTE UID[8] = { 0 };
 
-    _OPAL_UID(_OPAL_UID& newdata) { RtlCopyMemory(UID, newdata.UID, sizeof(UID)); }
-    void operator= (_OPAL_UID &data) { RtlCopyMemory(UID, data.UID, sizeof(UID)); }
-}OPAL_UID, * POPAL_UID;
-
-typedef struct _OPAL_DATA_ATOM : public IOPAL_DATA_ATOM, public IOPAL_DATA_INOUT {
-    OPAL_ATOM_TOKEN Type;
-    BYTE Data[32] = {0};        //hardcode.... MAX 32bytes data.
-
-    _OPAL_DATA_ATOM();
-    _OPAL_DATA_ATOM(char* str, int strlen);
-    _OPAL_DATA_ATOM(BYTE* data, int data_len);
-    _OPAL_DATA_ATOM(BYTE* data);
-    template<typename T>
-    _OPAL_DATA_ATOM(T data);
+class COpalDataAtom : public COpalDataBase {
+public:
+    COpalDataAtom();
+    COpalDataAtom(COpalDataAtom * newdata);
+    COpalDataAtom(COpalDataAtom& newdata);
+    COpalDataAtom(char* str, int strlen);
+    COpalDataAtom(BYTE* data, int data_len);
+    COpalDataAtom(BYTE* data);
+    template<typename T> COpalDataAtom(T data);
+    virtual ~COpalDataAtom();
 
     void PutString(char* str, int strlen);
     void PutBytes(BYTE* data, int data_len);
     void PutUID(BYTE* data);
-    template<typename T>
-        void PutUint(T data);
 
     size_t GetOpalBytes(BYTE* buffer, size_t max_len);
     void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
+    void Reset();
 
-    void operator= (_OPAL_DATA_ATOM& newdata);
-}OPAL_DATA_ATOM;
-
-typedef struct _OPAL_DATA{
-    OPAL_DATA_TOKEN Start;
-    OPAL_DATA_TOKEN End;
-} OPAL_DATA;
-
-typedef struct _OPAL_DATA_PAIR : public OPAL_DATA, public IOPAL_DATA_INOUT {
-    OPAL_DATA_ATOM Name;
-    //OPAL_DATA_ATOM Value;
-    IOPAL_DATA_INOUT Value;
-    _OPAL_DATA_PAIR();
-    _OPAL_DATA_PAIR(OPAL_DATA_ATOM name, IOPAL_DATA_INOUT value);
-
-    void operator= (_OPAL_DATA_PAIR &newdata);
-
-    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
-    void PutOpalBytes(BYTE* buffer, size_t max_len);
-    size_t GetOpalDataLen();
-} OPAL_DATA_PAIR;
-
-typedef struct _OPAL_DATA_LIST : public OPAL_DATA, IOPAL_DATA_INOUT {
-    list<IOPAL_DATA_INOUT*> List;
-
-    _OPAL_DATA_LIST()
+    void operator= (COpalDataAtom& newdata);
+    template<typename T> void PutUint(T data)
     {
-        Start = STARTLIST;
-        End = ENDLIST;
+        Reset();
+        SwapEndian(&data, (T*)Data);
+        Type = GetAtomBytesToken(sizeof(T));
     }
-    ~_OPAL_DATA_LIST()
+
+private:
+    OPAL_ATOM_TOKEN Type = OPAL_ATOM_TOKEN::NO_TOKEN;
+    BYTE Data[32] = {0};        //hardcode.... MAX 32bytes data.
+
+    //determine OPAL_ATOM_TOKEN::xxx_BYTES_xx by bytes array length
+    inline OPAL_ATOM_TOKEN GetAtomBytesToken(size_t size)
     {
-        for(IOPAL_DATA_INOUT* &item : List)
-            delete item;
-        List.clear();
+        OPAL_ATOM_TOKEN base = NO_TOKEN;
+        if (size >= 16)
+            base = MID_BYTES;
+        else if (size > 0)
+            base = SHORT_BYTES;
+
+        //check the definition of OPAL_ATOM_TOKEN.
+        //each token are defined as "BASE + length"
+        return (OPAL_ATOM_TOKEN)(base + size);
     }
-    void PushOpalItem(IOPAL_DATA_INOUT *item);
-    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
-    void PutOpalBytes(BYTE* buffer, size_t max_len);
-    size_t GetOpalDataLen();
-} OPAL_DATA_LIST;
 
-#if 0
-typedef struct _OPAL_SESSION_ARG : public _OPAL_DATA_LIST {
-    OPAL_DATA_ATOM HostSessionID;
-    OPAL_DATA_ATOM SPID;
-    OPAL_DATA_ATOM ReadWrite;
+    //determine OPAL_ATOM_TOKEN::xxx_BYTES_xx by sizeof(UINT data type)
+    inline OPAL_ATOM_TOKEN GetAtomUintToken(size_t size)
+    {
+        return (OPAL_ATOM_TOKEN)(SHORT_UINT + size);
+    }
 
-    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
-    void PutOpalBytes(BYTE* buffer, size_t max_len);
-    size_t GetOpalDataLen();
-} OPAL_SESSION_ARG;
-#endif
-typedef struct _OPAL_DATA_LIST OPAL_COMMAND_ARG;
-
-typedef struct _OPAL_CMD_PAYLOAD : public IOPAL_DATA_INOUT {
-    BYTE CallToken = (BYTE)CALL;
-    OPAL_DATA_ATOM InvokingUID;
-    OPAL_DATA_ATOM Method;
-    OPAL_COMMAND_ARG ArgList;
-
-    //size_t GetOpalBytes(BYTE* buffer, size_t max_len);
-    //void PutOpalBytes(BYTE* buffer, size_t max_len);
-    //size_t GetOpalDataLen();
-}OPAL_CMD_PAYLOAD;
-
-class COpalCmdBase{
+};//OPAL_DATA_ATOM;
+class COpalNamePair : public COpalDataBase {
 public:
-    COpalCmdBase();
-    ~COpalCmdBase();
+    COpalNamePair();
+    COpalNamePair(COpalNamePair &newdata);
+    COpalNamePair(COpalNamePair *newdata);
+    COpalNamePair(COpalDataAtom& name);
+    COpalNamePair(COpalDataAtom& name, COpalDataBase *value);
+    virtual ~COpalNamePair();
+    void operator= (COpalNamePair& newdata);
+    void Reset();
+    void Set(COpalDataAtom& name, COpalDataBase* value);
 
-    virtual void CompleteCmd() = 0;     //add empty list, add padding, calculate Length field in packets...etc.
-protected:
-    //sync Length fields of ComPacket, Packet, and SubPacket.
-    virtual void UpdatePacketLength() = 0;
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
+    size_t GetOpalDataLen();
 
-protected:
-    OPAL_COMPACKET ComPacket;
-    OPAL_PACKET Packet;
-    OPAL_DATA_SUB_PACKET SubPacket;
-    OPAL_CMD_PAYLOAD Payload;
+private:
+    const OPAL_DATA_TOKEN Start = OPAL_DATA_TOKEN::STARTNAME;
+    const OPAL_DATA_TOKEN End = OPAL_DATA_TOKEN::ENDNAME;
+    COpalDataAtom Name;
+    COpalDataBase *Value = NULL;
+    void CopyValue(COpalDataBase* newdata);
+};
+class COpalList : public COpalDataBase {
+public:
+    COpalList();
+    COpalList(COpalList &newlist);
+    COpalList(COpalList *newlist);
+    virtual ~COpalList();
+    void Reset();
+    void PushOpalItem(COpalDataBase *item);
+    void PushOpalItem(COpalDataBase &item);
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
+    size_t GetOpalDataLen();
+    void operator= (COpalList& newlist);
 
-    //BYTE MethodStatusList[5] = { 0xF0, 0, 0, 0, 0xF1 };
-    vector<BYTE> Padding;  //Packet::Length need align to DWORD, so put some padding...
+private:
+    const OPAL_DATA_TOKEN Start = OPAL_DATA_TOKEN::STARTLIST;
+    const OPAL_DATA_TOKEN End = OPAL_DATA_TOKEN::ENDLIST;
+    list<COpalDataBase*> List;
 
-    BYTE CmdBuf[PAGE_SIZE] = {0};
-    size_t CmdLength = 0;
+    void CopyList(list<COpalDataBase*> &newlist);
 };
 
+class COpalCmdPayload : public COpalDataBase {
+public:
+    COpalCmdPayload();
+    COpalCmdPayload(BYTE* invoke_uid, BYTE* method_uid);
+    virtual ~COpalCmdPayload();
 
-//class COpalSession : public COpalCmdBase {
-//    OPAL_SESSION_ARG Payload;
-//    void UpdatePacketLength();
-//};
+    void PushCmdArg(COpalDataBase *newarg);
+    void PushCmdArg(COpalDataBase &newarg);
 
-class COpalCommand : public COpalCmdBase {
+    size_t GetOpalBytes(BYTE* buffer, size_t max_len);
+    void PutOpalBytes(BYTE* buffer, size_t max_len);
+    size_t GetOpalDataLen();
+    void Set(BYTE *invoke_uid, BYTE *method_uid);
+    void Reset();
 
+private:
+    const BYTE CallToken = (BYTE)CALL;
+    COpalDataAtom InvokingUID;
+    COpalDataAtom Method;
+    COpalList ArgList;
+};
+
+class COpalCommand {
 public:
     COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method);
     ~COpalCommand();
 
-
+    void PushCmdArg(COpalDataBase &item);
+    void PushCmdArg(COpalDataBase *item);
+    size_t BuildCmdBuffer(BYTE* buffer, size_t max_buf_size);
     void CompleteCmd();     //add empty list, add padding, calculate Length field in packets...etc.
+protected:
+    //sync Length fields of ComPacket, Packet, and SubPacket.
     void UpdatePacketLength();
 
-    //size_t GetOpalBytes(BYTE* buffer, size_t max_len);
-    //void PutOpalBytes(BYTE* buffer, size_t max_len);
-    //size_t GetOpalDataLen();
+protected:
+    COpalComPacket ComPacket;
+    COpalPacket Packet;
+    COpalSubPacket SubPacket;
+    COpalCmdPayload Payload;
+    
+    UINT32 PaddingSize = 0;
+
+    size_t CmdLength = 0;
 };
 

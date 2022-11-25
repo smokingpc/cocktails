@@ -70,6 +70,20 @@ COpalNvme::COpalNvme(tstring devpath) : COpalDevice(devpath)
 }
 COpalNvme::~COpalNvme(){}
 
+UINT16 COpalDevice::GetBaseComID()
+{
+    switch (DevFeature)
+    {
+    case FEATURE_CODE::ENTERPRISE:
+        return DevInfo.Enterprise.BaseComID;
+    case FEATURE_CODE::OPAL_V100:
+        return DevInfo.OpalV100.BaseComID;
+    case FEATURE_CODE::OPAL_V200:
+        return DevInfo.OpalV200.BaseComID;
+    }
+
+    return 0;
+}
 DWORD COpalNvme::Discovery0()
 {
     //discovery0() use SCSI_OP==SCSIOP_SECURITY_PROTOCOL_IN with empty payload to ask 
@@ -125,14 +139,81 @@ DWORD COpalNvme::Identify()
     return ERROR_SUCCESS;
 }
 
-bool COpalNvme::QueryTPerProperties(BYTE* buffer, size_t buf_size)
+bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
 {
     //send command directly
-    COpalCommand cmd;
+    COpalCommand cmd(SMUID, PROPERTIES);
+    COpalNamePair hostprop;
+    COpalDataAtom name;
+    COpalDataAtom value;
+    COpalList value_list;
+    COpalNamePair value_pair;
+    //UINT16 max_size = PAGE_SIZE;
+    UINT16 data = PAGE_SIZE;
 
+    UINT32 temp = 1;
+    value.PutUint(temp);
+    {
+        name.PutString((char*)"MaxComPacketSize", sizeof("MaxComPacketSize"));
+        value.PutUint(data);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxResponseComPacketSize", sizeof("MaxResponseComPacketSize"));
+        value.PutUint(data);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxPacketSize", sizeof("MaxPacketSize"));
+        data = PAGE_SIZE - sizeof(COpalPacket);
+        value.PutUint(data);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxIndTokenSize", sizeof("MaxIndTokenSize"));
+        data = PAGE_SIZE - sizeof(COpalPacket) - sizeof(COpalPacket) - sizeof(COpalSubPacket);
+        value.PutUint(data);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        data = 1;
+        name.PutString((char*)"MaxPackets", sizeof("MaxPackets"));
+        value.PutUint(data);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxSubPackets", sizeof("MaxSubPackets"));
+        value.PutUint(data);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxMethods", sizeof("MaxMethods"));
+        value.PutUint(data);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+
+    name.PutUint((UINT8) HOSTPROPERTIES);
+    hostprop.Set(name, &value_list);
+
+    cmd.PushCmdArg(hostprop);
+    cmd.CompleteCmd();
     
+    BYTE cmd_buf[PAGE_SIZE] = {0};
+    size_t cmd_size = cmd.BuildCmdBuffer(cmd_buf, PAGE_SIZE);
+    
+    DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
+    if(ERROR_SUCCESS != error)
+        return false;
 
-    //read response
+    RtlCopyMemory(resp, cmd_buf, min(PAGE_SIZE, resp_size));
+    return true;
 }
 
 void COpalNvme::ParseIndentify(PINQUIRYDATA data)
@@ -207,13 +288,13 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             RtlCopyMemory(&DevInfo.Geometry, &desc->Geometry, sizeof(FEATURE_DESC_GEOMETRY));
             break;
         case ENTERPRISE:
-            if (desc->Header.Code > UseFeature)
-                UseFeature = (FEATURE_CODE)desc->Header.Code;
+            if (desc->Header.Code > DevFeature)
+                DevFeature = (FEATURE_CODE)desc->Header.Code;
             RtlCopyMemory(&DevInfo.Enterprise, &desc->Enterprise, sizeof(FEATURE_DESC_ENTERPRISE_SSC));
             break;
         case OPAL_V100:
-            if (desc->Header.Code > UseFeature)
-                UseFeature = (FEATURE_CODE)desc->Header.Code;
+            if (desc->Header.Code > DevFeature)
+                DevFeature = (FEATURE_CODE)desc->Header.Code;
             RtlCopyMemory(&DevInfo.OpalV100, &desc->OpalV100, sizeof(FEATURE_DESC_OPAL_V100));
             break;
         case SINGLE_USER:
@@ -223,8 +304,8 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             RtlCopyMemory(&DevInfo.Datastore, &desc->Datastore, sizeof(FEATURE_DESC_DATASTORE));
             break;
         case OPAL_V200:
-            if (desc->Header.Code > UseFeature)
-                UseFeature = (FEATURE_CODE)desc->Header.Code;
+            if (desc->Header.Code > DevFeature)
+                DevFeature = (FEATURE_CODE)desc->Header.Code;
             RtlCopyMemory(&DevInfo.OpalV200, &desc->OpalV200, sizeof(FEATURE_DESC_OPAL_V200));
             break;
         }

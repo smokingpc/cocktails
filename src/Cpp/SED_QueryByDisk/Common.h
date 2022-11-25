@@ -36,6 +36,6 @@ typedef basic_string<TCHAR> tstring;
 #include "Opal_Factory.h"
 
 //physical drive name example:  "\\.\PhysicalDrive2"
-//#define PHYSICAL_DISK_FORMAT    L"\\\\.\\PhysicalDrive%d"
+#define PHYSICAL_DISK_FORMAT    L"\\\\.\\PhysicalDrive%d"
 
 
