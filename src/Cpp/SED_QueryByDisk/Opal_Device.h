@@ -12,6 +12,10 @@ public:
     virtual DWORD Identify() = 0;
     tstring DevPath = _T("");
     
+    inline bool IsOpal2(){return (DevFeature == FEATURE_CODE::OPAL_V200);}
+    inline bool IsOpal1() { return (DevFeature == FEATURE_CODE::OPAL_V100); }
+    inline bool IsEnterprise() { return (DevFeature == FEATURE_CODE::ENTERPRISE); }
+
     inline void GetDeviceInfo(OPAL_DEVICE_INFO &info){RtlCopyMemory(&info, &DevInfo, sizeof(OPAL_DEVICE_INFO));}
     UINT16 GetBaseComID();
     virtual bool QueryTPerProperties(BYTE *buffer, size_t buf_size) = 0;

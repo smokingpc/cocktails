@@ -91,8 +91,11 @@ int _tmain(int argc, TCHAR* argv[])
         dev->GetDeviceInfo(info);
         PrintOpalDeviceInfo(dev->DevPath, info);
 
-        BYTE buffer[PAGE_SIZE] = {0};
-        dev->QueryTPerProperties(buffer, PAGE_SIZE);
+        if(dev->IsOpal2()|| dev->IsOpal1() || dev->IsEnterprise())
+        {
+            BYTE buffer[PAGE_SIZE] = {0};
+            dev->QueryTPerProperties(buffer, PAGE_SIZE);
+        }
     }
 
     //list<tstring> disklist;

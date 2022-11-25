@@ -289,12 +289,12 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             break;
         case ENTERPRISE:
             if (desc->Header.Code > DevFeature)
-                DevFeature = (FEATURE_CODE)desc->Header.Code;
+                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
             RtlCopyMemory(&DevInfo.Enterprise, &desc->Enterprise, sizeof(FEATURE_DESC_ENTERPRISE_SSC));
             break;
         case OPAL_V100:
             if (desc->Header.Code > DevFeature)
-                DevFeature = (FEATURE_CODE)desc->Header.Code;
+                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
             RtlCopyMemory(&DevInfo.OpalV100, &desc->OpalV100, sizeof(FEATURE_DESC_OPAL_V100));
             break;
         case SINGLE_USER:
@@ -305,7 +305,7 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             break;
         case OPAL_V200:
             if (desc->Header.Code > DevFeature)
-                DevFeature = (FEATURE_CODE)desc->Header.Code;
+                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
             RtlCopyMemory(&DevInfo.OpalV200, &desc->OpalV200, sizeof(FEATURE_DESC_OPAL_V200));
             break;
         }
