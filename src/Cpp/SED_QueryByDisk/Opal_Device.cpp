@@ -212,8 +212,14 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
     if(ERROR_SUCCESS != error)
         return false;
 
-    RtlCopyMemory(resp, cmd_buf, min(PAGE_SIZE, resp_size));
-    return true;
+    Sleep(50);  //wait 50ms for NVMe device complete last request.
+
+    //BYTE resp_buf[PAGE_SIZE] = { 0 };
+    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp, resp_size);
+
+    //RtlCopyMemory(resp, opal_buf, min(PAGE_SIZE, resp_size));
+
+    return (error == ERROR_SUCCESS);
 }
 
 void COpalNvme::ParseIndentify(PINQUIRYDATA data)
@@ -288,12 +294,12 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             RtlCopyMemory(&DevInfo.Geometry, &desc->Geometry, sizeof(FEATURE_DESC_GEOMETRY));
             break;
         case ENTERPRISE:
-            if (desc->Header.Code > DevFeature)
+            if (desc->Header.GetCode() > DevFeature)
                 DevFeature = (FEATURE_CODE)desc->Header.GetCode();
             RtlCopyMemory(&DevInfo.Enterprise, &desc->Enterprise, sizeof(FEATURE_DESC_ENTERPRISE_SSC));
             break;
         case OPAL_V100:
-            if (desc->Header.Code > DevFeature)
+            if (desc->Header.GetCode() > DevFeature)
                 DevFeature = (FEATURE_CODE)desc->Header.GetCode();
             RtlCopyMemory(&DevInfo.OpalV100, &desc->OpalV100, sizeof(FEATURE_DESC_OPAL_V100));
             break;
@@ -304,7 +310,7 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             RtlCopyMemory(&DevInfo.Datastore, &desc->Datastore, sizeof(FEATURE_DESC_DATASTORE));
             break;
         case OPAL_V200:
-            if (desc->Header.Code > DevFeature)
+            if (desc->Header.GetCode() > DevFeature)
                 DevFeature = (FEATURE_CODE)desc->Header.GetCode();
             RtlCopyMemory(&DevInfo.OpalV200, &desc->OpalV200, sizeof(FEATURE_DESC_OPAL_V200));
             break;

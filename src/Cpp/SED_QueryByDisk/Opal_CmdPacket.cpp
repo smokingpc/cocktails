@@ -690,7 +690,7 @@ void COpalList::Reset()
 
 void COpalList::PushOpalItem(COpalDataBase *item)
 {
-    List.push_back(item);
+    PushOpalItem(*item);
 }
 
 void COpalList::PushOpalItem(COpalDataBase &item)
@@ -878,7 +878,7 @@ size_t COpalCommand::BuildCmdBuffer(BYTE* buffer, size_t max_buf_size)
     size_t data_size = 0;
     BYTE* cursor = buffer;
 
-    if(CmdLength < max_buf_size)
+    if(CmdLength > max_buf_size)
         return 0;
 
     data_size = ComPacket.GetOpalBytes(cursor, remain_size);
