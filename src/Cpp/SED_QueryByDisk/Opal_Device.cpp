@@ -75,11 +75,11 @@ UINT16 COpalDevice::GetBaseComID()
     switch (DevFeature)
     {
     case FEATURE_CODE::ENTERPRISE:
-        return DevInfo.Enterprise.BaseComID;
+        return DevInfo.Enterprise.GetBaseComID();
     case FEATURE_CODE::OPAL_V100:
-        return DevInfo.OpalV100.BaseComID;
+        return DevInfo.OpalV100.GetBaseComID();
     case FEATURE_CODE::OPAL_V200:
-        return DevInfo.OpalV200.BaseComID;
+        return DevInfo.OpalV200.GetBaseComID();
     }
 
     return 0;
@@ -154,26 +154,26 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
     UINT32 temp = 1;
     value.PutUint(temp);
     {
-        name.PutString((char*)"MaxComPacketSize", sizeof("MaxComPacketSize"));
+        name.PutString((char*)"MaxComPacketSize", strlen("MaxComPacketSize"));
         value.PutUint(data);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
     {
-        name.PutString((char*)"MaxResponseComPacketSize", sizeof("MaxResponseComPacketSize"));
+        name.PutString((char*)"MaxResponseComPacketSize", strlen("MaxResponseComPacketSize"));
         value.PutUint(data);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
     {
-        name.PutString((char*)"MaxPacketSize", sizeof("MaxPacketSize"));
+        name.PutString((char*)"MaxPacketSize", strlen("MaxPacketSize"));
         data = PAGE_SIZE - sizeof(COpalPacket);
         value.PutUint(data);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
     {
-        name.PutString((char*)"MaxIndTokenSize", sizeof("MaxIndTokenSize"));
+        name.PutString((char*)"MaxIndTokenSize", strlen("MaxIndTokenSize"));
         data = PAGE_SIZE - sizeof(COpalPacket) - sizeof(COpalPacket) - sizeof(COpalSubPacket);
         value.PutUint(data);
         value_pair.Set(name, &value);
@@ -181,20 +181,20 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
     }
     {
         data = 1;
-        name.PutString((char*)"MaxPackets", sizeof("MaxPackets"));
-        value.PutUint(data);
+        name.PutString((char*)"MaxPackets", strlen("MaxPackets"));
+        value.PutUint((UINT8)data);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
     {
-        name.PutString((char*)"MaxSubPackets", sizeof("MaxSubPackets"));
-        value.PutUint(data);
+        name.PutString((char*)"MaxSubPackets", strlen("MaxSubPackets"));
+        value.PutUint((UINT8)data);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
     {
-        name.PutString((char*)"MaxMethods", sizeof("MaxMethods"));
-        value.PutUint(data);
+        name.PutString((char*)"MaxMethods", strlen("MaxMethods"));
+        value.PutUint((UINT8)data);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }

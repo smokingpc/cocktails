@@ -24,7 +24,7 @@ enum OPAL_ATOM_TOKEN : UINT16
     NO_TOKEN = 0,               //if data is only 1 bytes, don't push TOKEN in data payload
 
     SHORT_UINT = 0x80,           //OPAL_ATOM_TOKEN::Type == "UINT"
-    //SHORT_UINT1 = 0x81,          //1 byte unsigned int (same as UINT8)
+    SHORT_UINT1 = 0x81,          //1 byte unsigned int (same as UINT8)
     SHORT_UINT2 = 0x82,          //2 bytes unsigned int (same as UINT16)
     //SHORT_UINT3 = 0x83,          //3 bytes unsigned int
     SHORT_UINT4 = 0x84,          //4 bytes unsigned int (same as UINT32)

@@ -19,10 +19,10 @@ public:
 
 #pragma pack(push)
 #pragma pack(1)
-class COpalComPacket : public COpalDataBase{
+class COpalComPacket{// : public COpalDataBase{
 public:
     size_t GetOpalBytes(BYTE* buffer, size_t max_len);
-    void PutOpalBytes(BYTE* buffer, size_t max_len);
+    //void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
     void Reset();
 
@@ -34,10 +34,10 @@ public:
 
 };
 
-class COpalPacket : public COpalDataBase {
+class COpalPacket{// : public COpalDataBase {
 public:
     size_t GetOpalBytes(BYTE* buffer, size_t max_len);
-    void PutOpalBytes(BYTE* buffer, size_t max_len);
+    //void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
     void Reset();
 
@@ -56,10 +56,10 @@ public:
     UINT32 Length = 0;          //==sizeof(OPAL_DATA_SUB_PACKET) + OPAL_DATA_SUB_PACKET::Length + padding length
 };
 
-class COpalSubPacket : public COpalDataBase {
+class COpalSubPacket{// : public COpalDataBase {
 public:
     size_t GetOpalBytes(BYTE* buffer, size_t max_len);
-    void PutOpalBytes(BYTE* buffer, size_t max_len);
+    //void PutOpalBytes(BYTE* buffer, size_t max_len);
     size_t GetOpalDataLen();
     void Reset();
 
@@ -94,8 +94,10 @@ public:
     template<typename T> void PutUint(T data)
     {
         Reset();
-        SwapEndian(&data, (T*)Data);
-        Type = GetAtomBytesToken(sizeof(T));
+        //GetOpalBytes() will swap Endian again.
+        //Still store int values in LittleEndian.
+        RtlCopyMemory(this->Data, &data, sizeof(T));
+        Type = GetAtomUintToken(sizeof(T));
     }
 
 private:

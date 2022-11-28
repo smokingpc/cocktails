@@ -134,35 +134,35 @@ size_t COpalComPacket::GetOpalBytes(BYTE* buffer, size_t max_len)
     used_size = max_len - remain_size;
     return used_size;
 }
-void COpalComPacket::PutOpalBytes(BYTE* buffer, size_t max_len)
-{
-    BYTE* cursor = buffer;
-    size_t remain_size = max_len;
-    size_t size = 0;
-
-    if (max_len < GetOpalDataLen())
-        return ;
-
-    size = sizeof(Reserved);
-    SwapEndian((UINT32*)cursor, &Reserved);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(ExtComID);
-    RtlCopyMemory(ExtComID, cursor, size);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(OutstandingData);
-    SwapEndian((UINT32*)cursor, &OutstandingData);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(MinTx);
-    SwapEndian((UINT32*)cursor, &MinTx);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(Length);
-    SwapEndian((UINT32*)cursor, &Length);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-}
+//void COpalComPacket::PutOpalBytes(BYTE* buffer, size_t max_len)
+//{
+//    BYTE* cursor = buffer;
+//    size_t remain_size = max_len;
+//    size_t size = 0;
+//
+//    if (max_len < GetOpalDataLen())
+//        return ;
+//
+//    size = sizeof(Reserved);
+//    SwapEndian((UINT32*)cursor, &Reserved);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(ExtComID);
+//    RtlCopyMemory(ExtComID, cursor, size);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(OutstandingData);
+//    SwapEndian((UINT32*)cursor, &OutstandingData);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(MinTx);
+//    SwapEndian((UINT32*)cursor, &MinTx);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(Length);
+//    SwapEndian((UINT32*)cursor, &Length);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//}
 size_t COpalComPacket::GetOpalDataLen() { return sizeof(COpalComPacket); }
 void COpalComPacket::Reset()
 {
@@ -220,43 +220,43 @@ size_t COpalPacket::GetOpalBytes(BYTE* buffer, size_t max_len)
     used_size = max_len - remain_size;
     return used_size;
 }
-void COpalPacket::PutOpalBytes(BYTE* buffer, size_t max_len)
-{
-    BYTE* cursor = buffer;
-    size_t remain_size = max_len;
-    size_t size = 0;
-
-    if (max_len < GetOpalDataLen())
-        return;
-
-    size = sizeof(TSN);
-    SwapEndian((UINT32*)cursor, &TSN);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(HSN);
-    SwapEndian((UINT32*)cursor, &HSN);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(SeqNo);
-    SwapEndian((UINT32*)cursor, &SeqNo);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(Reserved);
-    SwapEndian((UINT16*)cursor, &Reserved);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(AckType);
-    SwapEndian((UINT16*)cursor, &AckType);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(Ack);
-    SwapEndian((UINT32*)cursor, &Ack);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(Length);
-    SwapEndian((UINT32*)cursor, &Length);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-}
+//void COpalPacket::PutOpalBytes(BYTE* buffer, size_t max_len)
+//{
+//    BYTE* cursor = buffer;
+//    size_t remain_size = max_len;
+//    size_t size = 0;
+//
+//    if (max_len < GetOpalDataLen())
+//        return;
+//
+//    size = sizeof(TSN);
+//    SwapEndian((UINT32*)cursor, &TSN);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(HSN);
+//    SwapEndian((UINT32*)cursor, &HSN);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(SeqNo);
+//    SwapEndian((UINT32*)cursor, &SeqNo);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(Reserved);
+//    SwapEndian((UINT16*)cursor, &Reserved);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(AckType);
+//    SwapEndian((UINT16*)cursor, &AckType);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(Ack);
+//    SwapEndian((UINT32*)cursor, &Ack);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(Length);
+//    SwapEndian((UINT32*)cursor, &Length);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//}
 size_t COpalPacket::GetOpalDataLen() { return sizeof(COpalPacket); }
 void COpalPacket::Reset()
 {
@@ -295,28 +295,28 @@ size_t COpalSubPacket::GetOpalBytes(BYTE* buffer, size_t max_len)
     used_size = max_len - remain_size;
     return used_size;
 }
-void COpalSubPacket::PutOpalBytes(BYTE* buffer, size_t max_len)
-{
-    BYTE* cursor = buffer;
-    size_t remain_size = max_len;
-    size_t used_size = 0;
-    size_t size = 0;
-
-    if (max_len < GetOpalDataLen())
-        return;
-
-    size = sizeof(Reserved);
-    RtlCopyMemory(Reserved, cursor, size);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(Kind);
-    SwapEndian((UINT16*)cursor, &Kind);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-
-    size = sizeof(Length);
-    SwapEndian((UINT32*)cursor, &Length);
-    UpdateSizeAndCursor(cursor, size, remain_size);
-}
+//void COpalSubPacket::PutOpalBytes(BYTE* buffer, size_t max_len)
+//{
+//    BYTE* cursor = buffer;
+//    size_t remain_size = max_len;
+//    size_t used_size = 0;
+//    size_t size = 0;
+//
+//    if (max_len < GetOpalDataLen())
+//        return;
+//
+//    size = sizeof(Reserved);
+//    RtlCopyMemory(Reserved, cursor, size);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(Kind);
+//    SwapEndian((UINT16*)cursor, &Kind);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//
+//    size = sizeof(Length);
+//    SwapEndian((UINT32*)cursor, &Length);
+//    UpdateSizeAndCursor(cursor, size, remain_size);
+//}
 size_t COpalSubPacket::GetOpalDataLen() { return sizeof(COpalSubPacket); }
 void COpalSubPacket::Reset()
 {
@@ -417,20 +417,21 @@ size_t COpalDataAtom::GetOpalBytes(BYTE* buffer, size_t max_len)
         token_size = data_size = 0;
     }
 
-    if(max_len < token_size + data_size)
+    if(max_len < (token_size + data_size) || 0 == (token_size + data_size))
         return 0;
 
-    if(0 == (token_size + data_size))
-        return 0;
+    //if datasize == 1, it is TINY_ATOM so no need to save type
+    if (1 == data_size)
+        token_size = 0;
 
     switch(token_size)
     {
         case 2:
-            RtlCopyMemory(cursor, (UINT16*)&Type, token_size);
+            SwapEndian((UINT16*)&Type, (UINT16*)cursor);
             break;
 
         case 1:
-            RtlCopyMemory(cursor, (UINT8*)&Type, token_size);
+            cursor[0] = (UINT8)Type;
             break;
     }
     UpdateSizeAndCursor(cursor, token_size, remain_size);
@@ -481,7 +482,10 @@ size_t COpalDataAtom::GetOpalDataLen()
     }
     else if (Type > SHORT_UINT)
     {
-        token_size = 1;
+        if (Type != SHORT_UINT1)
+            token_size = 1;
+        else
+            token_size = 0;
         data_size = (Type - SHORT_UINT);
     }
 
@@ -641,7 +645,7 @@ size_t COpalNamePair::GetOpalDataLen()
     //in such situation, "Start" and "End" tag are un-necessary.
     size_t name_len = Name.GetOpalDataLen();
     size_t data_len = (NULL!=Value)? Value->GetOpalDataLen() : 0;
-    return (sizeof(Start) + sizeof(End) + name_len, data_len);
+    return (sizeof(Start) + sizeof(End) + name_len + data_len);
 }
 #pragma endregion
 
@@ -839,10 +843,14 @@ size_t COpalCmdPayload::GetOpalBytes(BYTE* buffer, size_t max_len)
     size = Method.GetOpalBytes(cursor, remain_size);
     UpdateSizeAndCursor(cursor, size, remain_size);
 
-    size - ArgList.GetOpalBytes(cursor, remain_size);
+    size = ArgList.GetOpalBytes(cursor, remain_size);
     UpdateSizeAndCursor(cursor, size, remain_size);
 
-    size - MethodStatusList.GetOpalBytes(cursor, remain_size);
+    size = sizeof(BYTE);
+    RtlCopyMemory(cursor, &EndCallToken, size);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size = MethodStatusList.GetOpalBytes(cursor, remain_size);
     UpdateSizeAndCursor(cursor, size, remain_size);
 
     used_size = max_len - remain_size;
@@ -852,7 +860,14 @@ void COpalCmdPayload::PutOpalBytes(BYTE* buffer, size_t max_len)
 { throw new exception("not implemented"); }
 size_t COpalCmdPayload::GetOpalDataLen()
 {
-    return sizeof(CallToken) + InvokingUID.GetOpalDataLen() + Method.GetOpalDataLen();
+//not include MethodStatusList length
+    size_t size1 = sizeof(CallToken) + sizeof(EndCallToken);
+    size_t size2 = InvokingUID.GetOpalDataLen();
+    size_t size3 = Method.GetOpalDataLen();
+    size_t size4 = ArgList.GetOpalDataLen();
+//    return size1+size2+size3+size4;
+    return sizeof(CallToken) + InvokingUID.GetOpalDataLen() + Method.GetOpalDataLen() + 
+            ArgList.GetOpalDataLen() + sizeof(EndCallToken) + MethodStatusList.GetOpalDataLen();
 }
 void COpalCmdPayload::Reset()
 {
@@ -933,7 +948,7 @@ void COpalCommand::UpdatePacketLength()
     size = (UINT32)sizeof(COpalSubPacket) + SubPacket.Length;
     Packet.Length = (UINT32)ROUND_UP_ALIGN_2N(size, sizeof(UINT32));
     PaddingSize = Packet.Length - size;
-
+    size = sizeof(COpalPacket);
     ComPacket.Length = (UINT32)sizeof(COpalPacket) + Packet.Length;
     CmdLength = ComPacket.Length + sizeof(COpalComPacket);
 }
