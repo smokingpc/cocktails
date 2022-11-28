@@ -384,7 +384,7 @@ void COpalDataAtom::PutUID(BYTE* uid)
 size_t COpalDataAtom::GetOpalBytes(BYTE* buffer, size_t max_len)
 {
     BYTE* cursor = buffer;
-    size_t remain_size = 0;
+    size_t remain_size = max_len;
     size_t used_size = 0;
     size_t token_size = 0;
     size_t data_size = 0;
@@ -420,7 +420,7 @@ size_t COpalDataAtom::GetOpalBytes(BYTE* buffer, size_t max_len)
     if(max_len < token_size + data_size)
         return 0;
 
-    if(token_size + data_size)
+    if(0 == (token_size + data_size))
         return 0;
 
     switch(token_size)
@@ -831,6 +831,9 @@ size_t COpalCmdPayload::GetOpalBytes(BYTE* buffer, size_t max_len)
     UpdateSizeAndCursor(cursor, size, remain_size);
 
     size = Method.GetOpalBytes(cursor, remain_size);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size - ArgList.GetOpalBytes(cursor, remain_size);
     UpdateSizeAndCursor(cursor, size, remain_size);
 
     used_size = max_len - remain_size;
