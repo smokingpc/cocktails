@@ -648,7 +648,6 @@ size_t COpalNamePair::GetOpalDataLen()
 #pragma region ======== COpalList ========
 COpalList::COpalList()
 {}
-
 COpalList::COpalList(COpalList& newlist) : COpalList()
 {
     this->operator=(newlist);
@@ -796,7 +795,14 @@ size_t COpalList::GetOpalDataLen()
 //#pragma endregion
 
 #pragma region ======== COpalCmdPayload ========
-COpalCmdPayload::COpalCmdPayload(){}
+COpalCmdPayload::COpalCmdPayload()
+{
+    COpalDataAtom atom((UINT8)0);
+    MethodStatusList.PushOpalItem(atom);
+    MethodStatusList.PushOpalItem(atom);
+    MethodStatusList.PushOpalItem(atom);
+}
+
 COpalCmdPayload::COpalCmdPayload(BYTE* invoke_uid, BYTE* method_uid) : COpalCmdPayload()
 {
     Set(invoke_uid, method_uid);
@@ -834,6 +840,9 @@ size_t COpalCmdPayload::GetOpalBytes(BYTE* buffer, size_t max_len)
     UpdateSizeAndCursor(cursor, size, remain_size);
 
     size - ArgList.GetOpalBytes(cursor, remain_size);
+    UpdateSizeAndCursor(cursor, size, remain_size);
+
+    size - MethodStatusList.GetOpalBytes(cursor, remain_size);
     UpdateSizeAndCursor(cursor, size, remain_size);
 
     used_size = max_len - remain_size;
@@ -908,12 +917,12 @@ void COpalCommand::CompleteCmd()
 {
 //at the end of each OPAL_CMD_PAYLOAD, should push a empty OPAL_DATA_LIST with three bytes "0x00".
 //it represents the end of entire data payload.
-    COpalList endlist;
-    COpalDataAtom atom((UINT8) 0);
-    endlist.PushOpalItem(atom);
-    endlist.PushOpalItem(atom);
-    endlist.PushOpalItem(atom);
-    PushCmdArg(endlist);
+//    COpalList endlist;
+    //COpalDataAtom atom((UINT8) 0);
+    //endlist.PushOpalItem(atom);
+    //endlist.PushOpalItem(atom);
+    //endlist.PushOpalItem(atom);
+    //PushCmdArg(endlist);
     UpdatePacketLength();
 }
 

@@ -185,9 +185,11 @@ public:
 
 private:
     const BYTE CallToken = (BYTE)CALL;
+    const BYTE EndCallToken = (BYTE)ENDOFDATA;
     COpalDataAtom InvokingUID;
     COpalDataAtom Method;
     COpalList ArgList;
+    COpalList MethodStatusList; //indicates end of CmdPayload
 };
 
 class COpalCommand {
