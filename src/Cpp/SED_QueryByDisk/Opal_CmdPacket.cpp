@@ -359,11 +359,11 @@ COpalDataAtom::COpalDataAtom(T data) : COpalDataAtom()
     PutUint(data);
 }
 
-void COpalDataAtom::PutString(char* str, int strlen)
+void COpalDataAtom::PutString(char* str, size_t strlen)
 {
     PutBytes((BYTE*)str, strlen);
 }
-void COpalDataAtom::PutBytes(BYTE* data, int data_len)
+void COpalDataAtom::PutBytes(BYTE* data, size_t data_len)
 {
     Reset();
 
@@ -892,6 +892,11 @@ COpalCommand::~COpalCommand() {}
 void COpalCommand::PushCmdArg(COpalDataBase &item)
 {
     Payload.PushCmdArg(&item);
+}
+
+void COpalCommand::UpdateBaseComID(USHORT comid)
+{
+    SwapEndian(&comid, (UINT16*)ComPacket.ExtComID);
 }
 
 void COpalCommand::PushCmdArg(COpalDataBase *item)

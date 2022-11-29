@@ -68,7 +68,14 @@ COpalNvme::COpalNvme(tstring devpath) : COpalDevice(devpath)
 
     DevInfo.Type = BusTypeNvme;
 }
-COpalNvme::~COpalNvme(){}
+COpalNvme::~COpalNvme()
+{
+    if(INVALID_HANDLE_VALUE != DevHandle)
+    {
+        CloseHandle(DevHandle);
+        DevHandle = INVALID_HANDLE_VALUE;
+    }
+}
 
 UINT16 COpalDevice::GetBaseComID()
 {
@@ -153,7 +160,7 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
     UINT32 temp = 1;
     value.PutUint(temp);
     {
-        name.PutString((char*)"MaxComPacketSize", strlen("MaxComPacketSize"));
+        name.PutString((char*)"MaxComPacketSize", (int) strlen("MaxComPacketSize"));
         value.PutUint(data_size);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
@@ -202,13 +209,19 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
 
     cmd.PushCmdArg(hostprop);
     cmd.CompleteCmd();
-    
+
+    //to read Properties, we should use queried BaseComID to replace ExtComID in ComPacket;
+    cmd.UpdateBaseComID(GetBaseComID());
+
     BYTE *cmd_buf = new BYTE[PAGE_SIZE*2];
     RtlZeroMemory(cmd_buf, PAGE_SIZE*2);
     BYTE* temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)cmd_buf, PAGE_SIZE);
 
     //size_t cmd_size = cmd.BuildCmdBuffer(cmd_buf, PAGE_SIZE);
     //DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, BIG_BUFFER_SIZE);
+
+
+
     size_t cmd_size = cmd.BuildCmdBuffer(temp2, PAGE_SIZE);
     DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), temp2, PAGE_SIZE);
     delete[] cmd_buf;
@@ -219,6 +232,7 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
 
     temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)resp, PAGE_SIZE);
     //error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp, BIG_BUFFER_SIZE);
+
     error = DoScsiSecurityProtocolIn(1, GetBaseComID(), temp2, PAGE_SIZE);
 
     //RtlCopyMemory(resp, opal_buf, min(PAGE_SIZE, resp_size));
@@ -240,22 +254,27 @@ DWORD COpalNvme::SendCommand(DWORD ioctl, PVOID cmd_buf, size_t cmd_size)
 {
     DWORD rc = ERROR_SUCCESS;
     DWORD return_len = 0;
-    HANDLE device = CreateFile(DevPath.c_str(),
-        GENERIC_WRITE | GENERIC_READ,
-        FILE_SHARE_WRITE | FILE_SHARE_READ,
-        NULL,
-        OPEN_EXISTING,
-        0,
-        NULL);
 
-    if (INVALID_HANDLE_VALUE == device)
+    if (INVALID_HANDLE_VALUE == DevHandle)
+    {
+
+        DevHandle = CreateFile(DevPath.c_str(),
+            GENERIC_WRITE | GENERIC_READ,
+            FILE_SHARE_WRITE | FILE_SHARE_READ,
+            NULL,
+            OPEN_EXISTING,
+            0,
+            NULL);
+    }
+
+    if (INVALID_HANDLE_VALUE == DevHandle)
     {
         _tprintf(_T("Open %s failed, error = %d\n"), DevPath.c_str(), GetLastError());
         return ERROR_DEVICE_NOT_AVAILABLE;
     }
 
     //send cmd
-    BOOL ok = DeviceIoControl(device,
+    BOOL ok = DeviceIoControl(DevHandle,
         //IOCTL_SCSI_PASS_THROUGH_DIRECT,
         ioctl,
         cmd_buf,
@@ -267,7 +286,6 @@ DWORD COpalNvme::SendCommand(DWORD ioctl, PVOID cmd_buf, size_t cmd_size)
 
     if (!ok)
         rc = GetLastError();
-    CloseHandle(device);
 
     return rc;
 }

@@ -44,6 +44,8 @@ protected:
     void ParseIndentify(PVPD_SERIAL_NUMBER_PAGE data);
 
 private:
+    HANDLE DevHandle = INVALID_HANDLE_VALUE;
+
     DWORD SendCommand(DWORD ioctl, PVOID cmd_buf, size_t cmd_size);
 
     DWORD DoScsiSecurityProtocolIn(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size);

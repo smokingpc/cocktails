@@ -81,8 +81,8 @@ public:
     template<typename T> COpalDataAtom(T data);
     virtual ~COpalDataAtom();
 
-    void PutString(char* str, int strlen);
-    void PutBytes(BYTE* data, int data_len);
+    void PutString(char* str, size_t strlen);
+    void PutBytes(BYTE* data, size_t data_len);
     void PutUID(BYTE* data);
 
     size_t GetOpalBytes(BYTE* buffer, size_t max_len);
@@ -203,6 +203,8 @@ public:
     void PushCmdArg(COpalDataBase *item);
     size_t BuildCmdBuffer(BYTE* buffer, size_t max_buf_size);
     void CompleteCmd();     //add empty list, add padding, calculate Length field in packets...etc.
+
+    void UpdateBaseComID(USHORT comid);
 protected:
     //sync Length fields of ComPacket, Packet, and SubPacket.
     void UpdatePacketLength();
