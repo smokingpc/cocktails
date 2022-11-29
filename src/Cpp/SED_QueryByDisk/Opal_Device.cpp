@@ -43,7 +43,7 @@ static void FillScsiCmd(PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE cmd, PVOID buffer, 
     cmd->TargetId = 1;
     cmd->Lun = 0;
     cmd->DataTransferLength = buf_size; //length of cmd->DataBuffer.
-    cmd->TimeOutValue = 3;      //in seconds
+    cmd->TimeOutValue = 2;      //in seconds
     cmd->DataBuffer = buffer;
     cmd->SenseInfoOffset = offsetof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE, SenseInfo);
     cmd->SenseInfoLength = sizeof(cmd->SenseInfo);
@@ -148,53 +148,51 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
     COpalDataAtom value;
     COpalList value_list;
     COpalNamePair value_pair;
-    //UINT16 max_size = PAGE_SIZE;
-    UINT16 data = PAGE_SIZE;
+    UINT16 data_size = BIG_BUFFER_SIZE;
 
     UINT32 temp = 1;
     value.PutUint(temp);
     {
         name.PutString((char*)"MaxComPacketSize", strlen("MaxComPacketSize"));
-        value.PutUint(data);
+        value.PutUint(data_size);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
-    {
-        name.PutString((char*)"MaxResponseComPacketSize", strlen("MaxResponseComPacketSize"));
-        value.PutUint(data);
-        value_pair.Set(name, &value);
-        value_list.PushOpalItem(value_pair);
-    }
+    //{
+    //    name.PutString((char*)"MaxResponseComPacketSize", strlen("MaxResponseComPacketSize"));
+    //    value.PutUint(data);
+    //    value_pair.Set(name, &value);
+    //    value_list.PushOpalItem(value_pair);
+    //}
     {
         name.PutString((char*)"MaxPacketSize", strlen("MaxPacketSize"));
-        data = PAGE_SIZE - sizeof(COpalPacket);
-        value.PutUint(data);
+        data_size = BIG_BUFFER_SIZE - sizeof(COpalPacket);
+        value.PutUint(data_size);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
     {
         name.PutString((char*)"MaxIndTokenSize", strlen("MaxIndTokenSize"));
-        data = PAGE_SIZE - sizeof(COpalPacket) - sizeof(COpalPacket) - sizeof(COpalSubPacket);
-        value.PutUint(data);
+        data_size = BIG_BUFFER_SIZE - sizeof(COpalPacket) - sizeof(COpalPacket) - sizeof(COpalSubPacket);
+        value.PutUint(data_size);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
     {
-        data = 1;
         name.PutString((char*)"MaxPackets", strlen("MaxPackets"));
-        value.PutUint((UINT8)data);
+        value.PutUint((UINT8)1);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
     {
         name.PutString((char*)"MaxSubPackets", strlen("MaxSubPackets"));
-        value.PutUint((UINT8)data);
+        value.PutUint((UINT8)1);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
     {
         name.PutString((char*)"MaxMethods", strlen("MaxMethods"));
-        value.PutUint((UINT8)data);
+        value.PutUint((UINT8)1);
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
@@ -205,17 +203,23 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
     cmd.PushCmdArg(hostprop);
     cmd.CompleteCmd();
     
-    BYTE cmd_buf[PAGE_SIZE] = {0};
-    size_t cmd_size = cmd.BuildCmdBuffer(cmd_buf, PAGE_SIZE);
-    
-    DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
+    BYTE *cmd_buf = new BYTE[PAGE_SIZE*2];
+    RtlZeroMemory(cmd_buf, PAGE_SIZE*2);
+    BYTE* temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)cmd_buf, PAGE_SIZE);
+
+    //size_t cmd_size = cmd.BuildCmdBuffer(cmd_buf, PAGE_SIZE);
+    //DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, BIG_BUFFER_SIZE);
+    size_t cmd_size = cmd.BuildCmdBuffer(temp2, PAGE_SIZE);
+    DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), temp2, PAGE_SIZE);
+    delete[] cmd_buf;
     if(ERROR_SUCCESS != error)
         return false;
 
     Sleep(50);  //wait 50ms for NVMe device complete last request.
 
-    //BYTE resp_buf[PAGE_SIZE] = { 0 };
-    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp, resp_size);
+    temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)resp, PAGE_SIZE);
+    //error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp, BIG_BUFFER_SIZE);
+    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), temp2, PAGE_SIZE);
 
     //RtlCopyMemory(resp, opal_buf, min(PAGE_SIZE, resp_size));
 
@@ -337,7 +341,8 @@ DWORD COpalNvme::DoScsiSecurityProtocolIn(IN UCHAR protocol, IN UINT16 comid, IN
     cmd->CdbLength = sizeof(cdb->SECURITY_PROTOCOL_IN);
     cmd->DataIn = SCSI_IOCTL_DATA_IN;
 
-    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
+//    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
+    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE));
 }
 DWORD COpalNvme::DoScsiSecurityProtocolOut(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size)
 {
@@ -354,7 +359,8 @@ DWORD COpalNvme::DoScsiSecurityProtocolOut(IN UCHAR protocol, IN UINT16 comid, I
     cmd->CdbLength = sizeof(cdb->SECURITY_PROTOCOL_OUT);
     cmd->DataIn = SCSI_IOCTL_DATA_OUT;
 
-    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
+//    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
+    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE));
 }
 DWORD COpalNvme::DoScsiInquiry(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size)
 {

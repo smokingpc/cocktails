@@ -93,8 +93,12 @@ int _tmain(int argc, TCHAR* argv[])
 
         if(dev->IsOpal2()|| dev->IsOpal1() || dev->IsEnterprise())
         {
-            BYTE buffer[PAGE_SIZE] = {0};
+            //BYTE buffer[PAGE_SIZE] = {0};
+            BYTE *buffer = new BYTE[PAGE_SIZE*2];
+            RtlZeroMemory(buffer, PAGE_SIZE*2);
+            BYTE *temp = (BYTE*) ROUND_UP_ALIGN_2N((size_t)buffer, PAGE_SIZE);
             dev->QueryTPerProperties(buffer, PAGE_SIZE);
+            delete[] buffer;
         }
     }
 
