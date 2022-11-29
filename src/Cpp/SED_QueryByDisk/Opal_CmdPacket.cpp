@@ -810,10 +810,12 @@ void COpalCommand::UpdatePacketLength()
 COpalResponse::COpalResponse()
 {}
 COpalResponse::COpalResponse(BYTE* buffer, size_t max_buf_size) : COpalResponse()
-{LoadOpalBuffer(buffer, max_buf_size);}
+{
+    FromOpalBuffer(buffer, max_buf_size);
+}
 COpalResponse::~COpalResponse(){}
 
-void COpalResponse::LoadOpalBuffer(BYTE* buffer, size_t max_buf_size)
+void COpalResponse::FromOpalBuffer(BYTE* buffer, size_t max_buf_size)
 {}
 void COpalResponse::GetHeaders(COpalComPacket* compkt, COpalPacket* pkt, COpalSubPacket* subpkt)
 {

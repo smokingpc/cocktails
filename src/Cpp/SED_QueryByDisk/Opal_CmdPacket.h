@@ -223,7 +223,7 @@ public:
     COpalResponse(BYTE* buffer, size_t max_buf_size);
     ~COpalResponse();
 
-    void LoadOpalBuffer(BYTE* buffer, size_t max_buf_size);
+    void FromOpalBuffer(BYTE* buffer, size_t max_buf_size);
     void GetHeaders(COpalComPacket *compkt, COpalPacket *pkt, COpalSubPacket *subpkt);
     void GetHeaders(COpalComPacket &compkt, COpalPacket &pkt, COpalSubPacket &subpkt);
     void GetPayload(COpalCmdPayload &result);
