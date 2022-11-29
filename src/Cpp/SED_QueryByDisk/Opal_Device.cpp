@@ -165,12 +165,12 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
         value_pair.Set(name, &value);
         value_list.PushOpalItem(value_pair);
     }
-    //{
-    //    name.PutString((char*)"MaxResponseComPacketSize", strlen("MaxResponseComPacketSize"));
-    //    value.PutUint(data);
-    //    value_pair.Set(name, &value);
-    //    value_list.PushOpalItem(value_pair);
-    //}
+    {
+        name.PutString((char*)"MaxResponseComPacketSize", strlen("MaxResponseComPacketSize"));
+        value.PutUint(data_size);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
     {
         name.PutString((char*)"MaxPacketSize", strlen("MaxPacketSize"));
         data_size = BIG_BUFFER_SIZE - sizeof(COpalPacket);
@@ -212,30 +212,21 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
 
     //to read Properties, we should use queried BaseComID to replace ExtComID in ComPacket;
     cmd.UpdateBaseComID(GetBaseComID());
+    BYTE cmd_buf[PAGE_SIZE] = {0};
+    //BYTE *cmd_buf = new BYTE[PAGE_SIZE];
+    //RtlZeroMemory(cmd_buf, PAGE_SIZE);
+    //BYTE* temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)cmd_buf, PAGE_SIZE);
 
-    BYTE *cmd_buf = new BYTE[PAGE_SIZE*2];
-    RtlZeroMemory(cmd_buf, PAGE_SIZE*2);
-    BYTE* temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)cmd_buf, PAGE_SIZE);
+    size_t cmd_size = cmd.BuildOpalBuffer(cmd_buf, PAGE_SIZE);
+    DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
 
-    //size_t cmd_size = cmd.BuildCmdBuffer(cmd_buf, PAGE_SIZE);
-    //DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, BIG_BUFFER_SIZE);
-
-
-
-    size_t cmd_size = cmd.BuildCmdBuffer(temp2, PAGE_SIZE);
-    DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), temp2, PAGE_SIZE);
-    delete[] cmd_buf;
     if(ERROR_SUCCESS != error)
         return false;
 
     Sleep(50);  //wait 50ms for NVMe device complete last request.
-
-    temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)resp, PAGE_SIZE);
-    //error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp, BIG_BUFFER_SIZE);
-
-    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), temp2, PAGE_SIZE);
-
-    //RtlCopyMemory(resp, opal_buf, min(PAGE_SIZE, resp_size));
+    //sometimes buffer to read data from device SHOULD be allocated on heap, not stack....
+    //but in sedutils, it requires aligned to 1024 ? wierd....
+    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp, resp_size);
 
     return (error == ERROR_SUCCESS);
 }
@@ -359,8 +350,8 @@ DWORD COpalNvme::DoScsiSecurityProtocolIn(IN UCHAR protocol, IN UINT16 comid, IN
     cmd->CdbLength = sizeof(cdb->SECURITY_PROTOCOL_IN);
     cmd->DataIn = SCSI_IOCTL_DATA_IN;
 
-//    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
-    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE));
+    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
+    //return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE));
 }
 DWORD COpalNvme::DoScsiSecurityProtocolOut(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size)
 {
@@ -377,8 +368,8 @@ DWORD COpalNvme::DoScsiSecurityProtocolOut(IN UCHAR protocol, IN UINT16 comid, I
     cmd->CdbLength = sizeof(cdb->SECURITY_PROTOCOL_OUT);
     cmd->DataIn = SCSI_IOCTL_DATA_OUT;
 
-//    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
-    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE));
+    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
+//    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE));
 }
 DWORD COpalNvme::DoScsiInquiry(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size)
 {
