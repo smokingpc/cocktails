@@ -4,9 +4,15 @@ class COpalDataBase
 {
 public:
     virtual ~COpalDataBase(){}
+    
     //bytes endian of Opal Data Blob is BIG-ENDIAN
-    //size_t ToOpalBytes(list<BYTE>& result);
+    //ToOpalBytes() returns "how many bytes copied to buffer?"
+    //caller can use it to determine buffer new position ptr...
     virtual size_t ToOpalBytes(BYTE* buffer, size_t max_len)=0;
+    
+    //FromOpalBytes() returns "how many bytes consumed in parsing?
+    //caller can use it to determine buffer new position ptr...
+    virtual size_t FromOpalBytes(BYTE* buffer, size_t max_len) = 0;
 
     //bytes endian of Opal Data Blob is BIG-ENDIAN
     //void PutOpalBytes(list<BYTE>& input);
@@ -83,15 +89,65 @@ public:
     void PutString(char* str, size_t strlen);
     void PutBytes(BYTE* data, size_t data_len);
     void PutUID(BYTE* data);
+    
+    void GetBytes(BYTE* buffer, size_t max_len);
+    //template<typename T> void GetUint(T &data);
+
+    inline bool IsBytes(){ return (Type > OPAL_ATOM_TOKEN::SHORT_BYTES);}
+    inline bool IsNumeric() { return ((Type > OPAL_ATOM_TOKEN::SHORT_UINT) && !IsBytes()); }
+    inline bool IsTiny() { return ((Type == OPAL_ATOM_TOKEN::SHORT_UINT1) || (Type == OPAL_ATOM_TOKEN::SHORT_BYTES_1)); }
 
     size_t ToOpalBytes(BYTE* buffer, size_t max_len);
-    //void PutOpalBytes(BYTE* buffer, size_t max_len);
+    size_t FromOpalBytes(BYTE* buffer, size_t max_len);
+
     size_t OpalDataLen();
     void Reset();
 
     void operator= (COpalDataAtom& newdata);
+    template<typename T> void GetUint(T& data)
+    {
+        if (!IsNumeric() && !IsTiny())
+            return;
+
+        switch (Type)
+        {
+        case OPAL_ATOM_TOKEN::SHORT_UINT2:
+        {
+            UINT16 temp = 0;
+            SwapEndian((UINT16*)Data, (UINT16*)&temp);
+            data = (T)temp;
+            break;
+        }
+        case OPAL_ATOM_TOKEN::SHORT_UINT4:
+        {
+            UINT32 temp = 0;
+            SwapEndian((UINT32*)Data, (UINT32*)&temp);
+            data = (T)temp;
+            break;
+        }
+        case OPAL_ATOM_TOKEN::SHORT_UINT8:
+        {
+            UINT64 temp = 0;
+            SwapEndian((UINT64*)Data, (UINT64*)&temp);
+            data = (T)temp;
+            break;
+        }
+        case OPAL_ATOM_TOKEN::SHORT_UINT1:
+        case OPAL_ATOM_TOKEN::SHORT_BYTES_1:
+        default:
+            data = (T)Data[0];
+            break;
+        }
+    }
+
     template<typename T> void PutUint(T data)
     {
+    //filter out the types which IS NOT numberic type...
+        if(std::is_same<T, BYTE*>::value)
+            return;
+        if (std::is_same<T, char*>::value)
+            return;
+
         Reset();
         //ToOpalBytes() will swap Endian again.
         //Still store int values in LittleEndian.
@@ -100,8 +156,8 @@ public:
     }
 
 private:
-    OPAL_ATOM_TOKEN Type = OPAL_ATOM_TOKEN::NO_TOKEN;
-    BYTE Data[32] = {0};        //hardcode.... MAX 32bytes data.
+    OPAL_ATOM_TOKEN Type = OPAL_ATOM_TOKEN::NO_TOKEN;   //data stored here is LittleEndian.
+    BYTE Data[32] = {0};        //hardcode.... MAX 32bytes data. data stored here is LittleEndian.
 
     //determine OPAL_ATOM_TOKEN::xxx_BYTES_xx by bytes array length
     inline OPAL_ATOM_TOKEN GetAtomBytesToken(size_t size)
@@ -135,8 +191,11 @@ public:
     void operator= (COpalNamePair& newdata);
     void Reset();
     void Set(COpalDataAtom& name, COpalDataBase* value);
+    void Get(COpalDataAtom& name, COpalDataBase** value);
 
     size_t ToOpalBytes(BYTE* buffer, size_t max_len);
+    size_t FromOpalBytes(BYTE* buffer, size_t max_len);
+
     size_t OpalDataLen();
 
 private:
@@ -157,6 +216,8 @@ public:
     void PushOpalItem(COpalDataBase &item);
     void GetRawList(list<COpalDataBase*>& list);
     size_t ToOpalBytes(BYTE* buffer, size_t max_len);
+    size_t FromOpalBytes(BYTE* buffer, size_t max_len);
+
     size_t OpalDataLen();
     void operator= (COpalList& newlist);
 
@@ -174,28 +235,41 @@ public:
     COpalCmdPayload(BYTE* invoke_uid, BYTE* method_uid);
     virtual ~COpalCmdPayload();
 
-    void PushCmdArg(COpalDataBase *newarg);
-    void PushCmdArg(COpalDataBase &newarg);
-    void GetArgRawList(list<COpalDataBase*>& list);
+    void PushOpalItem(COpalDataBase *newarg);
+    void PushOpalItem(COpalDataBase &newarg);
+    void GetArgList(COpalList& result);
+    void GetArgList(list<COpalDataBase*>& list);
 
     size_t ToOpalBytes(BYTE* buffer, size_t max_len);
+    size_t FromOpalBytes(BYTE* buffer, size_t max_len);
+
     size_t OpalDataLen();
     void Set(BYTE *invoke_uid, BYTE *method_uid);
     void Reset();
     void operator= (COpalCmdPayload& newdata);
 
 private:
-    const BYTE CallToken = (BYTE)CALL;
-    const BYTE EndCallToken = (BYTE)ENDOFDATA;
+    const BYTE CallToken = (BYTE)OPAL_DATA_TOKEN::CALL;
+    const BYTE EndCallToken = (BYTE)OPAL_DATA_TOKEN::ENDOFDATA;
     COpalDataAtom InvokingUID;
     COpalDataAtom Method;
     COpalList ArgList;
-    COpalList MethodStatusList; //indicates end of CmdPayload
+    
+    //MethodStatusList indicates end of CmdPayload. it has only 5 bytes: 0xF0 0x00 0x00 0x00 0xF1
+    //I treat it as a COpalList with three 1-byte COpalDataAtom. Because the COpalSubPacket::Length
+    //fields need this value so I put MethodStatusList in COpalCmdPayload.
+    //(in view of data stream, it seems better to put MethodStatusList in COpalCommand ....)
+    COpalList MethodStatusList; 
 };
 
 class COpalCommand {
 public:
+    //Payload will be a DataAtom. used for EndSession command
+    COpalCommand();
+
+    //normal operation, Payload will be COpalCmdPayload
     COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method);
+    //normal operation, Payload will be COpalCmdPayload
     COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method, USHORT comid);
     ~COpalCommand();
 
@@ -203,7 +277,9 @@ public:
     void PushCmdArg(COpalDataBase *item);
     size_t BuildOpalBuffer(BYTE* buffer, size_t max_buf_size);
 
-    void UpdateBaseComID(USHORT comid);
+    void SetBaseComID(USHORT comid);
+    USHORT GetBaseComID();
+
 private:
     //sync Length fields of ComPacket, Packet, and SubPacket.
     void UpdatePacketLength();
@@ -211,8 +287,9 @@ private:
     COpalComPacket ComPacket;
     COpalPacket Packet;
     COpalSubPacket SubPacket;
-    COpalCmdPayload Payload;
-    
+    //COpalCmdPayload Payload;
+    COpalDataBase *Payload = nullptr;
+
     UINT32 PaddingSize = 0;
     UINT32 CmdLength = 0;
 };
@@ -220,19 +297,33 @@ private:
 class COpalResponse {
 public:
     COpalResponse();
-    COpalResponse(BYTE* buffer, size_t max_buf_size);
+    COpalResponse(BYTE* buffer, size_t max_len);
     ~COpalResponse();
 
-    void FromOpalBuffer(BYTE* buffer, size_t max_buf_size);
+    //FromOpalBuffer() returns "how many bytes consumed in parsing?
+    size_t FromOpalBuffer(BYTE* buffer, size_t max_len);
     void GetHeaders(COpalComPacket *compkt, COpalPacket *pkt, COpalSubPacket *subpkt);
     void GetHeaders(COpalComPacket &compkt, COpalPacket &pkt, COpalSubPacket &subpkt);
     void GetPayload(COpalCmdPayload &result);
-    void GetRawPayload(list<COpalDataBase*> &result);
-private:
-    COpalComPacket ComPacket;
-    COpalPacket Packet;
-    COpalSubPacket SubPacket;
-    COpalCmdPayload Payload;
+    void GetPayload(list<COpalDataBase*> &result);
+    
+    //Response of EndSession is different from other responses.
+    //It only has 1 char (0xFA) following after Data SubPacket.
+    //After 0xFA, there are only padding bytes.
+    //No Invoking and Method, no CALL token, No List....
+    inline bool IsEndSession()
+    {
+        return (OPAL_DATA_TOKEN::ENDOFSESSION == PayloadBegin[0]);
+    }
 
-    UINT32 PaddingSize = 0;
+private:
+    COpalComPacket *ComPacket = nullptr;
+    COpalPacket *Packet = nullptr;
+    COpalSubPacket *SubPacket = nullptr;
+    //COpalDataBase* Payload = nullptr;
+
+    BYTE* RespBuf = nullptr;
+    size_t RespBufSize = 0;
+    BYTE* PayloadBegin = nullptr;
+    size_t PayloadMaxSize = 0;
 };

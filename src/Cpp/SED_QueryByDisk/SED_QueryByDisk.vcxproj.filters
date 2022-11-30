@@ -30,6 +30,9 @@
     <ClCompile Include="Opal_Factory.cpp">
       <Filter>OPAL_Classes</Filter>
     </ClCompile>
+    <ClCompile Include="Opal_Utils.cpp">
+      <Filter>OPAL_Classes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -54,6 +57,9 @@
       <Filter>OPAL_Classes</Filter>
     </ClInclude>
     <ClInclude Include="Opal_Structures.h">
+      <Filter>OPAL_Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Utils.h">
       <Filter>OPAL_Classes</Filter>
     </ClInclude>
   </ItemGroup>

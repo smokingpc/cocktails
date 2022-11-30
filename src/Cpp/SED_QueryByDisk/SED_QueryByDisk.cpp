@@ -2,6 +2,8 @@
 //
 
 #include "Common.h"
+void PrintOpalList(COpalList* data);
+void PrintOpalNamePair(COpalNamePair* data);
 
 void PrintFeatureData(PFEATURE_DESC_TPer data)
 {
@@ -80,6 +82,125 @@ void PrintOpalDeviceInfo(tstring &diskname, OPAL_DEVICE_INFO& diskinfo)
     PrintFeatureData(&diskinfo.OpalV200);
 }
 
+void PrintOpalComPacket(COpalComPacket &compkt)
+{
+    UINT32 Reserved = 0;
+    UINT8 ExtComID[4] = { 0 };      //big endian
+    UINT32 OutstandingData = 0;     //big endian
+    UINT32 MinTx = 0;               //big endian
+    UINT32 Length = 0;              //(big endian) ==> sizeof(OPAL_PACKET) + OPAL_PACKET::Length
+
+    _tprintf(_T("=> compkt: ExtComID=0x%02X 0x%02X 0x%02X 0x%02X, OutstandingData=%d\n"), 
+                compkt.ExtComID[0], compkt.ExtComID[1], compkt.ExtComID[2], compkt.ExtComID[3], 
+                SwapEndian(compkt.OutstandingData));
+
+    _tprintf(_T("=> compkt: MinTx=%d, Length=%d(0x%08X)\n"),
+        SwapEndian(compkt.MinTx), SwapEndian(compkt.Length), SwapEndian(compkt.Length));
+}
+void PrintOpalPacket(COpalPacket& pkt)
+{
+    _tprintf(_T("==> pkt: SessionID = 0x%llX(TSN=0x%08d:HSN=0x%08d)\n"),
+        SwapEndian(pkt.SessionID), SwapEndian(pkt.TSN), SwapEndian(pkt.HSN));
+
+    _tprintf(_T("==> pkt: SeqNo=%d, AckType=%d, Ack=%d, Length=%d(0x%08X)\n"),
+        SwapEndian(pkt.SeqNo), SwapEndian(pkt.AckType), SwapEndian(pkt.Ack), 
+        SwapEndian(pkt.Length), SwapEndian(pkt.Length));
+}
+void PrintOpalSubPacket(COpalSubPacket& subpkt)
+{
+    UINT16 Kind = 0;        //??
+    UINT32 Length = 0;      //total length of following DataPayload block, NOT INCLUDE padding...
+
+    _tprintf(_T("===> subpkt: Kind=%d, Length=%d(0x%08X)\n"),
+        SwapEndian(subpkt.Kind), SwapEndian(subpkt.Length), SwapEndian(subpkt.Length));
+}
+
+void PrintOpalDataAtom(COpalDataAtom *atom)
+{
+    if(atom->IsTiny())
+    {
+        UINT8 data = 0;
+        atom->GetUint(data);
+        _tprintf(_T("DataAtom => TinyAtom [0x%02X]"), data);
+    }
+    else if (atom->IsNumeric())
+    {
+        UINT64 data = 0;
+        atom->GetUint(data);
+        _tprintf(_T("DataAtom => Numeric [0x%llX]"), data);
+    }
+    else if (atom->IsBytes())
+    {
+        BYTE buffer[32] = {0};
+        atom->GetBytes(buffer, 32);
+        _tprintf(_T("DataAtom => Bytes "));
+        for(int i=0; i<32; i++)
+            _tprintf(_T("0x%02X "), buffer[i]);
+        _tprintf(_T("\n"));
+    }
+    else
+    {
+        _tprintf(_T("  **  OOPS! DataAtom parsing error!! "));
+    }
+}
+
+void PrintOpalList(COpalList* data)
+{
+    _tprintf(_T(" [ \n"));
+    list<COpalDataBase*> list;
+    data->GetRawList(list);
+    for (COpalDataBase* item : list)
+    {
+        if(IsOpalList((COpalList*)item))
+            PrintOpalList((COpalList *)item);
+        else if (IsOpalNamePair((COpalNamePair*)item))
+            PrintOpalNamePair((COpalNamePair*)item);
+        else if (IsOpalAtom((COpalDataAtom*)item))
+            PrintOpalDataAtom((COpalDataAtom*)item);
+    }
+    _tprintf(_T(" ] \n"));
+}
+void PrintOpalNamePair(COpalNamePair* data)
+{
+    COpalDataAtom name;
+    COpalDataBase* value=nullptr;
+    _tprintf(_T(" { \n"));
+    data->Get(name, &value);
+    if (IsOpalList((COpalList*)value))
+        PrintOpalList((COpalList*)value);
+    else if (IsOpalNamePair((COpalNamePair*)value))
+        PrintOpalNamePair((COpalNamePair*)value);
+    else if (IsOpalAtom((COpalDataAtom*)value))
+        PrintOpalDataAtom((COpalDataAtom*)value);
+
+    if(nullptr != value)
+        delete value;
+    _tprintf(_T(" } \n"));
+}
+
+void PrintOpalProperties(BYTE* buffer, size_t max_len)
+{
+    COpalResponse resp;
+
+    _tprintf(_T("[TPer to HOST properties]\n"));
+
+    resp.FromOpalBuffer(buffer, max_len);
+
+    COpalComPacket compkt;
+    COpalPacket pkt;
+    COpalSubPacket subpkt;
+    resp.GetHeaders(compkt, pkt, subpkt);
+    PrintOpalComPacket(compkt);
+    PrintOpalPacket(pkt);
+    PrintOpalSubPacket(subpkt);
+
+    COpalCmdPayload payload;
+    resp.GetPayload(payload);
+    COpalList list;
+    payload.GetArgList(list);
+    PrintOpalList(&list);
+}
+
 int _tmain(int argc, TCHAR* argv[])
 {
     list<COpalDevice*> opallist;
@@ -94,49 +215,8 @@ int _tmain(int argc, TCHAR* argv[])
         if(dev->IsOpal2()|| dev->IsOpal1() || dev->IsEnterprise())
         {
             BYTE buffer[PAGE_SIZE] = {0};
-            //BYTE *buffer = new BYTE[PAGE_SIZE];
-            //RtlZeroMemory(buffer, PAGE_SIZE);
-            //BYTE *temp = (BYTE*) ROUND_UP_ALIGN_2N((size_t)buffer, PAGE_SIZE);
             dev->QueryTPerProperties(buffer, PAGE_SIZE);
-            //delete[] buffer;
         }
     }
-
-    //list<tstring> disklist;
-    //EnumPhysicalDisks(disklist);
-    //for(auto &diskname : disklist)
-    //{ 
-    //    BYTE *buffer = NULL;
-    //    STORAGE_BUS_TYPE type = BusTypeUnknown;
-    //    if(!IdentifyStorageType(type, diskname))
-    //    {
-    //        _tprintf(_T("Identify storage type of specified disk [%s] failed.\n"), diskname.c_str());
-    //        return -1;
-    //    }
-
-    //    //Identify storage type by "BusType of PhysicalDrive"
-    //    switch(type)
-    //    {
-    //        case BusTypeAta:
-    //        case BusTypeSata:
-    //        //case BusTypeRAID:   //don't use this cmd in RAID controller, even it is SATA raid. RAID will reply NO DATA.
-    //        {
-    //            OPAL_DISKINFO info = { 0 };
-    //            Identify_SATA(info, diskname);
-    //            Discovery0_SATA(info, diskname);
-    //            PrintDiskInfo(diskname, info);
-    //            break;
-    //        }
-    //        case BusTypeNvme:
-    //        {
-    //            OPAL_DISKINFO info = { 0 };
-    //            Identify_NVMe(info, diskname);
-    //            Discovery0_NVMe(info, diskname);
-    //            PrintDiskInfo(diskname, info);
-    //            break;
-    //        }
-    //    }
-    //}
-
     return ERROR_SUCCESS;
 }

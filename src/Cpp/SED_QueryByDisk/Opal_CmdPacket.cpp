@@ -100,22 +100,6 @@ static inline OPAL_ATOM_TOKEN GetAtomUintToken(size_t size)
     return (OPAL_ATOM_TOKEN)(SHORT_UINT + size);
 }
 
-static COpalDataBase* DuplicateOpalData(COpalDataBase* item)
-{
-    COpalDataAtom* atom = dynamic_cast<COpalDataAtom*> (item);
-    COpalList* list = dynamic_cast<COpalList*> (item);
-    COpalNamePair* pair = dynamic_cast<COpalNamePair*> (item);
-
-    if (NULL != atom)
-        return new COpalDataAtom(atom);
-    else if (NULL != list)
-        return new COpalList(list);
-    else if (NULL != pair)
-        return new COpalNamePair(pair);
-
-    return nullptr;
-}
-
 #pragma region ======== COpalComPacket ========
 size_t COpalComPacket::ToOpalBytes(BYTE* buffer, size_t max_len)
 {
@@ -279,13 +263,10 @@ COpalDataAtom::COpalDataAtom(BYTE* data) : COpalDataAtom()
 {
     PutUID(data);
 }
-
-template<typename T>
-COpalDataAtom::COpalDataAtom(T data) : COpalDataAtom()
+template<typename T> COpalDataAtom::COpalDataAtom(T data) : COpalDataAtom()
 {
     PutUint(data);
 }
-
 void COpalDataAtom::PutString(char* str, size_t strlen)
 {
     PutBytes((BYTE*)str, strlen);
@@ -307,7 +288,24 @@ void COpalDataAtom::PutUID(BYTE* uid)
     //UID is 8-bytes length predefined bytes array...
     PutBytes(uid, OPAL_UID_LEN);
 }
+void COpalDataAtom::GetBytes(BYTE* buffer, size_t max_len)
+{
+    if(!IsBytes())
+        return;
 
+    size_t data_len = 0;
+    if(Type > OPAL_ATOM_TOKEN::MID_BYTES)
+    {
+        data_len = (UINT16)Type - (UINT16)OPAL_ATOM_TOKEN::MID_BYTES;
+    }
+    else if (Type > OPAL_ATOM_TOKEN::SHORT_BYTES)
+    {
+        data_len = (UINT16)Type - (UINT16)OPAL_ATOM_TOKEN::SHORT_BYTES;
+    }
+    
+    data_len = min(data_len, max_len);
+    memcpy(buffer, Data, data_len);
+}
 size_t COpalDataAtom::ToOpalBytes(BYTE* buffer, size_t max_len)
 {
     BYTE* cursor = buffer;
@@ -383,7 +381,68 @@ size_t COpalDataAtom::ToOpalBytes(BYTE* buffer, size_t max_len)
     used_size = max_len - remain_size;
     return used_size;
 }
+size_t COpalDataAtom::FromOpalBytes(BYTE* buffer, size_t max_len)
+{
+    BYTE* cursor = buffer;
+    size_t total_used = 0;
+    size_t remain_size = max_len;
+    size_t used = 0;
+    UINT8 data_len = 0;
+    Reset();
 
+    //first element is OPAL_ATOM_TOKEN::MID_BYTESxxx
+    if(cursor[0] > 0xD0)
+    {
+        SwapEndian((UINT16*)cursor, (UINT16*)&Type);
+        data_len = (UINT16) Type - (UINT16)OPAL_ATOM_TOKEN::MID_BYTES;
+        memcpy(Data, cursor+sizeof(UINT16), data_len);
+        used = sizeof(UINT16) + data_len;
+    }
+    else if(cursor[0] > (UINT8)OPAL_ATOM_TOKEN::SHORT_BYTES)
+    {
+        Type = (OPAL_ATOM_TOKEN)cursor[0];
+        data_len = (UINT16)Type - (UINT16)OPAL_ATOM_TOKEN::SHORT_BYTES;
+        memcpy(Data, cursor + sizeof(UINT8), data_len);
+        used = sizeof(UINT16) + data_len;
+    }
+    else if (cursor[0] > (UINT8)OPAL_ATOM_TOKEN::SHORT_UINT)
+    {
+        Type = (OPAL_ATOM_TOKEN)cursor[0];
+        data_len = (UINT16)Type - (UINT16)OPAL_ATOM_TOKEN::SHORT_UINT;
+        cursor++;
+
+        switch (Type)
+        {
+        case OPAL_ATOM_TOKEN::SHORT_UINT1:
+            //memcpy(Data, cursor + sizeof(UINT8), 1);
+            Data[0] = cursor[0];
+            break;
+        case OPAL_ATOM_TOKEN::SHORT_UINT2:
+            SwapEndian((UINT16*)cursor, (UINT16*)Data);
+            break;
+        case OPAL_ATOM_TOKEN::SHORT_UINT4:
+            SwapEndian((UINT32*)cursor, (UINT32*)Data);
+            break;
+        case OPAL_ATOM_TOKEN::SHORT_UINT8:
+            SwapEndian((UINT64*)cursor, (UINT64*)Data);
+            break;
+        default:
+            break;
+        }
+        used = sizeof(UINT8) + data_len;
+    }
+    else
+    {
+        //this is TinyAtom datatype...
+        Type = OPAL_ATOM_TOKEN::SHORT_UINT1;
+        Data[0] = cursor[0];
+        used = 1;
+    }
+
+//END:
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+    return total_used;
+}
 size_t COpalDataAtom::OpalDataLen()
 {
     size_t token_size = 0;
@@ -415,13 +474,11 @@ size_t COpalDataAtom::OpalDataLen()
 
     return (token_size + data_size);
 }
-
 void COpalDataAtom::Reset()
 {
     Type = OPAL_ATOM_TOKEN::NO_TOKEN;
     RtlZeroMemory(Data, sizeof(Data));
 }
-
 void COpalDataAtom::operator= (COpalDataAtom& newdata)
 {
     this->Type = newdata.Type;
@@ -432,17 +489,13 @@ void COpalDataAtom::operator= (COpalDataAtom& newdata)
 #pragma region ======== COpalNamePair ========
 COpalNamePair::COpalNamePair()
 {}
-
-COpalNamePair::COpalNamePair(COpalNamePair& newdata) :COpalNamePair()
-{
-    this->operator=(newdata);
-}
-
+COpalNamePair::COpalNamePair(COpalNamePair& newdata) :COpalNamePair(&newdata)
+{}
 COpalNamePair::COpalNamePair(COpalNamePair* newdata) :COpalNamePair()
 {
-    this->operator=(*newdata);
+    COpalNamePair *tmp = (COpalNamePair*)DuplicateOpalData(newdata);
+    this->operator=(*tmp);
 }
-
 COpalNamePair::COpalNamePair(COpalDataAtom& name, COpalDataBase* value) : COpalNamePair()
 {
     Set(name, value);
@@ -451,17 +504,14 @@ COpalNamePair::COpalNamePair(COpalDataAtom& name) : COpalNamePair()
 {
     this->Name = name;
 }
-
 COpalNamePair::~COpalNamePair()
 {
     Reset();
 }
-
 void COpalNamePair::operator= (COpalNamePair& newdata)
 {
     Set(newdata.Name, newdata.Value);
 }
-
 void COpalNamePair::Reset ()
 {
     if (NULL != Value)
@@ -471,19 +521,24 @@ void COpalNamePair::Reset ()
     }
     Name.Reset();
 }
-
 void COpalNamePair::Set(COpalDataAtom& name, COpalDataBase* value)
 {
     this->Name = name;
     CopyValue(value);
 }
-
+void COpalNamePair::Get(COpalDataAtom& name, COpalDataBase** value)
+{
+    if(nullptr != value)
+    {
+        name = Name;
+        *value = DuplicateOpalData(this->Value);
+    }
+}
 //using RTTI to make sure COpalNamePair::Value contents will be copied
 void COpalNamePair::CopyValue(COpalDataBase* newdata)
 {
     this->Value = DuplicateOpalData(newdata);
 }
-
 size_t COpalNamePair::ToOpalBytes(BYTE* buffer, size_t max_len)
 {
     BYTE* cursor = buffer;
@@ -524,7 +579,53 @@ size_t COpalNamePair::ToOpalBytes(BYTE* buffer, size_t max_len)
     used_size = max_len - remain_size;
     return used_size;
 }
+size_t COpalNamePair::FromOpalBytes(BYTE* buffer, size_t max_len)
+{
+    BYTE* cursor = buffer;
+    size_t total_used = 0;
+    size_t remain_size = max_len;
+    size_t used = 0;
 
+    if (cursor[0] != (BYTE)OPAL_DATA_TOKEN::STARTNAME)
+        return 0;
+
+    used = 1;   //consume OPAL_DATA_TOKEN::STARTLIST token in buffer
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+
+    //following items only have 3 types: Atom, List, NamePair.
+    //there are many objects. so keep loop to parse until OPAL_DATA_TOKEN::ENDLIST met.
+    while (cursor[0] != OPAL_DATA_TOKEN::ENDNAME || total_used >= max_len)
+    {
+
+    //"Name" field in NamePair is always DataAtom.
+    //"Value" field in NamePair could be List, NamePair, or DataAtom
+        used = Name.FromOpalBytes(cursor, remain_size);
+        UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+
+        COpalDataBase* newdata = NULL;
+
+        if (cursor[0] == OPAL_DATA_TOKEN::STARTLIST)
+        {
+            newdata = new COpalList();
+        }
+        else if (cursor[0] == OPAL_DATA_TOKEN::STARTNAME)
+        {
+            newdata = new COpalNamePair();
+        }
+        else
+        {
+            newdata = new COpalDataAtom();
+        }
+        used = newdata->FromOpalBytes(cursor, remain_size);
+        Value = newdata;
+        UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+    }
+
+    used = 1;   //consume OPAL_DATA_TOKEN::ENDNAME token in buffer
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+
+    return total_used;
+}
 size_t COpalNamePair::OpalDataLen()
 {
     //if no "Name" field, the data_pair become a primitive type. Only have "Value" field.
@@ -542,23 +643,19 @@ COpalList::COpalList(COpalList& newlist) : COpalList()
 {
     this->operator=(newlist);
 }
-
 COpalList::COpalList(COpalList* newlist) : COpalList()
 {
     this->operator=(*newlist);
 }
-
 COpalList::~COpalList()
 {
     Reset();
 }
-
 void COpalList::operator= (COpalList& newlist)
 {
     Reset();
     CopyList(newlist.List);
 }
-
 //using RTTI to make sure COpalList::List contents will be copied
 void COpalList::CopyList(list<COpalDataBase*>& newlist)
 {
@@ -567,7 +664,6 @@ void COpalList::CopyList(list<COpalDataBase*>& newlist)
         PushOpalItem(*item);
     }
 }
-
 void COpalList::Reset()
 {
     for(COpalDataBase* item : List)
@@ -576,21 +672,18 @@ void COpalList::Reset()
     }
     List.clear();
 }
-
 void COpalList::PushOpalItem(COpalDataBase *item)
 {
-    PushOpalItem(*item);
+    this->List.push_back(item);
 }
-
 void COpalList::PushOpalItem(COpalDataBase &item)
 {
-    this->List.push_back(DuplicateOpalData(&item));
+    PushOpalItem(DuplicateOpalData(&item));
 }
 void COpalList::GetRawList(list<COpalDataBase*>& list)
 {
     CopyList(list);
 }
-
 size_t COpalList::ToOpalBytes(BYTE* buffer, size_t max_len)
 {
     BYTE* cursor = buffer;
@@ -625,7 +718,47 @@ size_t COpalList::ToOpalBytes(BYTE* buffer, size_t max_len)
     used_size = max_len - remain_size;
     return used_size;
 }
+size_t COpalList::FromOpalBytes(BYTE* buffer, size_t max_len)
+{
+    BYTE* cursor = buffer;
+    size_t total_used = 0;
+    size_t remain_size = max_len;
+    size_t used = 0;
 
+    if(cursor[0] != (BYTE)OPAL_DATA_TOKEN::STARTLIST)
+        return 0;
+
+    used = 1;   //consume OPAL_DATA_TOKEN::STARTLIST token in buffer
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+
+    //following items only have 3 types: Atom, List, NamePair.
+    //there are many objects. so keep loop to parse until OPAL_DATA_TOKEN::ENDLIST met.
+    while (cursor[0] != OPAL_DATA_TOKEN::ENDLIST || total_used >= max_len)
+    {
+        COpalDataBase* newdata = NULL;
+
+        if (cursor[0] == OPAL_DATA_TOKEN::STARTLIST)
+        {
+            newdata = new COpalList();
+        }
+        else if (cursor[0] == OPAL_DATA_TOKEN::STARTNAME)
+        {
+            newdata = new COpalNamePair();
+        }
+        else
+        {
+            newdata = new COpalDataAtom();
+        }
+        used = newdata->FromOpalBytes(cursor, remain_size);
+        List.push_back(newdata);
+        UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+    }
+
+    used = 1;   //consume OPAL_DATA_TOKEN::ENDLIST token in buffer
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+
+    return total_used;
+}
 size_t COpalList::OpalDataLen()
 {
     size_t ret = sizeof(Start) + sizeof(End);
@@ -647,7 +780,6 @@ COpalCmdPayload::COpalCmdPayload()
     MethodStatusList.PushOpalItem(atom);
     MethodStatusList.PushOpalItem(atom);
 }
-
 COpalCmdPayload::COpalCmdPayload(BYTE* invoke_uid, BYTE* method_uid) : COpalCmdPayload()
 {
     Set(invoke_uid, method_uid);
@@ -656,17 +788,21 @@ COpalCmdPayload::~COpalCmdPayload()
 {
     Reset();
 }
-void COpalCmdPayload::PushCmdArg(COpalDataBase* newarg)
+void COpalCmdPayload::PushOpalItem(COpalDataBase* newarg)
 {
     ArgList.PushOpalItem(newarg);
 }
-void COpalCmdPayload::PushCmdArg(COpalDataBase& newarg)
+void COpalCmdPayload::PushOpalItem(COpalDataBase& newarg)
 {
-    PushCmdArg(&newarg);
+    PushOpalItem(&newarg);
 }
-void COpalCmdPayload::GetArgRawList(list<COpalDataBase*>& list)
+void COpalCmdPayload::GetArgList(list<COpalDataBase*>& list)
 {
     ArgList.GetRawList(list);
+}
+void COpalCmdPayload::GetArgList(COpalList& result)
+{
+    result = this->ArgList;
 }
 size_t COpalCmdPayload::ToOpalBytes(BYTE* buffer, size_t max_len)
 {
@@ -701,8 +837,47 @@ size_t COpalCmdPayload::ToOpalBytes(BYTE* buffer, size_t max_len)
     used_size = max_len - remain_size;
     return used_size;
 }
-//void COpalCmdPayload::PutOpalBytes(BYTE* buffer, size_t max_len)
-//{ throw new exception("not implemented"); }
+size_t COpalCmdPayload::FromOpalBytes(BYTE* buffer, size_t max_len)
+{
+    BYTE *cursor = buffer;
+    size_t total_used = 0;
+    size_t remain_size = max_len;
+    size_t used = 0;
+    //command payload structure begin by OPAL_DATA_TOKEN::CALL
+    if(cursor[0] != (BYTE)OPAL_DATA_TOKEN::CALL)
+        return 0;
+
+    Reset();
+
+    used = 1;   //consume OPAL_DATA_TOKEN::CALL token in buffer
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+    //first element in cmd payload is InvokingUID.
+    //it is COpalDataAtom object
+    used = InvokingUID.FromOpalBytes(cursor, remain_size);
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+
+    //second element in cmd playload is Method.
+    //it is COpalDataAtom object
+    used = Method.FromOpalBytes(cursor, remain_size);
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+
+    used = ArgList.FromOpalBytes(cursor, remain_size);
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+
+    used = 1;   //consume OPAL_DATA_TOKEN::ENDOFDATA token in buffer
+    UpdateSizeAndCursor(cursor, used, total_used, remain_size);
+
+    //skip MethodStatusList. It is useless. Only used to identify "CmdPayload ends"
+    //I am too lazy to write parsing function so hardcode them here..... :p
+    assert(cursor[0] == OPAL_DATA_TOKEN::ENDOFDATA);
+    assert(cursor[1] == OPAL_DATA_TOKEN::STARTLIST);
+    assert(cursor[2] == 0x00);
+    assert(cursor[3] == 0x00);
+    assert(cursor[4] == 0x00);
+    assert(cursor[5] == OPAL_DATA_TOKEN::ENDLIST);
+
+    return total_used;
+}
 size_t COpalCmdPayload::OpalDataLen()
 {
 //not include MethodStatusList length
@@ -735,33 +910,49 @@ void COpalCmdPayload::Set(BYTE* invoke_uid, BYTE* method_uid)
 #pragma endregion
 
 #pragma region ======== COpalCommand ========
-COpalCommand::COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method) 
-    : PaddingSize(0), CmdLength(0)
+COpalCommand::COpalCommand()
 {
-    Payload.Set(INVOKE_UIDs[invoking].data(), METHOD_UIDs[method].data());
+    Payload = new COpalDataAtom();
 }
-
+COpalCommand::COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method)
+{
+    Payload = new COpalCmdPayload(INVOKE_UIDs[invoking].data(), METHOD_UIDs[method].data());
+    //Payload->Set(INVOKE_UIDs[invoking].data(), METHOD_UIDs[method].data());
+}
 COpalCommand::COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method, USHORT comid)
     : COpalCommand(invoking, method)
-    
 {
-    UpdateBaseComID(comid);
+    SetBaseComID(comid);
 }
-
-COpalCommand::~COpalCommand() {}
+COpalCommand::~COpalCommand() 
+{
+    if (nullptr != Payload)
+    {
+        delete Payload;
+        Payload = nullptr;
+    }
+}
 void COpalCommand::PushCmdArg(COpalDataBase &item)
 {
-    Payload.PushCmdArg(&item);
-}
+    if (IsCmdPayload(&item))
+        ((COpalCmdPayload*)Payload)->PushOpalItem(item);
 
-void COpalCommand::UpdateBaseComID(USHORT comid)
+//    Payload->PushOpalItem(&item);
+}
+void COpalCommand::SetBaseComID(USHORT comid)
 {
     SwapEndian(&comid, (UINT16*)ComPacket.ExtComID);
 }
-
+USHORT COpalCommand::GetBaseComID()
+{
+    UINT16 comid = 0;
+    SwapEndian((UINT16*)ComPacket.ExtComID, &comid);
+    return comid;
+}
 void COpalCommand::PushCmdArg(COpalDataBase *item)
 {
-    Payload.PushCmdArg(item);
+    if (IsCmdPayload(item))
+        ((COpalCmdPayload*)Payload)->PushOpalItem(item);
 }
 size_t COpalCommand::BuildOpalBuffer(BYTE* buffer, size_t max_buf_size)
 {
@@ -782,7 +973,7 @@ size_t COpalCommand::BuildOpalBuffer(BYTE* buffer, size_t max_buf_size)
     data_size = SubPacket.ToOpalBytes(cursor, remain_size);
     UpdateSizeAndCursor(cursor, data_size, remain_size);
 
-    data_size = Payload.ToOpalBytes(cursor, remain_size);
+    data_size = Payload->ToOpalBytes(cursor, remain_size);
     UpdateSizeAndCursor(cursor, data_size, remain_size);
 
     //put padding bytes
@@ -792,11 +983,10 @@ size_t COpalCommand::BuildOpalBuffer(BYTE* buffer, size_t max_buf_size)
     size_t used_size = max_buf_size - remain_size;
     return used_size;
 }
-
 void COpalCommand::UpdatePacketLength()
 {
     UINT32 size = 0;
-    SubPacket.Length = (UINT32) Payload.OpalDataLen();
+    SubPacket.Length = (UINT32) Payload->OpalDataLen();
     size = (UINT32)sizeof(COpalSubPacket) + SubPacket.Length;
     Packet.Length = (UINT32)ROUND_UP_ALIGN_2N(size, sizeof(UINT32));
     PaddingSize = Packet.Length - size;
@@ -809,19 +999,47 @@ void COpalCommand::UpdatePacketLength()
 #pragma region ======== COpalResponse ========
 COpalResponse::COpalResponse()
 {}
-COpalResponse::COpalResponse(BYTE* buffer, size_t max_buf_size) : COpalResponse()
+COpalResponse::COpalResponse(BYTE* buffer, size_t max_len) : COpalResponse()
 {
-    FromOpalBuffer(buffer, max_buf_size);
+    FromOpalBuffer(buffer, max_len);
 }
-COpalResponse::~COpalResponse(){}
+COpalResponse::~COpalResponse()
+{
+    if(nullptr != RespBuf)
+    {
+        delete[] RespBuf;
+        RespBuf = nullptr;
+    }
+}
+size_t COpalResponse::FromOpalBuffer(BYTE* buffer, size_t max_len)
+{
+    BYTE* cursor = RespBuf;
+    size_t total_size = 0;
+    ComPacket = (COpalComPacket*)buffer;
+    total_size = ComPacket->Length + sizeof(COpalComPacket);
 
-void COpalResponse::FromOpalBuffer(BYTE* buffer, size_t max_buf_size)
-{}
+    RespBuf = new BYTE[total_size];
+    memcpy(RespBuf, buffer, total_size);
+
+    ComPacket = (COpalComPacket*)cursor;
+    cursor += sizeof(COpalComPacket);
+    
+    Packet = (COpalPacket*)cursor;
+    cursor += sizeof(COpalPacket);
+    
+    SubPacket = (COpalSubPacket*)cursor;
+    cursor += sizeof(COpalSubPacket);
+    PayloadBegin = cursor;
+
+    PayloadMaxSize = ((UINT64)cursor - (UINT64)RespBuf);
+    RespBufSize = total_size;
+    return total_size;
+}
 void COpalResponse::GetHeaders(COpalComPacket* compkt, COpalPacket* pkt, COpalSubPacket* subpkt)
 {
-    memcpy(compkt, &ComPacket, sizeof(COpalComPacket));
-    memcpy(pkt, &Packet, sizeof(COpalPacket));
-    memcpy(subpkt, &SubPacket, sizeof(COpalSubPacket));
+    memcpy(compkt, ComPacket, sizeof(COpalComPacket));
+    memcpy(pkt, Packet, sizeof(COpalPacket));
+    memcpy(subpkt, SubPacket, sizeof(COpalSubPacket));
 }
 void COpalResponse::GetHeaders(COpalComPacket& compkt, COpalPacket& pkt, COpalSubPacket& subpkt)
 {
@@ -829,10 +1047,17 @@ void COpalResponse::GetHeaders(COpalComPacket& compkt, COpalPacket& pkt, COpalSu
 }
 void COpalResponse::GetPayload(COpalCmdPayload& result)
 {
-    result = this->Payload;
+    if(IsEndSession())
+        return;
+    result.FromOpalBytes(PayloadBegin, PayloadMaxSize);
 }
-void COpalResponse::GetRawPayload(list<COpalDataBase*>& result)
+void COpalResponse::GetPayload(list<COpalDataBase*>& result)
 {
-    this->Payload.GetArgRawList(result);
+    if (IsEndSession())
+        return;
+
+    COpalCmdPayload temp;
+    temp.FromOpalBytes(PayloadBegin, PayloadMaxSize);
+    temp.GetArgList(result);
 }
 #pragma endregion

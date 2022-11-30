@@ -10,6 +10,7 @@
 #include <scsi.h>
 #include <Setupapi.h>
 #include <stdio.h>
+#include <assert.h>
 #include <string>
 #include <list>
 #include <vector>
@@ -31,6 +32,7 @@ typedef basic_string<TCHAR> tstring;
 #include "Opal_Constant_and_Enum.h"
 #include "Opal_Structures.h"
 #include "Opal_CmdPacket.h"
+#include "Opal_Utils.h"
 #include "Opal_Device.h"
 #include "Opal_OS.h"
 #include "Opal_Factory.h"
