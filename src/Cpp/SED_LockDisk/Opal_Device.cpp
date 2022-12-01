@@ -36,17 +36,19 @@ static void FillScsiCDB_SecurityOut(PCDB cdb, UCHAR protocol, UINT16 comid, ULON
     SwapEndian(&temp, (ULONG*)cdb->SECURITY_PROTOCOL_OUT.AllocationLength);
 }
 
-static void FillScsiCmd(PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE cmd, PVOID buffer, ULONG buf_size)
+static void FillScsiCmd(PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE cmd, PVOID buffer, ULONG buf_size, UCHAR cdb_len, UCHAR data_inout)
 {
     cmd->Length = sizeof(SCSI_PASS_THROUGH_DIRECT);
     cmd->PathId = 0;
     cmd->TargetId = 1;
     cmd->Lun = 0;
     cmd->DataTransferLength = buf_size; //length of cmd->DataBuffer.
-    cmd->TimeOutValue = 3;      //in seconds
+    cmd->TimeOutValue = 2;      //in seconds
     cmd->DataBuffer = buffer;
     cmd->SenseInfoOffset = offsetof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE, SenseInfo);
     cmd->SenseInfoLength = sizeof(cmd->SenseInfo);
+    cmd->CdbLength = cdb_len;
+    cmd->DataIn = data_inout;
 }
 
 COpalDevice::COpalDevice(tstring devpath)
@@ -55,11 +57,11 @@ COpalDevice::COpalDevice(tstring devpath)
 }
 COpalDevice::~COpalDevice(){}
 
-DWORD COpalDevice::OpenSession()
-{
-    return ERROR_NOT_SUPPORTED; 
-}
-void COpalDevice::CloseSession(){}
+//DWORD COpalDevice::OpenSession()
+//{
+//    return ERROR_NOT_SUPPORTED; 
+//}
+//void COpalDevice::CloseSession(){}
 
 COpalNvme::COpalNvme(tstring devpath) : COpalDevice(devpath)
 {
@@ -68,8 +70,29 @@ COpalNvme::COpalNvme(tstring devpath) : COpalDevice(devpath)
 
     DevInfo.Type = BusTypeNvme;
 }
-COpalNvme::~COpalNvme(){}
+COpalNvme::~COpalNvme()
+{
+    if(INVALID_HANDLE_VALUE != DevHandle)
+    {
+        CloseHandle(DevHandle);
+        DevHandle = INVALID_HANDLE_VALUE;
+    }
+}
 
+UINT16 COpalDevice::GetBaseComID()
+{
+    switch (DevFeature)
+    {
+    case FEATURE_CODE::ENTERPRISE:
+        return DevInfo.Enterprise.GetBaseComID();
+    case FEATURE_CODE::OPAL_V100:
+        return DevInfo.OpalV100.GetBaseComID();
+    case FEATURE_CODE::OPAL_V200:
+        return DevInfo.OpalV200.GetBaseComID();
+    }
+
+    return 0;
+}
 DWORD COpalNvme::Discovery0()
 {
     //discovery0() use SCSI_OP==SCSIOP_SECURITY_PROTOCOL_IN with empty payload to ask 
@@ -124,6 +147,92 @@ DWORD COpalNvme::Identify()
 
     return ERROR_SUCCESS;
 }
+
+bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
+{
+    //send command directly
+    COpalCommand cmd(SMUID, PROPERTIES);
+    COpalNamePair hostprop;
+    COpalDataAtom name;
+    COpalDataAtom value;
+    COpalList value_list;
+    COpalNamePair value_pair;
+    UINT16 data_size = BIG_BUFFER_SIZE;
+
+    UINT32 temp = 1;
+    value.PutUint(temp);
+    {
+        name.PutString((char*)"MaxComPacketSize", (int) strlen("MaxComPacketSize"));
+        value.PutUint(data_size);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxResponseComPacketSize", strlen("MaxResponseComPacketSize"));
+        value.PutUint(data_size);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxPacketSize", strlen("MaxPacketSize"));
+        data_size = BIG_BUFFER_SIZE - sizeof(COpalComPacket);
+        value.PutUint(data_size);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxIndTokenSize", strlen("MaxIndTokenSize"));
+        data_size = BIG_BUFFER_SIZE - sizeof(COpalComPacket) - sizeof(COpalPacket) - sizeof(COpalSubPacket);
+        value.PutUint(data_size);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxPackets", strlen("MaxPackets"));
+        value.PutUint((UINT8)1);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxSubPackets", strlen("MaxSubPackets"));
+        value.PutUint((UINT8)1);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+    {
+        name.PutString((char*)"MaxMethods", strlen("MaxMethods"));
+        value.PutUint((UINT8)1);
+        value_pair.Set(name, &value);
+        value_list.PushOpalItem(value_pair);
+    }
+
+    name.PutUint((UINT8) HOSTPROPERTIES);
+    hostprop.Set(name, &value_list);
+
+    cmd.PushCmdArg(hostprop);
+    //cmd.CompleteCmd();
+
+    //to read Properties, we should use queried BaseComID to replace ExtComID in ComPacket;
+    cmd.SetBaseComID(GetBaseComID());
+    BYTE cmd_buf[PAGE_SIZE] = {0};
+    //BYTE *cmd_buf = new BYTE[PAGE_SIZE];
+    //RtlZeroMemory(cmd_buf, PAGE_SIZE);
+    //BYTE* temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)cmd_buf, PAGE_SIZE);
+
+    size_t cmd_size = cmd.BuildOpalBuffer(cmd_buf, PAGE_SIZE);
+    DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
+
+    if(ERROR_SUCCESS != error)
+        return false;
+
+    Sleep(50);  //wait 50ms for NVMe device complete last request.
+    //sometimes buffer to read data from device SHOULD be allocated on heap, not stack....
+    //but in sedutils, it requires aligned to 1024 ? wierd....
+    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp, resp_size);
+
+    return (error == ERROR_SUCCESS);
+}
+
 void COpalNvme::ParseIndentify(PINQUIRYDATA data)
 {
     RtlCopyMemory(DevInfo.ModelName, data->ProductId, sizeof(data->ProductId));
@@ -138,22 +247,27 @@ DWORD COpalNvme::SendCommand(DWORD ioctl, PVOID cmd_buf, size_t cmd_size)
 {
     DWORD rc = ERROR_SUCCESS;
     DWORD return_len = 0;
-    HANDLE device = CreateFile(DevPath.c_str(),
-        GENERIC_WRITE | GENERIC_READ,
-        FILE_SHARE_WRITE | FILE_SHARE_READ,
-        NULL,
-        OPEN_EXISTING,
-        0,
-        NULL);
 
-    if (INVALID_HANDLE_VALUE == device)
+    if (INVALID_HANDLE_VALUE == DevHandle)
+    {
+
+        DevHandle = CreateFile(DevPath.c_str(),
+            GENERIC_WRITE | GENERIC_READ,
+            FILE_SHARE_WRITE | FILE_SHARE_READ,
+            NULL,
+            OPEN_EXISTING,
+            0,
+            NULL);
+    }
+
+    if (INVALID_HANDLE_VALUE == DevHandle)
     {
         _tprintf(_T("Open %s failed, error = %d\n"), DevPath.c_str(), GetLastError());
         return ERROR_DEVICE_NOT_AVAILABLE;
     }
 
     //send cmd
-    BOOL ok = DeviceIoControl(device,
+    BOOL ok = DeviceIoControl(DevHandle,
         //IOCTL_SCSI_PASS_THROUGH_DIRECT,
         ioctl,
         cmd_buf,
@@ -165,7 +279,6 @@ DWORD COpalNvme::SendCommand(DWORD ioctl, PVOID cmd_buf, size_t cmd_size)
 
     if (!ok)
         rc = GetLastError();
-    CloseHandle(device);
 
     return rc;
 }
@@ -196,13 +309,13 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             RtlCopyMemory(&DevInfo.Geometry, &desc->Geometry, sizeof(FEATURE_DESC_GEOMETRY));
             break;
         case ENTERPRISE:
-            if (desc->Header.Code > UseFeature)
-                UseFeature = (FEATURE_CODE)desc->Header.Code;
+            if (desc->Header.GetCode() > DevFeature)
+                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
             RtlCopyMemory(&DevInfo.Enterprise, &desc->Enterprise, sizeof(FEATURE_DESC_ENTERPRISE_SSC));
             break;
         case OPAL_V100:
-            if (desc->Header.Code > UseFeature)
-                UseFeature = (FEATURE_CODE)desc->Header.Code;
+            if (desc->Header.GetCode() > DevFeature)
+                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
             RtlCopyMemory(&DevInfo.OpalV100, &desc->OpalV100, sizeof(FEATURE_DESC_OPAL_V100));
             break;
         case SINGLE_USER:
@@ -212,8 +325,8 @@ void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
             RtlCopyMemory(&DevInfo.Datastore, &desc->Datastore, sizeof(FEATURE_DESC_DATASTORE));
             break;
         case OPAL_V200:
-            if (desc->Header.Code > UseFeature)
-                UseFeature = (FEATURE_CODE)desc->Header.Code;
+            if (desc->Header.GetCode() > DevFeature)
+                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
             RtlCopyMemory(&DevInfo.OpalV200, &desc->OpalV200, sizeof(FEATURE_DESC_OPAL_V200));
             break;
         }
@@ -234,12 +347,11 @@ DWORD COpalNvme::DoScsiSecurityProtocolIn(IN UCHAR protocol, IN UINT16 comid, IN
         (PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE)cmd_ptr.get();
     PCDB cdb = (PCDB)cmd->Cdb;
 
-    FillScsiCmd(cmd, opal_buf, (ULONG)buf_size);
+    FillScsiCmd(cmd, opal_buf, (ULONG)buf_size, sizeof(cdb->SECURITY_PROTOCOL_IN), SCSI_IOCTL_DATA_IN);
     FillScsiCDB_SecurityIn(cdb, protocol, comid, (ULONG)buf_size);
-    cmd->CdbLength = sizeof(cdb->SECURITY_PROTOCOL_IN);
-    cmd->DataIn = SCSI_IOCTL_DATA_IN;
 
     return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
+    //return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE));
 }
 DWORD COpalNvme::DoScsiSecurityProtocolOut(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size)
 {
@@ -251,12 +363,11 @@ DWORD COpalNvme::DoScsiSecurityProtocolOut(IN UCHAR protocol, IN UINT16 comid, I
         (PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE)cmd_ptr.get();
     PCDB cdb = (PCDB)cmd->Cdb;
 
-    FillScsiCmd(cmd, opal_buf, (ULONG)buf_size);
+    FillScsiCmd(cmd, opal_buf, (ULONG)buf_size, (UCHAR)sizeof(cdb->SECURITY_PROTOCOL_OUT), SCSI_IOCTL_DATA_OUT);
     FillScsiCDB_SecurityOut(cdb, protocol, comid, (ULONG)buf_size);
-    cmd->CdbLength = sizeof(cdb->SECURITY_PROTOCOL_OUT);
-    cmd->DataIn = SCSI_IOCTL_DATA_OUT;
 
     return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
+//    return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), sizeof(SCSI_PASS_THROUGH_DIRECT_WITH_SENSE));
 }
 DWORD COpalNvme::DoScsiInquiry(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size)
 {
@@ -268,10 +379,8 @@ DWORD COpalNvme::DoScsiInquiry(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal
         (PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE)cmd_ptr.get();
     PCDB cdb = (PCDB)cmd->Cdb;
 
-    FillScsiCmd(cmd, opal_buf, (ULONG)buf_size);
+    FillScsiCmd(cmd, opal_buf, (ULONG)buf_size, (UCHAR)sizeof(cdb->CDB6INQUIRY), SCSI_IOCTL_DATA_IN);
     FillScsiCDB_Inquiry(cdb, (UCHAR)buf_size);
-    cmd->CdbLength = sizeof(cdb->CDB6INQUIRY);
-    cmd->DataIn = SCSI_IOCTL_DATA_IN;
 
     return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
 }
@@ -285,10 +394,8 @@ DWORD COpalNvme::DoScsiInquiry3Vpd(IN UCHAR protocol, IN UINT16 comid, IN BYTE* 
         (PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE)cmd_ptr.get();
     PCDB cdb = (PCDB)cmd->Cdb;
 
-    FillScsiCmd(cmd, opal_buf, (ULONG)buf_size);
+    FillScsiCmd(cmd, opal_buf, (ULONG)buf_size, (UCHAR)sizeof(cdb->CDB6INQUIRY3), SCSI_IOCTL_DATA_IN);
     FillScsiCDB_Inquiry3Vpd(cdb, (UCHAR)buf_size);
-    cmd->CdbLength = sizeof(cdb->CDB6INQUIRY3);
-    cmd->DataIn = SCSI_IOCTL_DATA_IN;
 
     return SendCommand(IOCTL_SCSI_PASS_THROUGH_DIRECT, cmd_ptr.get(), cmd_size);
 }

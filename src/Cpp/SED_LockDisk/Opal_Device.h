@@ -12,22 +12,20 @@ public:
     virtual DWORD Identify() = 0;
     tstring DevPath = _T("");
     
+    inline bool IsOpal2(){return (DevFeature == FEATURE_CODE::OPAL_V200);}
+    inline bool IsOpal1() { return (DevFeature == FEATURE_CODE::OPAL_V100); }
+    inline bool IsEnterprise() { return (DevFeature == FEATURE_CODE::ENTERPRISE); }
+
     inline void GetDeviceInfo(OPAL_DEVICE_INFO &info){RtlCopyMemory(&info, &DevInfo, sizeof(OPAL_DEVICE_INFO));}
-
+    UINT16 GetBaseComID();
+    virtual bool QueryTPerProperties(BYTE *buffer, size_t buf_size) = 0;
 protected:
-    DWORD OpenSession();
-    void CloseSession();
-
     OPAL_DEVICE_INFO DevInfo;
-    FEATURE_CODE UseFeature = FEATURE_CODE::NO_FEATURE;
+    FEATURE_CODE DevFeature = FEATURE_CODE::NO_FEATURE;
     
     //following fields comes from TCG_Storage_Opal_SSC_Application_Note.pdf
     //it explains communication packets and blocks structure.
     UINT32 HostSession = 0;
-    //OPAL_VER OpalVer = NO_OPAL;
-    //UINT16 BaseComID = 0;       //used to build opal session, queried by Discovery0 
-    //UINT16 BaseComID = 0;
-    //tstring DevPath = _T("");
 };
 
 
@@ -38,6 +36,7 @@ public:
 
     DWORD Discovery0();
     DWORD Identify();
+    bool QueryTPerProperties(BYTE* resp, size_t resp_size);
 
 protected:
     void ParseDiscovery0(IN BYTE* buffer);
@@ -45,9 +44,10 @@ protected:
     void ParseIndentify(PVPD_SERIAL_NUMBER_PAGE data);
 
 private:
+    HANDLE DevHandle = INVALID_HANDLE_VALUE;
+
     DWORD SendCommand(DWORD ioctl, PVOID cmd_buf, size_t cmd_size);
 
-    //
     DWORD DoScsiSecurityProtocolIn(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size);
     DWORD DoScsiSecurityProtocolOut(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size);
     DWORD DoScsiInquiry(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size);

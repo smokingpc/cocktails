@@ -19,18 +19,52 @@ enum FEATURE_CODE : UINT16 {
     OPAL_V200 = 0x0203,
 };
 
-//indicates the data type in Data Payload.
-enum OPAL_ATOM_TAG : BYTE
+enum OPAL_ATOM_TOKEN : UINT16
 {
-    ATOM_UINT = 0x80,           //OPAL_ATOM_TOKEN::Type == "UINT"
-    ATOM_BYTE_SEQ = 0xA0,       //OPAL_ATOM_TOKEN::Type == "Byte Sequence"
+    NO_TOKEN = 0,               //if data is only 1 bytes, don't push TOKEN in data payload
+
+    //all type tokens are greater than 0x80.
+    //values smaller than 0x80 should be TinyAtom. TinyAtom doesn't have token.
+    SHORT_UINT = 0x0080,           //OPAL_ATOM_TOKEN::Type == "UINT"
+    SHORT_UINT1 = 0x0081,          //1 byte unsigned int (same as UINT8)
+    SHORT_UINT2 = 0x0082,          //2 bytes unsigned int (same as UINT16)
+    SHORT_UINT3 = 0x0083,          //3 bytes unsigned int
+    SHORT_UINT4 = 0x0084,          //4 bytes unsigned int (same as UINT32)
+    SHORT_UINT5 = 0x0085,          //5 bytes unsigned int
+    SHORT_UINT6 = 0x0086,          //6 bytes unsigned int
+    SHORT_UINT7 = 0x0087,          //7 bytes unsigned int
+    SHORT_UINT8 = 0x0088,          //8 bytes unsigned int (same as UINT64)
+    SHORT_UINT9 = 0x0089,          //9 bytes unsigned int
+    SHORT_UINT10 = 0x008A,         //10 bytes unsigned int
+
+    SHORT_BYTES = 0x00A0,       //OPAL_SHORT_TOKEN::Type == "Byte Sequence"
+    SHORT_BYTES_1 = 0x00A1,        //1 byte 
+    SHORT_BYTES_2 = 0x00A2,        //2 bytes array => BYTE[2]
+    SHORT_BYTES_3 = 0x00A3,        //3 bytes array => BYTE[3]
+    SHORT_BYTES_4 = 0x00A4,        //4 bytes array => BYTE[4]
+    SHORT_BYTES_5 = 0x00A5,        //5 bytes array => BYTE[5]
+    SHORT_BYTES_6 = 0x00A6,        //6 bytes array => BYTE[6]
+    SHORT_BYTES_7 = 0x00A7,        //7 bytes array => BYTE[7]
+    SHORT_BYTES_8 = 0x00A8,        //8 bytes array => BYTE[8]
+    SHORT_BYTES_9 = 0x00A9,        //9 bytes array => BYTE[9]
+    SHORT_BYTES_10 = 0x00AA,        //10 bytes array => BYTE[10]
+    SHORT_BYTES_11 = 0x00AB,        //11 bytes array => BYTE[11]
+    SHORT_BYTES_12 = 0x00AC,        //12 bytes array => BYTE[12]
+    SHORT_BYTES_13 = 0x00AD,        //13 bytes array => BYTE[13]
+    SHORT_BYTES_14 = 0x00AE,        //14 bytes array => BYTE[14]
+    SHORT_BYTES_15 = 0x00AF,        //15 bytes array => BYTE[15]
+
+    MID_BYTES = 0xD000,
+    MID_BYTES_16 = 0xD010,     //16 bytes array => BYTE[16]
+    MID_BYTES_24 = 0xD018,     //24 bytes array => BYTE[24]
 };
 
-enum OPAL_PAYLOAD_TOKEN {
+enum OPAL_DATA_TOKEN : BYTE {
     //Boolean
     OPAL_TRUE = 0x01,
     OPAL_FALSE = 0x00,
     OPAL_BOOLEAN_EXPR = 0x03,
+
     // cellblocks
     TABLE = 0x00,
     STARTROW = 0x01,
@@ -38,8 +72,10 @@ enum OPAL_PAYLOAD_TOKEN {
     STARTCOLUMN = 0x03,
     ENDCOLUMN = 0x04,
     VALUES = 0x01,
+
     // authority table
     PIN = 0x03,
+
     // locking tokens
     RANGESTART = 0x03,
     RANGELENGTH = 0x04,
@@ -48,18 +84,23 @@ enum OPAL_PAYLOAD_TOKEN {
     READLOCKED = 0x07,
     WRITELOCKED = 0x08,
     ACTIVEKEY = 0x0A,
+
     //locking info table
     MAXRANGES = 0x04,
+
     // mbr control
     MBRENABLE = 0x01,
     MBRDONE = 0x02,
+
     // properties
     HOSTPROPERTIES = 0x00,
+
     // response tokenis() returned values
     DTA_TOKENID_BYTESTRING = 0xe0,
     DTA_TOKENID_SINT = 0xe1,
     DTA_TOKENID_UINT = 0xe2,
     DTA_TOKENID_TOKEN = 0xe3, // actual token is returned
+
     // atoms
     STARTLIST = 0xf0,
     ENDLIST = 0xf1,
@@ -87,7 +128,7 @@ enum OPAL_PAYLOAD_TOKEN {
 
 enum OPAL_UID_TAG {
     // users
-    SESSION_MGR,                //< session manager
+    SMUID,                //< session manager
     THISSP,                     //< special "thisSP" syntax (SP==Security Provider)
     ADMINSP,                    //< Administrative SP (SP==Security Provider)
     LOCKINGSP,                  //< Locking SP (SP==Security Provider)

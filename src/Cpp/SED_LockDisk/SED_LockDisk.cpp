@@ -84,15 +84,6 @@ void PrintOpalDeviceInfo(tstring& diskname, OPAL_DEVICE_INFO& info)
 
 int _tmain(int argc, TCHAR* argv[])
 {
-    list<COpalDevice *> devlist;
-    OpalFactory::EnumOpalDevices(devlist);
-
-    for(auto &device : devlist)
-    {
-        OPAL_DEVICE_INFO info;
-        device->GetDeviceInfo(info);
-        PrintOpalDeviceInfo(device->DevPath, info);
-    }
 }
 
 

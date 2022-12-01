@@ -148,15 +148,14 @@ typedef struct _FEATURE_DESCRIPTOR
     }DUMMYSTRUCTNAME;
 }FEATURE_DESCRIPTOR, * PFEATURE_DESCRIPTOR;
 
-//indicates the data type in Data Payload.
-typedef struct  _OPAL_ATOM_TOKEN {
-    union {
-        UCHAR Length : 4;
-        UCHAR Type : 4;
-    }DUMMYSTRUCTNAME;
-    UCHAR AsByte;
-}OPAL_ATOM_TOKEN;
-
+////indicates the data type in Data Payload.
+//typedef struct  _OPAL_ATOM_TOKEN {
+//    union {
+//        UCHAR Length : 4;
+//        UCHAR Type : 4;
+//    }DUMMYSTRUCTNAME;
+//    UCHAR AsByte;
+//}OPAL_ATOM_TOKEN;
 #pragma pack(pop)
 
 typedef struct _OPAL_DEVICE_INFO

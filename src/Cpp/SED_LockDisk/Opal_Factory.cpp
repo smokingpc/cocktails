@@ -2,8 +2,6 @@
 using namespace std;
 #pragma comment( lib, "setupapi.lib" )
 
-namespace OpalFactory
-{
 void EnumOpalDevices(IN OUT std::list<COpalDevice*>& result)
 {
     list<tstring> disklist;
@@ -27,15 +25,14 @@ DWORD QueryOpalDevices(IN tstring& diskname, IN OUT OPAL_DEVICE_INFO& result)
 { 
     return ERROR_NOT_SUPPORTED; 
 }
-OPAL_DEVICE_INFO* CreateOpalDevice(IN tstring& diskname)
-{
-    return NULL;
-}
+//OPAL_DEVICE_INFO* CreateOpalDevice(IN tstring& diskname)
+//{
+//    return NULL;
+//}
 size_t EnumOpalDevice(IN tstring& diskname, IN OUT list< COpalDevice*> devlist)
 {
     return 0;
 }
-
 STORAGE_BUS_TYPE QueryStorageType(IN tstring& diskname)
 {
     bool ok = false;
@@ -83,7 +80,7 @@ STORAGE_BUS_TYPE QueryStorageType(IN tstring& diskname)
     return type;
 }
 
-DWORD EnumWin32Disks(IN OUT list<tstring> &result)
+DWORD EnumWin32Disks(IN OUT std::list<tstring> &result)
 {
     HDEVINFO devinfo = NULL;
     GUID class_guid = GUID_DEVINTERFACE_DISK;
@@ -151,6 +148,4 @@ DWORD EnumWin32Disks(IN OUT list<tstring> &result)
         return ERROR_NOT_FOUND;
     
     return ERROR_SUCCESS;
-}
-
 }
