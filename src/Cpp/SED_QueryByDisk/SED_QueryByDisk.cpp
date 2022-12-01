@@ -121,13 +121,13 @@ void PrintOpalDataAtom(COpalDataAtom *atom)
     {
         UINT8 data = 0;
         atom->GetUint(data);
-        _tprintf(_T("DataAtom => TinyAtom [0x%02X]"), data);
+        _tprintf(_T("DataAtom => TinyAtom [0x%02X](%d)"), data, data);
     }
     else if (atom->IsNumeric())
     {
         UINT64 data = 0;
         atom->GetUint(data);
-        _tprintf(_T("DataAtom => Numeric [0x%llX]"), data);
+        _tprintf(_T("DataAtom => Numeric [0x%llX](%lld)"), data, data);
     }
     else if (atom->IsBytes())
     {
@@ -137,6 +137,8 @@ void PrintOpalDataAtom(COpalDataAtom *atom)
         for(int i=0; i<32; i++)
             _tprintf(_T("0x%02X "), buffer[i]);
         _tprintf(_T("\n"));
+
+        _tprintf(_T("         => \"%S\" \n"), (char*)buffer);
     }
     else
     {
@@ -166,6 +168,9 @@ void PrintOpalNamePair(COpalNamePair* data)
     COpalDataBase* value=nullptr;
     _tprintf(_T(" { \n"));
     data->Get(name, &value);
+
+    PrintOpalDataAtom((COpalDataAtom*)&name);
+
     if (IsOpalList((COpalList*)value))
         PrintOpalList((COpalList*)value);
     else if (IsOpalNamePair((COpalNamePair*)value))
@@ -216,7 +221,10 @@ int _tmain(int argc, TCHAR* argv[])
         {
             BYTE buffer[PAGE_SIZE] = {0};
             dev->QueryTPerProperties(buffer, PAGE_SIZE);
+            PrintOpalProperties(buffer, PAGE_SIZE);
         }
     }
+
+    getchar();
     return ERROR_SUCCESS;
 }

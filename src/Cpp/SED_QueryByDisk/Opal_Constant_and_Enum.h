@@ -28,14 +28,14 @@ enum OPAL_ATOM_TOKEN : UINT16
     SHORT_UINT = 0x0080,           //OPAL_ATOM_TOKEN::Type == "UINT"
     SHORT_UINT1 = 0x0081,          //1 byte unsigned int (same as UINT8)
     SHORT_UINT2 = 0x0082,          //2 bytes unsigned int (same as UINT16)
-    //SHORT_UINT3 = 0x0083,          //3 bytes unsigned int
+    SHORT_UINT3 = 0x0083,          //3 bytes unsigned int
     SHORT_UINT4 = 0x0084,          //4 bytes unsigned int (same as UINT32)
-    //SHORT_UINT5 = 0x0085,          //5 bytes unsigned int
-    //SHORT_UINT6 = 0x0086,          //6 bytes unsigned int
-    //SHORT_UINT7 = 0x0087,          //7 bytes unsigned int
+    SHORT_UINT5 = 0x0085,          //5 bytes unsigned int
+    SHORT_UINT6 = 0x0086,          //6 bytes unsigned int
+    SHORT_UINT7 = 0x0087,          //7 bytes unsigned int
     SHORT_UINT8 = 0x0088,          //8 bytes unsigned int (same as UINT64)
-    //SHORT_UINT9 = 0x0089,          //9 bytes unsigned int
-    //SHORT_UINT10 = 0x008A,         //10 bytes unsigned int
+    SHORT_UINT9 = 0x0089,          //9 bytes unsigned int
+    SHORT_UINT10 = 0x008A,         //10 bytes unsigned int
 
     SHORT_BYTES = 0x00A0,       //OPAL_SHORT_TOKEN::Type == "Byte Sequence"
     SHORT_BYTES_1 = 0x00A1,        //1 byte 

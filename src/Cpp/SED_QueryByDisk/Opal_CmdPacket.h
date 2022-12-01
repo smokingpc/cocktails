@@ -114,29 +114,50 @@ public:
         case OPAL_ATOM_TOKEN::SHORT_UINT2:
         {
             UINT16 temp = 0;
-            SwapEndian((UINT16*)Data, (UINT16*)&temp);
+            temp = *(UINT16*)Data;
+            //SwapEndian((UINT16*)Data, (UINT16*)&temp);
             data = (T)temp;
             break;
         }
         case OPAL_ATOM_TOKEN::SHORT_UINT4:
         {
             UINT32 temp = 0;
-            SwapEndian((UINT32*)Data, (UINT32*)&temp);
+            temp = *(UINT32*)Data;
+            //SwapEndian((UINT32*)Data, (UINT32*)&temp);
             data = (T)temp;
             break;
         }
         case OPAL_ATOM_TOKEN::SHORT_UINT8:
         {
             UINT64 temp = 0;
-            SwapEndian((UINT64*)Data, (UINT64*)&temp);
+            temp = *(UINT64*)Data;
+            //SwapEndian((UINT64*)Data, (UINT64*)&temp);
             data = (T)temp;
             break;
         }
+        case OPAL_ATOM_TOKEN::SHORT_UINT3:
+            if(sizeof(T) >= 3)
+            {
+                //SwapEndian((T*)Data, &data);
+                memcpy(&data, (T*)Data, 3);
+            }
+            break;
+        case OPAL_ATOM_TOKEN::SHORT_UINT5:
+        case OPAL_ATOM_TOKEN::SHORT_UINT6:
+        case OPAL_ATOM_TOKEN::SHORT_UINT7:
+            if (sizeof(T) >= 7)
+            {
+                //SwapEndian((T*)Data, &data);
+                memcpy(&data, (T*)Data, 7);
+            }
+            break;
+
         case OPAL_ATOM_TOKEN::SHORT_UINT1:
         case OPAL_ATOM_TOKEN::SHORT_BYTES_1:
-        default:
             data = (T)Data[0];
             break;
+        default:
+            throw new exception("Unsupported ATOM type!!!");
         }
     }
 
