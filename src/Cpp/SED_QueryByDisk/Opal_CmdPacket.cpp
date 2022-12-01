@@ -509,7 +509,7 @@ COpalNamePair::COpalNamePair(COpalNamePair* newdata) :COpalNamePair()
 //    COpalNamePair *tmp = (COpalNamePair*)DuplicateOpalData(newdata);
     this->operator=(*newdata);
 }
-COpalNamePair::COpalNamePair(COpalDataAtom& name, COpalDataBase* value) : COpalNamePair()
+COpalNamePair::COpalNamePair(COpalDataAtom& name, COpalData* value) : COpalNamePair()
 {
     Set(name, value);
 }
@@ -534,12 +534,12 @@ void COpalNamePair::Reset ()
     }
     Name.Reset();
 }
-void COpalNamePair::Set(COpalDataAtom& name, COpalDataBase* value)
+void COpalNamePair::Set(COpalDataAtom& name, COpalData* value)
 {
     this->Name = name;
     CopyValue(value);
 }
-void COpalNamePair::Get(COpalDataAtom& name, COpalDataBase** value)
+void COpalNamePair::Get(COpalDataAtom& name, COpalData** value)
 {
     if(nullptr != value)
     {
@@ -548,7 +548,7 @@ void COpalNamePair::Get(COpalDataAtom& name, COpalDataBase** value)
     }
 }
 //using RTTI to make sure COpalNamePair::Value contents will be copied
-void COpalNamePair::CopyValue(COpalDataBase* newdata)
+void COpalNamePair::CopyValue(COpalData* newdata)
 {
     this->Value = DuplicateOpalData(newdata);
 }
@@ -615,7 +615,7 @@ size_t COpalNamePair::FromOpalBytes(BYTE* buffer, size_t max_len)
         used = Name.FromOpalBytes(cursor, remain_size);
         UpdateSizeAndCursor(cursor, used, total_used, remain_size);
 
-        COpalDataBase* newdata = NULL;
+        COpalData* newdata = NULL;
 
         if (cursor[0] == OPAL_DATA_TOKEN::STARTLIST)
         {
@@ -670,32 +670,32 @@ void COpalList::operator= (COpalList& newlist)
     CopyList(newlist.List);
 }
 //using RTTI to make sure COpalList::List contents will be copied
-void COpalList::CopyList(list<COpalDataBase*>& newlist)
+void COpalList::CopyList(list<COpalData*>& newlist)
 {
-    for(COpalDataBase *item : newlist)
+    for(COpalData *item : newlist)
     {
         PushOpalItem(*item);
     }
 }
 void COpalList::Reset()
 {
-    for(COpalDataBase* item : List)
+    for(COpalData* item : List)
     {
         delete item;
     }
     List.clear();
 }
-void COpalList::PushOpalItem(COpalDataBase *item)
+void COpalList::PushOpalItem(COpalData *item)
 {
     this->List.push_back(item);
 }
-void COpalList::PushOpalItem(COpalDataBase &item)
+void COpalList::PushOpalItem(COpalData &item)
 {
     PushOpalItem(DuplicateOpalData(&item));
 }
-void COpalList::GetRawList(list<COpalDataBase*>& list)
+void COpalList::GetRawList(list<COpalData*>& list)
 {
-    for(COpalDataBase* item : this->List)
+    for(COpalData* item : this->List)
     {
         list.push_back(DuplicateOpalData(item));
     }
@@ -721,7 +721,7 @@ size_t COpalList::ToOpalBytes(BYTE* buffer, size_t max_len)
     RtlCopyMemory(cursor, &Start, size);
     UpdateSizeAndCursor(cursor, size, remain_size);
 
-    for(COpalDataBase *item : List)
+    for(COpalData *item : List)
     {
         size = item->ToOpalBytes(cursor, remain_size);
         UpdateSizeAndCursor(cursor, size, remain_size);
@@ -751,7 +751,7 @@ size_t COpalList::FromOpalBytes(BYTE* buffer, size_t max_len)
     //there are many objects. so keep loop to parse until OPAL_DATA_TOKEN::ENDLIST met.
     while (cursor[0] != OPAL_DATA_TOKEN::ENDLIST || total_used >= max_len)
     {
-        COpalDataBase* newdata = NULL;
+        COpalData* newdata = NULL;
 
         if (cursor[0] == OPAL_DATA_TOKEN::STARTLIST)
         {
@@ -778,7 +778,7 @@ size_t COpalList::FromOpalBytes(BYTE* buffer, size_t max_len)
 size_t COpalList::OpalDataLen()
 {
     size_t ret = sizeof(Start) + sizeof(End);
-    for(COpalDataBase *item : List)
+    for(COpalData *item : List)
         ret += item->OpalDataLen();
 
     return ret;
@@ -804,15 +804,15 @@ COpalCmdPayload::~COpalCmdPayload()
 {
     Reset();
 }
-void COpalCmdPayload::PushOpalItem(COpalDataBase* newarg)
+void COpalCmdPayload::PushOpalItem(COpalData* newarg)
 {
     ArgList.PushOpalItem(newarg);
 }
-void COpalCmdPayload::PushOpalItem(COpalDataBase& newarg)
+void COpalCmdPayload::PushOpalItem(COpalData& newarg)
 {
     PushOpalItem(&newarg);
 }
-void COpalCmdPayload::GetArgList(list<COpalDataBase*>& list)
+void COpalCmdPayload::GetArgList(list<COpalData*>& list)
 {
     ArgList.GetRawList(list);
 }
@@ -896,12 +896,6 @@ size_t COpalCmdPayload::FromOpalBytes(BYTE* buffer, size_t max_len)
 }
 size_t COpalCmdPayload::OpalDataLen()
 {
-//not include MethodStatusList length
-    size_t size1 = sizeof(CallToken) + sizeof(EndCallToken);
-    size_t size2 = InvokingUID.OpalDataLen();
-    size_t size3 = Method.OpalDataLen();
-    size_t size4 = ArgList.OpalDataLen();
-//    return size1+size2+size3+size4;
     return sizeof(CallToken) + InvokingUID.OpalDataLen() + Method.OpalDataLen() + 
             ArgList.OpalDataLen() + sizeof(EndCallToken) + MethodStatusList.OpalDataLen();
 }
@@ -948,7 +942,7 @@ COpalCommand::~COpalCommand()
         Payload = nullptr;
     }
 }
-void COpalCommand::PushCmdArg(COpalDataBase &item)
+void COpalCommand::PushCmdArg(COpalData &item)
 {
     if (IsCmdPayload(&item))
         ((COpalCmdPayload*)Payload)->PushOpalItem(item);
@@ -965,7 +959,7 @@ USHORT COpalCommand::GetBaseComID()
     SwapEndian((UINT16*)ComPacket.ExtComID, &comid);
     return comid;
 }
-void COpalCommand::PushCmdArg(COpalDataBase *item)
+void COpalCommand::PushCmdArg(COpalData *item)
 {
     if (IsCmdPayload(item))
         ((COpalCmdPayload*)Payload)->PushOpalItem(item);
@@ -1068,7 +1062,7 @@ void COpalResponse::GetPayload(COpalCmdPayload& result)
         return;
     result.FromOpalBytes(PayloadBegin, PayloadMaxSize);
 }
-void COpalResponse::GetPayload(list<COpalDataBase*>& result)
+void COpalResponse::GetPayload(list<COpalData*>& result)
 {
     if (IsEndSession())
         return;

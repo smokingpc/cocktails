@@ -1,6 +1,6 @@
 #pragma once
-bool IsOpalAtom(COpalDataBase *ptr);
-bool IsOpalList(COpalDataBase* ptr);
-bool IsOpalNamePair(COpalDataBase* ptr);
-bool IsCmdPayload(COpalDataBase* item);
-COpalDataBase* DuplicateOpalData(COpalDataBase* item);
+bool IsOpalAtom(COpalData *ptr);
+bool IsOpalList(COpalData* ptr);
+bool IsOpalNamePair(COpalData* ptr);
+bool IsCmdPayload(COpalData* item);
+COpalData* DuplicateOpalData(COpalData* item);

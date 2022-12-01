@@ -149,9 +149,9 @@ void PrintOpalDataAtom(COpalDataAtom *atom)
 void PrintOpalList(COpalList* data)
 {
     _tprintf(_T(" [ \n"));
-    list<COpalDataBase*> list;
+    list<COpalData*> list;
     data->GetRawList(list);
-    for (COpalDataBase* item : list)
+    for (COpalData* item : list)
     {
         if(IsOpalList((COpalList*)item))
             PrintOpalList((COpalList *)item);
@@ -165,7 +165,7 @@ void PrintOpalList(COpalList* data)
 void PrintOpalNamePair(COpalNamePair* data)
 {
     COpalDataAtom name;
-    COpalDataBase* value=nullptr;
+    COpalData* value=nullptr;
     _tprintf(_T(" { \n"));
     data->Get(name, &value);
 

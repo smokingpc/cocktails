@@ -1,23 +1,23 @@
 #include "common.h"
-bool IsOpalAtom(COpalDataBase* ptr)
+bool IsOpalAtom(COpalData* ptr)
 {
 //using RTTI to check ptr type...
     return (nullptr != dynamic_cast<COpalDataAtom*>(ptr));
 }
-bool IsOpalList(COpalDataBase* ptr)
+bool IsOpalList(COpalData* ptr)
 {
     return (nullptr != dynamic_cast<COpalList*>(ptr));
 }
-bool IsOpalNamePair(COpalDataBase* ptr)
+bool IsOpalNamePair(COpalData* ptr)
 {
     return (nullptr != dynamic_cast<COpalNamePair*>(ptr));
 }
-bool IsCmdPayload(COpalDataBase* ptr)
+bool IsCmdPayload(COpalData* ptr)
 {
     return (nullptr != dynamic_cast<COpalCmdPayload*>(ptr));
 }
 
-COpalDataBase* DuplicateOpalData(COpalDataBase* ptr)
+COpalData* DuplicateOpalData(COpalData* ptr)
 {
     if(IsOpalAtom(ptr))
         return new COpalDataAtom((COpalDataAtom*)ptr);
