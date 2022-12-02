@@ -9,19 +9,31 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="TCG_OPAL">
+      <UniqueIdentifier>{ec016ad1-955c-4d8e-abff-b4d1f803b65b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PBKDF2">
+      <UniqueIdentifier>{4e18847b-5487-4582-bf70-ed7035c23483}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SED_LockDisk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Opal_Factory.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Opal_CmdPacket.cpp">
+      <Filter>TCG_OPAL</Filter>
     </ClCompile>
     <ClCompile Include="Opal_Device.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>TCG_OPAL</Filter>
     </ClCompile>
-    <ClCompile Include="Opal_CmdPacket.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Opal_Factory.cpp">
+      <Filter>TCG_OPAL</Filter>
+    </ClCompile>
+    <ClCompile Include="pbkdf2_hmac.c">
+      <Filter>PBKDF2</Filter>
+    </ClCompile>
+    <ClCompile Include="Opal_PwdHash.cpp">
+      <Filter>TCG_OPAL</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -31,23 +43,29 @@
     <ClInclude Include="Utils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Opal_Device.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Opal_Structures.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="Opal_CmdPacket.h">
+      <Filter>TCG_OPAL</Filter>
     </ClInclude>
     <ClInclude Include="Opal_Constant_and_Enum.h">
-      <Filter>Source Files</Filter>
+      <Filter>TCG_OPAL</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Device.h">
+      <Filter>TCG_OPAL</Filter>
     </ClInclude>
     <ClInclude Include="Opal_Factory.h">
-      <Filter>Source Files</Filter>
+      <Filter>TCG_OPAL</Filter>
     </ClInclude>
     <ClInclude Include="Opal_OS.h">
-      <Filter>Source Files</Filter>
+      <Filter>TCG_OPAL</Filter>
     </ClInclude>
-    <ClInclude Include="Opal_CmdPacket.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="Opal_Structures.h">
+      <Filter>TCG_OPAL</Filter>
+    </ClInclude>
+    <ClInclude Include="pbkdf2_hmac.h">
+      <Filter>PBKDF2</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_PwdHasher.h">
+      <Filter>TCG_OPAL</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -19,13 +19,20 @@ public:
     inline void GetDeviceInfo(OPAL_DEVICE_INFO &info){RtlCopyMemory(&info, &DevInfo, sizeof(OPAL_DEVICE_INFO));}
     UINT16 GetBaseComID();
     virtual bool QueryTPerProperties(BYTE *buffer, size_t buf_size) = 0;
+    virtual bool LockGlobalRange(char* pwd) = 0;
+    virtual bool UnlockGlobalRange(char* pwd) = 0;
+
+    static UINT32 GetHostSessionID();
+
 protected:
     OPAL_DEVICE_INFO DevInfo;
     FEATURE_CODE DevFeature = FEATURE_CODE::NO_FEATURE;
     
     //following fields comes from TCG_Storage_Opal_SSC_Application_Note.pdf
     //it explains communication packets and blocks structure.
-    UINT32 HostSession = 0;
+    static volatile UINT32 HostSession;
+    virtual bool StartSession(UINT16 session, char* pwd) = 0;
+    virtual bool EndSession(UINT16 session) = 0;
 };
 
 
@@ -37,11 +44,15 @@ public:
     DWORD Discovery0();
     DWORD Identify();
     bool QueryTPerProperties(BYTE* resp, size_t resp_size);
+    bool LockGlobalRange(char* pwd);
+    bool UnlockGlobalRange(char* pwd);
 
 protected:
     void ParseDiscovery0(IN BYTE* buffer);
     void ParseIndentify(PINQUIRYDATA data);
     void ParseIndentify(PVPD_SERIAL_NUMBER_PAGE data);
+    bool StartSession(UINT16 session, char *pwd);
+    bool EndSession(UINT16 session);
 
 private:
     HANDLE DevHandle = INVALID_HANDLE_VALUE;

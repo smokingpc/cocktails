@@ -1,7 +1,7 @@
 #include "Common.h"
 using namespace std;
 
-static std::map<OPAL_UID_TAG, vector<BYTE>> INVOKE_UIDs =
+std::map<OPAL_UID_TAG, vector<BYTE>> INVOKE_UIDs =
 {
     //{SESSION_MGMT,      { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff }},
 
@@ -47,7 +47,7 @@ static std::map<OPAL_UID_TAG, vector<BYTE>> INVOKE_UIDs =
     {HEXFF_OMITTER, { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}}, //< HEXFF for omitted
 };
 
-static std::map<OPAL_METHOD_TAG, vector<BYTE>> METHOD_UIDs =
+std::map<OPAL_METHOD_TAG, vector<BYTE>> METHOD_UIDs =
 {
     {PROPERTIES, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x01}}, /**< Properties */
     {STARTSESSION,{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x02}}, /**<STARTSESSION */
@@ -98,6 +98,13 @@ static inline OPAL_ATOM_TOKEN GetAtomBytesToken(size_t size)
 static inline OPAL_ATOM_TOKEN GetAtomUintToken(size_t size)
 {
     return (OPAL_ATOM_TOKEN)(SHORT_UINT + size);
+}
+
+bool GetInvokeUID(OPAL_UID_TAG tag, vector<BYTE>& result)
+{
+//todo : ERROR handling
+    result = INVOKE_UIDs[tag];
+    return true;
 }
 
 #pragma region ======== COpalComPacket ========
@@ -923,11 +930,11 @@ void COpalCmdPayload::Set(BYTE* invoke_uid, BYTE* method_uid)
 COpalCommand::COpalCommand()
 {
     Payload = new COpalDataAtom();
+    ((COpalDataAtom*)Payload)->PutToken(OPAL_DATA_TOKEN::ENDOFSESSION);
 }
 COpalCommand::COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method)
 {
     Payload = new COpalCmdPayload(INVOKE_UIDs[invoking].data(), METHOD_UIDs[method].data());
-    //Payload->Set(INVOKE_UIDs[invoking].data(), METHOD_UIDs[method].data());
 }
 COpalCommand::COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method, USHORT comid)
     : COpalCommand(invoking, method)

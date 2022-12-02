@@ -229,6 +229,11 @@ public:
         }
     }
 
+    void PutToken(OPAL_DATA_TOKEN token)
+    {
+        PutUint((UINT8)token);
+    }
+
     template<typename T> void PutUint(T data)
     {
     //filter out the types which IS NOT numberic type...
@@ -474,3 +479,6 @@ private:
     BYTE* PayloadBegin = nullptr;
     size_t PayloadMaxSize = 0;
 };
+
+
+bool GetInvokeUID(OPAL_UID_TAG tag, vector<BYTE> &result);

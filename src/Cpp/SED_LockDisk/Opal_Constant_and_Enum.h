@@ -25,6 +25,10 @@ enum OPAL_ATOM_TOKEN : UINT16
 
     //all type tokens are greater than 0x80.
     //values smaller than 0x80 should be TinyAtom. TinyAtom doesn't have token.
+
+
+    //short token only output 1 byte to opal buffer.
+    //set it to UINT16 is just for combine all toekn into one enum definition.
     SHORT_UINT = 0x0080,           //OPAL_ATOM_TOKEN::Type == "UINT"
     SHORT_UINT1 = 0x0081,          //1 byte unsigned int (same as UINT8)
     SHORT_UINT2 = 0x0082,          //2 bytes unsigned int (same as UINT16)
@@ -37,6 +41,8 @@ enum OPAL_ATOM_TOKEN : UINT16
     SHORT_UINT9 = 0x0089,          //9 bytes unsigned int
     SHORT_UINT10 = 0x008A,         //10 bytes unsigned int
 
+    //short token only output 1 byte to opal buffer.
+    //set it to UINT16 is just for combine all toekn into one enum definition.
     SHORT_BYTES = 0x00A0,       //OPAL_SHORT_TOKEN::Type == "Byte Sequence"
     SHORT_BYTES_1 = 0x00A1,        //1 byte 
     SHORT_BYTES_2 = 0x00A2,        //2 bytes array => BYTE[2]
@@ -54,9 +60,10 @@ enum OPAL_ATOM_TOKEN : UINT16
     SHORT_BYTES_14 = 0x00AE,        //14 bytes array => BYTE[14]
     SHORT_BYTES_15 = 0x00AF,        //15 bytes array => BYTE[15]
 
-    MID_BYTES = 0xD000,
-    MID_BYTES_16 = 0xD010,     //16 bytes array => BYTE[16]
-    MID_BYTES_24 = 0xD018,     //24 bytes array => BYTE[24]
+    MID_BYTES = 0xD000,         //MID_BYTES begin from 0xD010. there is no value smaller than MID_BYTES_16
+    MID_BYTES_16 = 0xD010,      //16 bytes array => BYTE[16]
+    MID_BYTES_24 = 0xD018,      //24 bytes array => BYTE[24]
+    MID_BYTES_32 = 0xD020,      //32 bytes array => BYTE[32]
 };
 
 enum OPAL_DATA_TOKEN : BYTE {
@@ -100,6 +107,10 @@ enum OPAL_DATA_TOKEN : BYTE {
     DTA_TOKENID_SINT = 0xe1,
     DTA_TOKENID_UINT = 0xe2,
     DTA_TOKENID_TOKEN = 0xe3, // actual token is returned
+
+    //session related
+    HOST_CHALLENGE = 0x00,
+    HOST_SIGN_AUTH = 0x03,      //HostSigningAuthority in StartSession
 
     // atoms
     STARTLIST = 0xf0,

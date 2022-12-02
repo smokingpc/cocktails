@@ -135,7 +135,7 @@ enum OPAL_UID_TAG {
     
     ENT_LOCKINGSP,              //< ENTERPRISE Locking SP  (SP==Security Provider)
     ANYBODY,                    //<anybody
-    SECURITY_ID,                        //< SID
+    SECURITY_ID,                //< SID
     ADMIN1,                     //< ADMIN1
     USER1,                      //< USER1
     USER2,                      //< USER2

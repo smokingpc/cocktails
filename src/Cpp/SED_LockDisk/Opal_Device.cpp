@@ -51,17 +51,18 @@ static void FillScsiCmd(PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE cmd, PVOID buffer, 
     cmd->DataIn = data_inout;
 }
 
+
+UINT32 volatile COpalDevice::HostSession = 0;
+
 COpalDevice::COpalDevice(tstring devpath)
 {
     DevPath = devpath;
 }
 COpalDevice::~COpalDevice(){}
-
-//DWORD COpalDevice::OpenSession()
-//{
-//    return ERROR_NOT_SUPPORTED; 
-//}
-//void COpalDevice::CloseSession(){}
+UINT32 COpalDevice::GetHostSessionID()
+{
+    return InterlockedIncrement(&HostSession);
+}
 
 COpalNvme::COpalNvme(tstring devpath) : COpalDevice(devpath)
 {
@@ -115,7 +116,6 @@ DWORD COpalNvme::Discovery0()
 
     return ERROR_SUCCESS;
 }
-
 DWORD COpalNvme::Identify()
 {
     DWORD rc = ERROR_SUCCESS;
@@ -146,6 +146,182 @@ DWORD COpalNvme::Identify()
     ParseIndentify((PVPD_SERIAL_NUMBER_PAGE)buffer);
 
     return ERROR_SUCCESS;
+}
+
+bool COpalNvme::LockGlobalRange(char *pwd)
+{
+    UINT32 session = GetHostSessionID();
+    StartSession(session, pwd);
+
+    //set Locking Range
+
+    EndSession(session);
+    return true;
+}
+
+bool COpalNvme::UnlockGlobalRange(char* pwd)
+{
+    return false;
+}
+
+void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
+{
+    PDISCOVERY0_HEADER header = (PDISCOVERY0_HEADER)buffer;
+    PFEATURE_DESCRIPTOR desc = NULL;
+    UCHAR* cursor = buffer;
+    UCHAR* body = NULL;
+    UINT32 total_size = header->GetParamLength();
+    cursor += sizeof(DISCOVERY0_HEADER);
+    body = cursor;
+    desc = (PFEATURE_DESCRIPTOR)cursor;
+
+    while (desc->Header.Length > 0 && (cursor - buffer) < total_size)
+    {
+//all data in OPAL response are BIG-ENDIAN.
+//if responsed desc->Header.GetCode() can't be parsed, this device DEFINITELY not support this feature.
+        switch (desc->Header.GetCode())
+        {
+        case TPer:
+            RtlCopyMemory(&DevInfo.TPer, &desc->TPer, sizeof(FEATURE_DESC_TPer));
+            break;
+        case LOCKING:
+            RtlCopyMemory(&DevInfo.Locking, &desc->Locking, sizeof(FEATURE_DESC_LOCKING));
+            break;
+        case GEOMETRY:
+            RtlCopyMemory(&DevInfo.Geometry, &desc->Geometry, sizeof(FEATURE_DESC_GEOMETRY));
+            break;
+        case ENTERPRISE:
+            if (desc->Header.GetCode() > DevFeature)
+                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
+            RtlCopyMemory(&DevInfo.Enterprise, &desc->Enterprise, sizeof(FEATURE_DESC_ENTERPRISE_SSC));
+            break;
+        case OPAL_V100:
+            if (desc->Header.GetCode() > DevFeature)
+                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
+            RtlCopyMemory(&DevInfo.OpalV100, &desc->OpalV100, sizeof(FEATURE_DESC_OPAL_V100));
+            break;
+        case SINGLE_USER:
+            RtlCopyMemory(&DevInfo.SingleUserMode, &desc->SingleUserMode, sizeof(FEATURE_DESC_SINGLE_USER_MODE));
+            break;
+        case DATASTORE:
+            RtlCopyMemory(&DevInfo.Datastore, &desc->Datastore, sizeof(FEATURE_DESC_DATASTORE));
+            break;
+        case OPAL_V200:
+            if (desc->Header.GetCode() > DevFeature)
+                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
+            RtlCopyMemory(&DevInfo.OpalV200, &desc->OpalV200, sizeof(FEATURE_DESC_OPAL_V200));
+            break;
+        }
+
+        //each block are splitted by a DWORD...
+        cursor = cursor + desc->Header.Length + sizeof(DWORD);
+        desc = (PFEATURE_DESCRIPTOR)cursor;
+    }
+}
+void COpalNvme::ParseIndentify(PINQUIRYDATA data)
+{
+    RtlCopyMemory(DevInfo.ModelName, data->ProductId, sizeof(data->ProductId));
+    RtlCopyMemory(DevInfo.FirmwareRev, data->ProductRevisionLevel, sizeof(data->ProductRevisionLevel));
+}
+void COpalNvme::ParseIndentify(PVPD_SERIAL_NUMBER_PAGE data)
+{
+    RtlCopyMemory(DevInfo.SerialNo, data->SerialNumber, data->PageLength);
+}
+bool COpalNvme::StartSession(UINT16 session, char* pwd)
+{
+    //open session with password
+    //sp stands for ServiceProvider
+    //OPAL_UID_TAG sp = IsEnterprise()? OPAL_UID_TAG::ENT_LOCKINGSP : OPAL_UID_TAG::LOCKINGSP;
+    COpalCommand start(OPAL_UID_TAG::SMUID, OPAL_METHOD_TAG::STARTSESSION, GetBaseComID());
+    DWORD error = ERROR_SUCCESS;
+    {
+        COpalDataAtom name;
+        COpalDataAtom value;
+        COpalNamePair pair;
+        value.PutUint((UINT8)GetHostSessionID());
+        start.PushCmdArg(value);
+
+        OPAL_UID_TAG locksp = IsEnterprise() ? OPAL_UID_TAG::ENT_LOCKINGSP : OPAL_UID_TAG::LOCKINGSP;
+        vector<BYTE> uid;
+        GetInvokeUID(locksp, uid);
+        value.PutUID(uid.data());
+        start.PushCmdArg(value);
+
+        //Is this session a Write Session?
+        value.PutUint((UINT8)OPAL_DATA_TOKEN::OPAL_TRUE);
+        start.PushCmdArg(value);
+
+        if (NULL != pwd && strlen(pwd) > 0)
+        {
+            name.PutToken(HOST_CHALLENGE);
+            COpalPwdHash* hasher = new COpalPwdHash_Win32();
+            char salt[20] = { 0 };
+            char hashed_pwd[32] = { 0 };
+            hasher->HashOpalPwd((BYTE*)pwd, strlen(pwd), 75000, (BYTE*)salt, 20, (BYTE*)hashed_pwd, 32);
+            value.PutBytes((BYTE*)hashed_pwd, 32);
+            pair.Set(name, &value);
+            start.PushCmdArg(pair);
+        }
+
+        pair.Reset();
+        name.PutToken(HOST_SIGN_AUTH);
+        uid.clear();
+        GetInvokeUID(OPAL_UID_TAG::ADMIN1, uid);
+        value.PutUID(uid.data());
+    }
+
+    BYTE* cmd_buf = new BYTE[PAGE_SIZE];
+    memset(cmd_buf, 0, PAGE_SIZE);
+    start.BuildOpalBuffer(cmd_buf, PAGE_SIZE);
+    error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
+    delete[] cmd_buf;
+
+    if (ERROR_SUCCESS != error)
+        return false;
+
+    Sleep(50);  //wait 50ms for NVMe device complete last request.
+    //sometimes buffer to read data from device SHOULD be allocated on heap, not stack....
+    //but in sedutils, it requires aligned to 1024 ? wierd....
+    BYTE* resp_buf = new BYTE[PAGE_SIZE];
+    memset(resp_buf, 0, PAGE_SIZE);
+    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp_buf, PAGE_SIZE);
+    delete[] resp_buf;
+
+    if (ERROR_SUCCESS != error)
+        return false;
+
+    //todo: check response data
+
+    return true;
+}
+bool COpalNvme::EndSession(UINT16 session)
+{
+
+    //end session
+    COpalCommand end;
+    BYTE* cmd_buf = new BYTE[PAGE_SIZE];
+    memset(cmd_buf, 0, PAGE_SIZE);
+    end.BuildOpalBuffer(cmd_buf, PAGE_SIZE);
+    DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
+    delete[] cmd_buf;
+
+    if (ERROR_SUCCESS != error)
+        return false;
+
+    Sleep(50);  //wait 50ms for NVMe device complete last request.
+    //sometimes buffer to read data from device SHOULD be allocated on heap, not stack....
+    //but in sedutils, it requires aligned to 1024 ? wierd....
+    BYTE* resp_buf = new BYTE[PAGE_SIZE];
+    memset(resp_buf, 0, PAGE_SIZE);
+    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp_buf, PAGE_SIZE);
+    delete[] resp_buf;
+
+    if (ERROR_SUCCESS != error)
+        return false;
+
+    //todo: check response data
+
+    return true;
 }
 
 bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
@@ -232,17 +408,6 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
 
     return (error == ERROR_SUCCESS);
 }
-
-void COpalNvme::ParseIndentify(PINQUIRYDATA data)
-{
-    RtlCopyMemory(DevInfo.ModelName, data->ProductId, sizeof(data->ProductId));
-    RtlCopyMemory(DevInfo.FirmwareRev, data->ProductRevisionLevel, sizeof(data->ProductRevisionLevel));
-}
-void COpalNvme::ParseIndentify(PVPD_SERIAL_NUMBER_PAGE data)
-{
-    RtlCopyMemory(DevInfo.SerialNo, data->SerialNumber, data->PageLength);
-}
-
 DWORD COpalNvme::SendCommand(DWORD ioctl, PVOID cmd_buf, size_t cmd_size)
 {
     DWORD rc = ERROR_SUCCESS;
@@ -281,60 +446,6 @@ DWORD COpalNvme::SendCommand(DWORD ioctl, PVOID cmd_buf, size_t cmd_size)
         rc = GetLastError();
 
     return rc;
-}
-void COpalNvme::ParseDiscovery0(IN BYTE* buffer)
-{
-    PDISCOVERY0_HEADER header = (PDISCOVERY0_HEADER)buffer;
-    PFEATURE_DESCRIPTOR desc = NULL;
-    UCHAR* cursor = buffer;
-    UCHAR* body = NULL;
-    UINT32 total_size = header->GetParamLength();
-    cursor += sizeof(DISCOVERY0_HEADER);
-    body = cursor;
-    desc = (PFEATURE_DESCRIPTOR)cursor;
-
-    while (desc->Header.Length > 0 && (cursor - buffer) < total_size)
-    {
-//all data in OPAL response are BIG-ENDIAN.
-//if responsed desc->Header.GetCode() can't be parsed, this device DEFINITELY not support this feature.
-        switch (desc->Header.GetCode())
-        {
-        case TPer:
-            RtlCopyMemory(&DevInfo.TPer, &desc->TPer, sizeof(FEATURE_DESC_TPer));
-            break;
-        case LOCKING:
-            RtlCopyMemory(&DevInfo.Locking, &desc->Locking, sizeof(FEATURE_DESC_LOCKING));
-            break;
-        case GEOMETRY:
-            RtlCopyMemory(&DevInfo.Geometry, &desc->Geometry, sizeof(FEATURE_DESC_GEOMETRY));
-            break;
-        case ENTERPRISE:
-            if (desc->Header.GetCode() > DevFeature)
-                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
-            RtlCopyMemory(&DevInfo.Enterprise, &desc->Enterprise, sizeof(FEATURE_DESC_ENTERPRISE_SSC));
-            break;
-        case OPAL_V100:
-            if (desc->Header.GetCode() > DevFeature)
-                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
-            RtlCopyMemory(&DevInfo.OpalV100, &desc->OpalV100, sizeof(FEATURE_DESC_OPAL_V100));
-            break;
-        case SINGLE_USER:
-            RtlCopyMemory(&DevInfo.SingleUserMode, &desc->SingleUserMode, sizeof(FEATURE_DESC_SINGLE_USER_MODE));
-            break;
-        case DATASTORE:
-            RtlCopyMemory(&DevInfo.Datastore, &desc->Datastore, sizeof(FEATURE_DESC_DATASTORE));
-            break;
-        case OPAL_V200:
-            if (desc->Header.GetCode() > DevFeature)
-                DevFeature = (FEATURE_CODE)desc->Header.GetCode();
-            RtlCopyMemory(&DevInfo.OpalV200, &desc->OpalV200, sizeof(FEATURE_DESC_OPAL_V200));
-            break;
-        }
-
-        //each block are splitted by a DWORD...
-        cursor = cursor + desc->Header.Length + sizeof(DWORD);
-        desc = (PFEATURE_DESCRIPTOR)cursor;
-    }
 }
 
 DWORD COpalNvme::DoScsiSecurityProtocolIn(IN UCHAR protocol, IN UINT16 comid, IN BYTE* opal_buf, IN size_t buf_size)

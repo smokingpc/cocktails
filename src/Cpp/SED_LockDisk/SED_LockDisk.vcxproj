@@ -142,6 +142,8 @@
     <ClCompile Include="Opal_CmdPacket.cpp" />
     <ClCompile Include="Opal_Device.cpp" />
     <ClCompile Include="Opal_Factory.cpp" />
+    <ClCompile Include="Opal_PwdHash.cpp" />
+    <ClCompile Include="pbkdf2_hmac.c" />
     <ClCompile Include="SED_LockDisk.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -151,7 +153,9 @@
     <ClInclude Include="Opal_Device.h" />
     <ClInclude Include="Opal_Factory.h" />
     <ClInclude Include="Opal_OS.h" />
+    <ClInclude Include="Opal_PwdHasher.h" />
     <ClInclude Include="Opal_Structures.h" />
+    <ClInclude Include="pbkdf2_hmac.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

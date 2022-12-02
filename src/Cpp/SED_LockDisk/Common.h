@@ -36,6 +36,9 @@ typedef basic_string<TCHAR> tstring;
 #include "Opal_Device.h"
 #include "Opal_OS.h"
 #include "Opal_Factory.h"
+#include "pbkdf2_hmac.h"
+#include "Opal_PwdHasher.h"
+
 
 //physical drive name example:  "\\.\PhysicalDrive2"
 #define PHYSICAL_DISK_FORMAT    L"\\\\.\\PhysicalDrive%d"
