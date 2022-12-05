@@ -153,7 +153,12 @@ public:
     COpalDataAtom(char* str, int strlen);
     COpalDataAtom(BYTE* data, int data_len);
     COpalDataAtom(BYTE* data);
-    template<typename T> COpalDataAtom(T data);
+    COpalDataAtom(OPAL_DATA_TOKEN data);
+    template<typename T> COpalDataAtom(T data) : COpalDataAtom()
+    {
+        PutUint(data);
+    }
+
     virtual ~COpalDataAtom();
 
     void PutString(char* str, size_t strlen);
@@ -292,11 +297,14 @@ public:
     COpalNamePair(COpalNamePair &newdata);
     COpalNamePair(COpalNamePair *newdata);
     COpalNamePair(COpalDataAtom& name);
+    COpalNamePair(COpalDataAtom* name);
     COpalNamePair(COpalDataAtom& name, COpalData *value);
+    COpalNamePair(COpalDataAtom* name, COpalData* value);
     virtual ~COpalNamePair();
     void operator= (COpalNamePair& newdata);
     void Reset();
     void Set(COpalDataAtom& name, COpalData* value);
+    void Set(COpalDataAtom* name, COpalData* value);
     void Get(COpalDataAtom& name, COpalData** value);
 
     size_t ToOpalBytes(BYTE* buffer, size_t max_len);

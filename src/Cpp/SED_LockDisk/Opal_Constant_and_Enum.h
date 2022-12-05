@@ -156,6 +156,12 @@ enum OPAL_UID_TAG {
 
     // tables
     LOCKRANGE_GLOBAL,           //< Locking_GlobalRange
+    LOCKRANGE_1,                //< Locking_Range 1
+    LOCKRANGE_2,                //< Locking_Range 2
+    LOCKRANGE_3,                //< Locking_Range 3
+    LOCKRANGE_4,                //< Locking_Range 4
+
+
     LOCKRANGE_ACE_READDLOCK,    //< ACE_Locking_Range_Set_ReaddLocked UID
     LOCKRANGE_ACE_WRITELOCK,    //< ACE_Locking_Range_Set_WrLocked UID
     LOCKRANGE_GLOBAL_ACE_READLOCK,  //< ACE_Locking_Range_GLOBAL_Set_RdLocked UID
@@ -228,3 +234,4 @@ enum OPAL_STATUS {
 #define DEVICE_MODEL_LEN    40
 
 #define OPAL_UID_LEN        8
+#define DISCOVERY0_COMID    (UINT16)0x0001

@@ -1,5 +1,24 @@
 #pragma once
 
+//**Response is not completely implemented.
+// COpalResponse is used to parse responsed bytes from Device.
+// Currently it is still under developing.
+// It only can parse "Properties" command, and Locking/Unlocking command.
+// 
+// Response data is very similar as Command.
+// They has same structure: 
+//      ComPacket
+//      Packet
+//      SubPacket
+//      Payload of SubPacket (refer to COpalCmdPayload comments)
+//      Paddings
+// 
+// For Response of "End of Session", it is same as "End of Session" command.
+// Device replies same data(as command) to notify Host : "End of Session" complete.
+//
+
+//20221205 Roy Note: skip the response of EndOfSession  :p
+
 class COpalResponse {
 public:
     COpalResponse();
@@ -8,8 +27,11 @@ public:
 
     //FromOpalBuffer() returns "how many bytes consumed in parsing?
     size_t FromOpalBuffer(BYTE* buffer, size_t max_len);
+    void GetHeader(COpalComPacket* compkt);
+    void GetHeader(COpalPacket* pkt);
+    void GetHeader(COpalSubPacket* subpkt);
     void GetHeaders(COpalComPacket* compkt, COpalPacket* pkt, COpalSubPacket* subpkt);
-    void GetHeaders(COpalComPacket& compkt, COpalPacket& pkt, COpalSubPacket& subpkt);
+    //void GetHeaders(COpalComPacket& compkt, COpalPacket& pkt, COpalSubPacket& subpkt);
     void GetPayload(COpalCmdPayload& result);
     void GetPayload(list<COpalData*>& result);
 
@@ -26,11 +48,13 @@ private:
     COpalComPacket* ComPacket = nullptr;
     COpalPacket* Packet = nullptr;
     COpalSubPacket* SubPacket = nullptr;
-    //COpalData* Payload = nullptr;
+    COpalCmdPayload *Payload = nullptr;
 
     BYTE* RespBuf = nullptr;
     size_t RespBufSize = 0;
     BYTE* PayloadBegin = nullptr;
     size_t PayloadMaxSize = 0;
 };
+
+
 

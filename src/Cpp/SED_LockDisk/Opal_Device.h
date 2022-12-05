@@ -33,7 +33,7 @@ protected:
     //following fields comes from TCG_Storage_Opal_SSC_Application_Note.pdf
     //it explains communication packets and blocks structure.
     static volatile UINT32 HostSession;
-    virtual UINT32 StartSession(UINT32 host_sid, OPAL_UID_TAG provider, char* pwd) = 0;
+    virtual UINT32 StartSession(UINT32 host_sid, OPAL_UID_TAG provider, BOOLEAN is_write, char* pwd) = 0;
     virtual void EndSession(UINT32 host_sid, UINT32 tper_sid) = 0;
 };
 
@@ -55,7 +55,7 @@ protected:
     void ParseDiscovery0(IN BYTE* buffer);
     void ParseIndentify(PINQUIRYDATA data);
     void ParseIndentify(PVPD_SERIAL_NUMBER_PAGE data);
-    UINT32 StartSession(UINT32 host_sid, OPAL_UID_TAG provider, char *pwd);
+    UINT32 StartSession(UINT32 host_sid, OPAL_UID_TAG provider, BOOLEAN is_write, char *pwd);
     void EndSession(UINT32 host_sid, UINT32 tper_sid);
 
 private:

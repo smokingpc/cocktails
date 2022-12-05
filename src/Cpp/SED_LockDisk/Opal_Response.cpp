@@ -15,6 +15,12 @@ COpalResponse::~COpalResponse()
         delete[] RespBuf;
         RespBuf = nullptr;
     }
+
+    if(nullptr != Payload)
+    {
+        delete Payload;
+        Payload = nullptr;
+    }
 }
 size_t COpalResponse::FromOpalBuffer(BYTE* buffer, size_t max_len)
 {
@@ -37,33 +43,59 @@ size_t COpalResponse::FromOpalBuffer(BYTE* buffer, size_t max_len)
     cursor += sizeof(COpalSubPacket);
     PayloadBegin = cursor;
 
+    if(!IsEndSession())
+    {
+        Payload = new COpalCmdPayload();
+        Payload->FromOpalBytes(cursor, (cursor-buffer));
+    }
+
     RespBufSize = total_size;
     PayloadMaxSize = RespBufSize - ((UINT64)cursor - (UINT64)RespBuf);
     return total_size;
 }
 void COpalResponse::GetHeaders(COpalComPacket* compkt, COpalPacket* pkt, COpalSubPacket* subpkt)
 {
-    memcpy(compkt, ComPacket, sizeof(COpalComPacket));
-    memcpy(pkt, Packet, sizeof(COpalPacket));
-    memcpy(subpkt, SubPacket, sizeof(COpalSubPacket));
+    GetHeader(compkt);
+    GetHeader(pkt);
+    GetHeader(subpkt);
 }
-void COpalResponse::GetHeaders(COpalComPacket& compkt, COpalPacket& pkt, COpalSubPacket& subpkt)
+void COpalResponse::GetHeader(COpalComPacket* compkt)
 {
-    return GetHeaders(&compkt, &pkt, &subpkt);
+    if (nullptr != compkt)
+        memcpy(compkt, ComPacket, sizeof(COpalComPacket));
 }
+void COpalResponse::GetHeader(COpalPacket* pkt)
+{
+    if (nullptr != pkt)
+        memcpy(pkt, Packet, sizeof(COpalPacket));
+}
+void COpalResponse::GetHeader(COpalSubPacket* subpkt)
+{
+    if (nullptr != subpkt)
+        memcpy(subpkt, SubPacket, sizeof(COpalSubPacket));
+}
+
+//void COpalResponse::GetHeaders(COpalComPacket& compkt, COpalPacket& pkt, COpalSubPacket& subpkt)
+//{
+//    return GetHeaders(&compkt, &pkt, &subpkt);
+//}
 void COpalResponse::GetPayload(COpalCmdPayload& result)
 {
     if (IsEndSession())
         return;
-    result.FromOpalBytes(PayloadBegin, PayloadMaxSize);
+    //result.FromOpalBytes(PayloadBegin, PayloadMaxSize);
+    if(Payload != nullptr)
+        result = *Payload;
 }
 void COpalResponse::GetPayload(list<COpalData*>& result)
 {
     if (IsEndSession())
         return;
 
-    COpalCmdPayload temp;
-    temp.FromOpalBytes(PayloadBegin, PayloadMaxSize);
-    temp.GetArgList(result);
+    //COpalCmdPayload temp;
+    //temp.FromOpalBytes(PayloadBegin, PayloadMaxSize);
+    //temp.GetArgList(result);
+    if (Payload != nullptr)
+        Payload->GetArgList(result);
 }
 #pragma endregion

@@ -58,7 +58,8 @@ private:
     //I treat it as a COpalList with three 1-byte COpalDataAtom. Because the COpalSubPacket::Length
     //fields need this value so I put MethodStatusList in COpalCmdPayload.
     //**MethodStatusList is named by official example....
-    COpalList MethodStatusList;
+    //COpalList MethodStatusList;
+    COpalMethodStatus MethodStatus;
 };
 
 // Most commands to OPAL Device has same structure in sequence as following: 
@@ -80,17 +81,14 @@ public:
     COpalCommand();
 
     //normal operation, Payload will be COpalCmdPayload
-    //COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method);
-    //normal operation, Payload will be COpalCmdPayload
-    //COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method, USHORT comid);
+    COpalCommand(OPAL_UID_TAG invoking, OPAL_METHOD_TAG method, UINT32 host_sid, UINT32 tper_sid, USHORT comid);
     //comid is BaseComID comes from Discovery0 command
-    COpalCommand(USHORT comid);
+    //COpalCommand(USHORT comid);
+    COpalCommand(UINT32 host_sid, UINT32 tper_sid, USHORT comid);
+    
     ~COpalCommand();
 
     size_t BuildOpalBuffer(BYTE* buffer, size_t max_buf_size);
-
-    //sync Length fields of ComPacket, Packet, and SubPacket.
-    virtual void CompleteCmd();
 
 protected:
     COpalComPacket ComPacket;
@@ -102,59 +100,57 @@ protected:
     UINT32 CmdLength = 0;
     UINT16 BaseComID = 0;
 
-    //virtual size_t BuildOpalBufferHeader(BYTE* buffer, size_t max_buf_size);
+    //A complete session id is built by TSN+HSN, TSN=>TperSID,  HSN=>HostSID
+    UINT32 Host_Sid = 0;
+    UINT32 Tper_Sid = 0;
+
+    OPAL_UID_TAG Invoker = OPAL_UID_TAG::SMUID;
+    OPAL_METHOD_TAG Method = OPAL_METHOD_TAG::STARTSESSION;
     virtual size_t BuildOpalBufferPayload(BYTE* buffer, size_t max_buf_size);
-    //virtual size_t BuildOpalBufferTail(BYTE* buffer, size_t max_buf_size);
+    virtual size_t BuildOpalBufferTail(BYTE* buffer, size_t max_buf_size);
     virtual UINT32 CalcPayloadLenInBytes();
+
+    //sync Length fields of ComPacket, Packet, and SubPacket.
+    void CompleteCmd();
 };
 
 class CCmdStartSession : public COpalCommand
 {
 public:
     CCmdStartSession(UINT32 host_sid, USHORT comid);
+    //CCmdStartSession(UINT32 host_sid, UINT32 tper_sid, USHORT comid);
     virtual ~CCmdStartSession();
-
-//    size_t BuildOpalBuffer(BYTE* buffer, size_t max_buf_size);
-
-protected:
-    void PrepareCmdArg(UINT32 host_sid, USHORT comid);
+    void PrepareCmd(OPAL_UID_TAG target_sp, OPAL_UID_TAG sign_auth, BOOLEAN is_write, char *pwd);
 };
 
 class CCmdEndSession : public COpalCommand
 {
 public:
     CCmdEndSession(UINT32 host_sid, UINT32 tper_sid, USHORT comid);
-    ~CCmdEndSession();
-
-    size_t BuildOpalBuffer(BYTE* buffer, size_t max_buf_size);
+    virtual ~CCmdEndSession();
 
 protected:
-    void PrepareCmdArg();
-
     size_t BuildOpalBufferPayload(BYTE* buffer, size_t max_buf_size);
     size_t BuildOpalBufferTail(BYTE* buffer, size_t max_buf_size);
     UINT32 CalcPayloadLenInBytes();
+
+    OPAL_DATA_TOKEN EOS = OPAL_DATA_TOKEN::ENDOFSESSION;
 };
 
-class CSetLockRange : public COpalCommand
+//Lock or Unlock global range...
+class CLockGlobalRange : public COpalCommand
 {
+public:
+    CLockGlobalRange(UINT32 host_sid, UINT32 tper_sid, USHORT comid);
+    virtual ~CLockGlobalRange();
+    void PrepareCmd(BOOLEAN read_lock, BOOLEAN write_lock);
 };
 
-
-//**Response is not completely implemented.
-// COpalResponse is used to parse responsed bytes from Device.
-// Currently it is still under developing.
-// It only can parse "Properties" command, and Locking/Unlocking command.
-// 
-// Response data is very similar as Command.
-// They has same structure: 
-//      ComPacket
-//      Packet
-//      SubPacket
-//      Payload of SubPacket (refer to COpalCmdPayload comments)
-//      Paddings
-// 
-// For Response of "End of Session", it is same as "End of Session" command.
-// Device replies same data(as command) to notify Host : "End of Session" complete.
-//
+class CCmdQueryProperties : public COpalCommand
+{
+public:
+    CCmdQueryProperties(UINT32 host_sid, USHORT comid);
+    virtual ~CCmdQueryProperties();
+    void PrepareCmd(UINT16 max_compkt_size);
+};
 

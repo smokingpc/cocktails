@@ -184,9 +184,9 @@ COpalDataAtom::COpalDataAtom(BYTE* data) : COpalDataAtom()
 {
     PutUID(data);
 }
-template<typename T> COpalDataAtom::COpalDataAtom(T data) : COpalDataAtom()
+COpalDataAtom::COpalDataAtom(OPAL_DATA_TOKEN data)
 {
-    PutUint(data);
+    PutUint((UINT8)data);
 }
 void COpalDataAtom::PutString(char* str, size_t strlen)
 {
@@ -434,9 +434,17 @@ COpalNamePair::COpalNamePair(COpalDataAtom& name, COpalData* value) : COpalNameP
 {
     Set(name, value);
 }
+COpalNamePair::COpalNamePair(COpalDataAtom* name, COpalData* value) : COpalNamePair()
+{
+    Set(name, value);
+}
 COpalNamePair::COpalNamePair(COpalDataAtom& name) : COpalNamePair()
 {
     this->Name = name;
+}
+COpalNamePair::COpalNamePair(COpalDataAtom* name) : COpalNamePair()
+{
+    this->Name = *name;
 }
 COpalNamePair::~COpalNamePair()
 {
@@ -458,6 +466,11 @@ void COpalNamePair::Reset ()
 void COpalNamePair::Set(COpalDataAtom& name, COpalData* value)
 {
     this->Name = name;
+    CopyValue(value);
+}
+void COpalNamePair::Set(COpalDataAtom* name, COpalData* value)
+{
+    this->Name = *name;
     CopyValue(value);
 }
 void COpalNamePair::Get(COpalDataAtom& name, COpalData** value)

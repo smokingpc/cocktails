@@ -99,7 +99,7 @@ DWORD COpalNvme::Discovery0()
     //discovery0() use SCSI_OP==SCSIOP_SECURITY_PROTOCOL_IN with empty payload to ask 
     //device discovery information.
     UCHAR protocol = 1;
-    UINT16 comid = 1;
+    UINT16 comid = DISCOVERY0_COMID;
     DWORD buf_size = BIG_BUFFER_SIZE;
     BYTE *opal_buffer = new BYTE[buf_size];
     unique_ptr<BYTE> buf_ptr(opal_buffer);
@@ -151,7 +151,33 @@ DWORD COpalNvme::Identify()
 bool COpalNvme::LockGlobalRange(const char *pwd)
 {
     UINT32 host_sid = GetHostSessionID();
-    UINT32 tper_sid = StartSession(host_sid, OPAL_UID_TAG::LOCKINGSP, (char*) pwd);
+    UINT32 tper_sid = StartSession(host_sid, OPAL_UID_TAG::LOCKINGSP, TRUE, (char*) pwd);
+    DWORD error = ERROR_SUCCESS;
+    BYTE* buffer = new BYTE[PAGE_SIZE];
+    unique_ptr<BYTE> buf_ptr(buffer);
+
+    if(0 == tper_sid)
+        return false;
+
+    CLockGlobalRange lock(host_sid, tper_sid, GetBaseComID());
+    lock.PrepareCmd(TRUE, TRUE);
+
+    memset(buffer, 0, PAGE_SIZE);
+    lock.BuildOpalBuffer(buffer, PAGE_SIZE);
+    error = DoScsiSecurityProtocolOut(1, GetBaseComID(), buffer, PAGE_SIZE);
+
+    if (ERROR_SUCCESS != error)
+        return 0;
+
+    Sleep(50);  //wait 50ms for NVMe device complete last request.
+
+    memset(buffer, 0, PAGE_SIZE);
+    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), buffer, PAGE_SIZE);
+    if (ERROR_SUCCESS != error)
+    {
+        //todo: log....
+
+    }
 
     //set Locking Range
     EndSession(host_sid, tper_sid);
@@ -167,7 +193,37 @@ bool COpalNvme::LockGlobalRange(const wchar_t* pwd)
 
 bool COpalNvme::UnlockGlobalRange(const char* pwd)
 {
-    return false;
+    UINT32 host_sid = GetHostSessionID();
+    UINT32 tper_sid = StartSession(host_sid, OPAL_UID_TAG::LOCKINGSP, TRUE, (char*)pwd);
+    DWORD error = ERROR_SUCCESS;
+    BYTE* buffer = new BYTE[PAGE_SIZE];
+    unique_ptr<BYTE> buf_ptr(buffer);
+
+    if (0 == tper_sid)
+        return false;
+
+    CLockGlobalRange lock(host_sid, tper_sid, GetBaseComID());
+    lock.PrepareCmd(FALSE, FALSE);
+    memset(buffer, 0, PAGE_SIZE);
+    lock.BuildOpalBuffer(buffer, PAGE_SIZE);
+    error = DoScsiSecurityProtocolOut(1, GetBaseComID(), buffer, PAGE_SIZE);
+
+    if (ERROR_SUCCESS != error)
+        return 0;
+
+    Sleep(50);  //wait 50ms for NVMe device complete last request.
+
+    memset(buffer, 0, PAGE_SIZE);
+    error = DoScsiSecurityProtocolIn(1, GetBaseComID(), buffer, PAGE_SIZE);
+    if (ERROR_SUCCESS != error)
+    {
+        //todo: log....
+
+    }
+
+    //set Locking Range
+    EndSession(host_sid, tper_sid);
+    return true;
 }
 bool COpalNvme::UnlockGlobalRange(const wchar_t* pwd)
 {
@@ -239,56 +295,18 @@ void COpalNvme::ParseIndentify(PVPD_SERIAL_NUMBER_PAGE data)
 {
     RtlCopyMemory(DevInfo.SerialNo, data->SerialNumber, data->PageLength);
 }
-UINT32 COpalNvme::StartSession(UINT32 host_sid, OPAL_UID_TAG provider, char* pwd)
+UINT32 COpalNvme::StartSession(UINT32 host_sid, OPAL_UID_TAG provider, BOOLEAN is_write, char* pwd)
 {
     //open session with password
     //sp stands for ServiceProvider
     //OPAL_UID_TAG sp = IsEnterprise()? OPAL_UID_TAG::ENT_LOCKINGSP : OPAL_UID_TAG::LOCKINGSP;
     UINT32 tper_sid = 0;
-    COpalCommand start(OPAL_UID_TAG::SMUID, OPAL_METHOD_TAG::STARTSESSION, GetBaseComID());
     DWORD error = ERROR_SUCCESS;
-    {
-        COpalDataAtom name;
-        COpalDataAtom value;
-        COpalNamePair pair;
-        //value.PutUint((UINT8)GetHostSessionID());
-        value.PutUint(host_sid);
-        start.PushCmdArg(value);
-
-        //OPAL_UID_TAG locksp = IsEnterprise() ? OPAL_UID_TAG::ENT_LOCKINGSP : OPAL_UID_TAG::LOCKINGSP;
-        vector<BYTE> uid;
-        GetOpalUID(provider, uid);
-        value.PutUID(uid.data());
-        start.PushCmdArg(value);
-
-        //Is this session a Write Session?
-        value.PutUint((UINT8)OPAL_DATA_TOKEN::OPAL_TRUE);
-        start.PushCmdArg(value);
-
-        if (NULL != pwd && strlen(pwd) > 0)
-        {
-            name.PutToken(HOST_CHALLENGE);
-            COpalPwdHash* hasher = new COpalPwdHash_Win32();
-            char salt[20] = { 0 };
-            char hashed_pwd[32] = { 0 };
-            hasher->HashOpalPwd((BYTE*)pwd, (UINT32)strlen(pwd), 75000, (BYTE*)salt, 20, (BYTE*)hashed_pwd, 32);
-            value.PutBytes((BYTE*)hashed_pwd, 32);
-            pair.Set(name, &value);
-            start.PushCmdArg(pair);
-            delete hasher;
-        }
-
-        pair.Reset();
-        name.PutToken(HOST_SIGN_AUTH);
-        uid.clear();
-        GetOpalUID(OPAL_UID_TAG::ADMIN1, uid);
-        value.PutUID(uid.data());
-        pair.Set(name, &value);
-        start.PushCmdArg(pair);
-    }
+    CCmdStartSession start(host_sid, GetBaseComID());
 
     BYTE* cmd_buf = new BYTE[PAGE_SIZE];
     memset(cmd_buf, 0, PAGE_SIZE);
+    start.PrepareCmd(provider, OPAL_UID_TAG::ADMIN1, is_write, pwd);
     start.BuildOpalBuffer(cmd_buf, PAGE_SIZE);
     error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
     delete[] cmd_buf;
@@ -302,26 +320,11 @@ UINT32 COpalNvme::StartSession(UINT32 host_sid, OPAL_UID_TAG provider, char* pwd
     BYTE* resp_buf = new BYTE[PAGE_SIZE];
     memset(resp_buf, 0, PAGE_SIZE);
     error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp_buf, PAGE_SIZE);
-
-    {
-        COpalResponse resp(resp_buf, PAGE_SIZE);
-        list<COpalData *> list;
-        resp.GetPayload(list);
-        for(COpalData* item : list)
-        {
-            if(IsOpalAtom(item))
-            {
-                COpalDataAtom atom((COpalDataAtom*)item);
-                UINT32 id = 0;
-                atom.GetUint(id);
-                if(id != host_sid)
-                {
-                    tper_sid = id;
-                    break;
-                }
-            }
-        }
-    }
+    COpalResponse resp(resp_buf, PAGE_SIZE);
+    
+    COpalPacket pkt;
+    resp.GetHeader(&pkt);
+    tper_sid = pkt.TSN;
 
     delete[] resp_buf;
 
@@ -335,13 +338,11 @@ UINT32 COpalNvme::StartSession(UINT32 host_sid, OPAL_UID_TAG provider, char* pwd
 }
 void COpalNvme::EndSession(UINT32 host_sid, UINT32 tper_sid)
 {
-
     //end session
-    COpalCommand end;
+    CCmdEndSession end(host_sid, tper_sid, GetBaseComID());
     BYTE* cmd_buf = new BYTE[PAGE_SIZE];
     memset(cmd_buf, 0, PAGE_SIZE);
-    end.SetBaseComID(GetBaseComID());
-    end.SetSessionID(host_sid, tper_sid);
+
     end.BuildOpalBuffer(cmd_buf, PAGE_SIZE);
     DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
     delete[] cmd_buf;
@@ -368,7 +369,9 @@ void COpalNvme::EndSession(UINT32 host_sid, UINT32 tper_sid)
 bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
 {
     //send command directly
-    COpalCommand cmd(SMUID, PROPERTIES);
+    CCmdQueryProperties cmd(GetHostSessionID(), GetBaseComID());
+#if 0
+    COpalCommand cmd(SMUID, PROPERTIES, GetHostSessionID(), 0, GetBaseComID());
     COpalNamePair hostprop;
     COpalDataAtom name;
     COpalDataAtom value;
@@ -431,10 +434,13 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
 
     //to read Properties, we should use queried BaseComID to replace ExtComID in ComPacket;
     cmd.SetBaseComID(GetBaseComID());
+#endif
     BYTE cmd_buf[PAGE_SIZE] = {0};
     //BYTE *cmd_buf = new BYTE[PAGE_SIZE];
     //RtlZeroMemory(cmd_buf, PAGE_SIZE);
     //BYTE* temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)cmd_buf, PAGE_SIZE);
+
+    cmd.PrepareCmd(PAGE_SIZE);
 
     size_t cmd_size = cmd.BuildOpalBuffer(cmd_buf, PAGE_SIZE);
     DWORD error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
