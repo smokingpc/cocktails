@@ -292,7 +292,7 @@ int pbkdf2_derive_bytes_hmac(HCRYPTHASH  hash_init,
     /* Get the hash output size. */
 
     length = 4;
-    r = CryptGetHashParam(hash_init, HP_HASHSIZE, &hash_size, &length, 0);
+    r = CryptGetHashParam(hash_init, HP_HASHSIZE, (BYTE*)&hash_size, &length, 0);
 
     if(r == FALSE || hash_size > MAX_HASH_BUFFER_SIZE) {
         return -1;

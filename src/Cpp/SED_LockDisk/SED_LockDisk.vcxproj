@@ -139,22 +139,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Opal_CmdPacket.cpp" />
+    <ClCompile Include="Opal_Command.cpp" />
+    <ClCompile Include="Opal_Packet.cpp" />
     <ClCompile Include="Opal_Device.cpp" />
     <ClCompile Include="Opal_Factory.cpp" />
     <ClCompile Include="Opal_PwdHash.cpp" />
-    <ClCompile Include="pbkdf2_hmac.c" />
+    <ClCompile Include="Opal_Response.cpp" />
+    <ClCompile Include="Opal_Utils.cpp" />
+    <ClCompile Include="pbkdf2_hmac.cpp" />
     <ClCompile Include="SED_LockDisk.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
-    <ClInclude Include="Opal_CmdPacket.h" />
+    <ClInclude Include="Opal_Response.h" />
+    <ClInclude Include="Opal_Packet.h" />
+    <ClInclude Include="Opal_Command.h" />
     <ClInclude Include="Opal_Constant_and_Enum.h" />
     <ClInclude Include="Opal_Device.h" />
     <ClInclude Include="Opal_Factory.h" />
     <ClInclude Include="Opal_OS.h" />
     <ClInclude Include="Opal_PwdHasher.h" />
     <ClInclude Include="Opal_Structures.h" />
+    <ClInclude Include="Opal_Utils.h" />
     <ClInclude Include="pbkdf2_hmac.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>

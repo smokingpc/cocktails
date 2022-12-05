@@ -16,6 +16,9 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <locale>
+#include <codecvt>
+
 
 using namespace std;
 typedef basic_string<TCHAR> tstring;
@@ -31,7 +34,9 @@ typedef basic_string<TCHAR> tstring;
 #include "Utils.h"
 #include "Opal_Constant_and_Enum.h"
 #include "Opal_Structures.h"
-#include "Opal_CmdPacket.h"
+#include "Opal_Packet.h"
+#include "Opal_Command.h"
+#include "Opal_Response.h"
 #include "Opal_Utils.h"
 #include "Opal_Device.h"
 #include "Opal_OS.h"

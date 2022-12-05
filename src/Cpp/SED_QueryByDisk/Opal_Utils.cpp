@@ -1,4 +1,5 @@
 #include "common.h"
+
 bool IsOpalAtom(COpalData* ptr)
 {
 //using RTTI to check ptr type...

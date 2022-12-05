@@ -19,8 +19,10 @@ public:
     inline void GetDeviceInfo(OPAL_DEVICE_INFO &info){RtlCopyMemory(&info, &DevInfo, sizeof(OPAL_DEVICE_INFO));}
     UINT16 GetBaseComID();
     virtual bool QueryTPerProperties(BYTE *buffer, size_t buf_size) = 0;
-    virtual bool LockGlobalRange(char* pwd) = 0;
-    virtual bool UnlockGlobalRange(char* pwd) = 0;
+    virtual bool LockGlobalRange(const char* pwd) = 0;
+    virtual bool UnlockGlobalRange(const char* pwd) = 0;
+    virtual bool LockGlobalRange(const wchar_t* pwd) = 0;
+    virtual bool UnlockGlobalRange(const wchar_t* pwd) = 0;
 
     static UINT32 GetHostSessionID();
 
@@ -31,8 +33,8 @@ protected:
     //following fields comes from TCG_Storage_Opal_SSC_Application_Note.pdf
     //it explains communication packets and blocks structure.
     static volatile UINT32 HostSession;
-    virtual bool StartSession(UINT16 session, char* pwd) = 0;
-    virtual bool EndSession(UINT16 session) = 0;
+    virtual UINT32 StartSession(UINT32 host_sid, OPAL_UID_TAG provider, char* pwd) = 0;
+    virtual void EndSession(UINT32 host_sid, UINT32 tper_sid) = 0;
 };
 
 
@@ -44,15 +46,17 @@ public:
     DWORD Discovery0();
     DWORD Identify();
     bool QueryTPerProperties(BYTE* resp, size_t resp_size);
-    bool LockGlobalRange(char* pwd);
-    bool UnlockGlobalRange(char* pwd);
+    bool LockGlobalRange(const char* pwd);
+    bool LockGlobalRange(const wchar_t* pwd);
+    bool UnlockGlobalRange(const char* pwd);
+    bool UnlockGlobalRange(const wchar_t* pwd);
 
 protected:
     void ParseDiscovery0(IN BYTE* buffer);
     void ParseIndentify(PINQUIRYDATA data);
     void ParseIndentify(PVPD_SERIAL_NUMBER_PAGE data);
-    bool StartSession(UINT16 session, char *pwd);
-    bool EndSession(UINT16 session);
+    UINT32 StartSession(UINT32 host_sid, OPAL_UID_TAG provider, char *pwd);
+    void EndSession(UINT32 host_sid, UINT32 tper_sid);
 
 private:
     HANDLE DevHandle = INVALID_HANDLE_VALUE;

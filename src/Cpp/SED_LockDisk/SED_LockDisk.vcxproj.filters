@@ -20,7 +20,7 @@
     <ClCompile Include="SED_LockDisk.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Opal_CmdPacket.cpp">
+    <ClCompile Include="Opal_Packet.cpp">
       <Filter>TCG_OPAL</Filter>
     </ClCompile>
     <ClCompile Include="Opal_Device.cpp">
@@ -29,10 +29,19 @@
     <ClCompile Include="Opal_Factory.cpp">
       <Filter>TCG_OPAL</Filter>
     </ClCompile>
-    <ClCompile Include="pbkdf2_hmac.c">
+    <ClCompile Include="pbkdf2_hmac.cpp">
       <Filter>PBKDF2</Filter>
     </ClCompile>
     <ClCompile Include="Opal_PwdHash.cpp">
+      <Filter>TCG_OPAL</Filter>
+    </ClCompile>
+    <ClCompile Include="Opal_Utils.cpp">
+      <Filter>TCG_OPAL</Filter>
+    </ClCompile>
+    <ClCompile Include="Opal_Command.cpp">
+      <Filter>TCG_OPAL</Filter>
+    </ClCompile>
+    <ClCompile Include="Opal_Response.cpp">
       <Filter>TCG_OPAL</Filter>
     </ClCompile>
   </ItemGroup>
@@ -43,7 +52,7 @@
     <ClInclude Include="Utils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Opal_CmdPacket.h">
+    <ClInclude Include="Opal_Packet.h">
       <Filter>TCG_OPAL</Filter>
     </ClInclude>
     <ClInclude Include="Opal_Constant_and_Enum.h">
@@ -65,6 +74,15 @@
       <Filter>PBKDF2</Filter>
     </ClInclude>
     <ClInclude Include="Opal_PwdHasher.h">
+      <Filter>TCG_OPAL</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Utils.h">
+      <Filter>TCG_OPAL</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Command.h">
+      <Filter>TCG_OPAL</Filter>
+    </ClInclude>
+    <ClInclude Include="Opal_Response.h">
       <Filter>TCG_OPAL</Filter>
     </ClInclude>
   </ItemGroup>

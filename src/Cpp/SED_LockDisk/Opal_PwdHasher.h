@@ -37,7 +37,7 @@ public :
             vector<BYTE>& salt, vector<BYTE>& outdata)
     {
         outdata.reserve(OPA_PWDHASH_LEN);
-        return HashOpalPwd(raw_pwd.data(), raw_pwd.size(), iter_count,
-            salt.data(), salt.size(), outdata.data(), outdata.size());
+        return HashOpalPwd(raw_pwd.data(), (UINT32)raw_pwd.size(), iter_count,
+            salt.data(), (UINT32)salt.size(), outdata.data(), (UINT32)outdata.size());
     }
 };

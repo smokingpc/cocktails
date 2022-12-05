@@ -109,7 +109,11 @@ int _tmain(int argc, TCHAR* argv[])
 
     COpalDevice *dev = new COpalNvme(diskname);
     if(locking)
-        dev->LockGlobalRange(pwd);
+        dev->LockGlobalRange(pwd.c_str());
+    else
+        dev->UnlockGlobalRange(pwd.c_str());
+
+    delete[] dev;
 }
 
 
