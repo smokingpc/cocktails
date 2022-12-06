@@ -62,6 +62,7 @@ COpalDevice::~COpalDevice(){}
 UINT32 COpalDevice::GetHostSessionID()
 {
     return InterlockedIncrement(&HostSession);
+    //return 105; //??  copied from sedutils....
 }
 
 COpalNvme::COpalNvme(tstring devpath) : COpalDevice(devpath)
@@ -194,6 +195,7 @@ bool COpalNvme::LockGlobalRange(const wchar_t* pwd)
 bool COpalNvme::UnlockGlobalRange(const char* pwd)
 {
     UINT32 host_sid = GetHostSessionID();
+    host_sid = 0;
     UINT32 tper_sid = StartSession(host_sid, OPAL_UID_TAG::LOCKINGSP, TRUE, (char*)pwd);
     DWORD error = ERROR_SUCCESS;
     BYTE* buffer = new BYTE[PAGE_SIZE];
@@ -322,9 +324,20 @@ UINT32 COpalNvme::StartSession(UINT32 host_sid, OPAL_UID_TAG provider, BOOLEAN i
     error = DoScsiSecurityProtocolIn(1, GetBaseComID(), resp_buf, PAGE_SIZE);
     COpalResponse resp(resp_buf, PAGE_SIZE);
     
-    COpalPacket pkt;
-    resp.GetHeader(&pkt);
-    tper_sid = pkt.TSN;
+    //In StartSession, HSN and TSN are replied from device.
+    //replied ArgList of Response only have 2 data: first is "echo of HostSession ID", 
+    //second is device's TPer Session ID
+    list<COpalData *> list;
+    resp.GetPayload(list);
+    for(COpalData* item:list)
+    {
+        UINT32 data = 0;
+        ((COpalDataAtom*)item)->GetUint(data);
+        if(data != host_sid)
+            tper_sid = data;
+        delete item;
+    }
+    //
 
     delete[] resp_buf;
 
@@ -369,7 +382,9 @@ void COpalNvme::EndSession(UINT32 host_sid, UINT32 tper_sid)
 bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
 {
     //send command directly
-    CCmdQueryProperties cmd(GetHostSessionID(), GetBaseComID());
+    //QueryTPerProperties use HSN==TSN==0,
+    //use other values will fail this command.
+    CCmdQueryProperties cmd(0, GetBaseComID());
 #if 0
     COpalCommand cmd(SMUID, PROPERTIES, GetHostSessionID(), 0, GetBaseComID());
     COpalNamePair hostprop;

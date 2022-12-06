@@ -810,7 +810,7 @@ void COpalCmdPayload::PushOpalItem(COpalData* newarg)
 }
 void COpalCmdPayload::PushOpalItem(COpalData& newarg)
 {
-    PushOpalItem(&newarg);
+    ArgList.PushOpalItem(newarg);
 }
 void COpalCmdPayload::GetArgList(list<COpalData*>& list)
 {
@@ -944,10 +944,8 @@ COpalCommand::~COpalCommand()
 }
 void COpalCommand::PushCmdArg(COpalData &item)
 {
-    if (IsCmdPayload(&item))
+    if (IsCmdPayload(Payload))
         ((COpalCmdPayload*)Payload)->PushOpalItem(item);
-
-//    Payload->PushOpalItem(&item);
 }
 void COpalCommand::SetBaseComID(USHORT comid)
 {

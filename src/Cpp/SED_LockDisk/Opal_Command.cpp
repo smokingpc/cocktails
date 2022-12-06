@@ -299,6 +299,10 @@ void CCmdStartSession::PrepareCmd(OPAL_UID_TAG target_sp, OPAL_UID_TAG sign_auth
     value = new COpalDataAtom(GetSpUID(sign_auth));
     pair = new COpalNamePair(name, value);
     Payload.PushOpalItem(pair);
+
+    //In StartSession Command, we have only push HostSID in ArgList.
+    //Don't put them in Packet::TSN and Packet::HSN. It will cause command failed.
+    Host_Sid = Tper_Sid = 0;
 }
 #pragma endregion
 
@@ -379,6 +383,8 @@ void CCmdQueryProperties::PrepareCmd(UINT16 max_compkt_size)
     COpalList *list = nullptr;
     COpalNamePair *pair = nullptr;
     UINT16 data_size = max_compkt_size;
+
+    Payload.Set(GetSpUID(Invoker), GetMethodUID(Method));
 
     list = new COpalList();
     name = new COpalDataAtom((char*)"MaxComPacketSize", (int)strlen("MaxComPacketSize"));

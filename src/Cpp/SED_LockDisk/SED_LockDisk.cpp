@@ -4,6 +4,9 @@
 #include "Common.h"
 using namespace std;
 
+void PrintOpalList(COpalList* data);
+void PrintOpalNamePair(COpalNamePair* data);
+
 void PrintFeatureData(PFEATURE_DESC_TPer data)
 {
     _tprintf(_T("[TPer]\n"));
@@ -66,6 +69,131 @@ void PrintFeatureData(PFEATURE_DESC_DATASTORE data)
 }
 
 
+void PrintOpalComPacket(COpalComPacket& compkt)
+{
+    UINT32 Reserved = 0;
+    UINT8 ExtComID[4] = { 0 };      //big endian
+    UINT32 OutstandingData = 0;     //big endian
+    UINT32 MinTx = 0;               //big endian
+    UINT32 Length = 0;              //(big endian) ==> sizeof(OPAL_PACKET) + OPAL_PACKET::Length
+
+    _tprintf(_T("=> compkt: ExtComID=0x%02X 0x%02X 0x%02X 0x%02X, OutstandingData=%d\n"),
+        compkt.ExtComID[0], compkt.ExtComID[1], compkt.ExtComID[2], compkt.ExtComID[3],
+        SwapEndian(compkt.OutstandingData));
+
+    _tprintf(_T("=> compkt: MinTx=%d, Length=%d(0x%08X)\n"),
+        SwapEndian(compkt.MinTx), SwapEndian(compkt.Length), SwapEndian(compkt.Length));
+}
+void PrintOpalPacket(COpalPacket& pkt)
+{
+    _tprintf(_T("==> pkt: SessionID TSN=0x%08d:HSN=0x%08d\n"),
+                SwapEndian(pkt.TSN), SwapEndian(pkt.HSN));
+
+    _tprintf(_T("==> pkt: SeqNo=%d, AckType=%d, Ack=%d, Length=%d(0x%08X)\n"),
+        SwapEndian(pkt.SeqNo), SwapEndian(pkt.AckType), SwapEndian(pkt.Ack),
+        SwapEndian(pkt.Length), SwapEndian(pkt.Length));
+}
+void PrintOpalSubPacket(COpalSubPacket& subpkt)
+{
+    UINT16 Kind = 0;        //??
+    UINT32 Length = 0;      //total length of following DataPayload block, NOT INCLUDE padding...
+
+    _tprintf(_T("===> subpkt: Kind=%d, Length=%d(0x%08X)\n"),
+        SwapEndian(subpkt.Kind), SwapEndian(subpkt.Length), SwapEndian(subpkt.Length));
+}
+
+void PrintOpalDataAtom(COpalDataAtom* atom)
+{
+    if (atom->IsTiny())
+    {
+        UINT8 data = 0;
+        atom->GetUint(data);
+        _tprintf(_T("DataAtom => TinyAtom [0x%02X](%d)"), data, data);
+    }
+    else if (atom->IsNumeric())
+    {
+        UINT64 data = 0;
+        atom->GetUint(data);
+        _tprintf(_T("DataAtom => Numeric [0x%llX](%lld)"), data, data);
+    }
+    else if (atom->IsBytes())
+    {
+        BYTE buffer[32] = { 0 };
+        atom->GetBytes(buffer, 32);
+        _tprintf(_T("DataAtom => Bytes "));
+        for (int i = 0; i < 32; i++)
+            _tprintf(_T("0x%02X "), buffer[i]);
+        _tprintf(_T("\n"));
+
+        _tprintf(_T("         => \"%S\" \n"), (char*)buffer);
+    }
+    else
+    {
+        _tprintf(_T("  **  OOPS! DataAtom parsing error!! "));
+    }
+}
+
+void PrintOpalList(COpalList* data)
+{
+    _tprintf(_T(" [ \n"));
+    list<COpalData*> list;
+    data->GetRawList(list);
+    for (COpalData* item : list)
+    {
+        if (IsOpalList((COpalList*)item))
+            PrintOpalList((COpalList*)item);
+        else if (IsOpalNamePair((COpalNamePair*)item))
+            PrintOpalNamePair((COpalNamePair*)item);
+        else if (IsOpalAtom((COpalDataAtom*)item))
+            PrintOpalDataAtom((COpalDataAtom*)item);
+    }
+    _tprintf(_T(" ] \n"));
+}
+void PrintOpalNamePair(COpalNamePair* data)
+{
+    COpalDataAtom name;
+    COpalData* value = nullptr;
+    _tprintf(_T(" { \n"));
+    data->Get(name, &value);
+
+    PrintOpalDataAtom((COpalDataAtom*)&name);
+
+    if (IsOpalList((COpalList*)value))
+        PrintOpalList((COpalList*)value);
+    else if (IsOpalNamePair((COpalNamePair*)value))
+        PrintOpalNamePair((COpalNamePair*)value);
+    else if (IsOpalAtom((COpalDataAtom*)value))
+        PrintOpalDataAtom((COpalDataAtom*)value);
+
+    if (nullptr != value)
+        delete value;
+    _tprintf(_T(" } \n"));
+}
+
+void PrintOpalProperties(BYTE* buffer, size_t max_len)
+{
+    COpalResponse resp;
+
+    _tprintf(_T("[TPer to HOST properties]\n"));
+
+    resp.FromOpalBuffer(buffer, max_len);
+
+    COpalComPacket compkt;
+    COpalPacket pkt;
+    COpalSubPacket subpkt;
+    resp.GetHeaders(&compkt, &pkt, &subpkt);
+    PrintOpalComPacket(compkt);
+    PrintOpalPacket(pkt);
+    PrintOpalSubPacket(subpkt);
+
+    COpalCmdPayload payload;
+    resp.GetPayload(payload);
+    COpalList list;
+    payload.GetArgList(list);
+    PrintOpalList(&list);
+}
+
+
 void PrintOpalDeviceInfo(tstring& diskname, OPAL_DEVICE_INFO& info)
 {
     _tprintf(_T("===> %s\n"), diskname.c_str());
@@ -80,6 +208,7 @@ void PrintOpalDeviceInfo(tstring& diskname, OPAL_DEVICE_INFO& info)
     PrintFeatureData(&info.Datastore);
     PrintFeatureData(&info.OpalV200);
 }
+
 
 void Usage()
 {
@@ -108,6 +237,11 @@ int _tmain(int argc, TCHAR* argv[])
         locking = true;
 
     COpalDevice *dev = new COpalNvme(diskname);
+
+    BYTE buffer[PAGE_SIZE] = {0};
+    dev->QueryTPerProperties(buffer, PAGE_SIZE);
+    PrintOpalProperties(buffer, PAGE_SIZE);
+
     if(locking)
         dev->LockGlobalRange(pwd.c_str());
     else

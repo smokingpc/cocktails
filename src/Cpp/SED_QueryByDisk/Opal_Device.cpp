@@ -210,7 +210,6 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
     hostprop.Set(name, &value_list);
 
     cmd.PushCmdArg(hostprop);
-    //cmd.CompleteCmd();
 
     //to read Properties, we should use queried BaseComID to replace ExtComID in ComPacket;
     cmd.SetBaseComID(GetBaseComID());

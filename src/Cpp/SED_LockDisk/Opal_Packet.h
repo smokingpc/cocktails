@@ -103,16 +103,10 @@ public:
     size_t OpalDataLen();
     void Reset();
 
-    union
-    {
-        struct {
-        //the TSN and HSN comes from session open.
-        //All commands during this session shoud use them to communicate with device.
-            UINT32 TSN;         //session SN of TPer, returned by StartSession "SPSessionID" field.
-            UINT32 HSN;         //session SN of Host, this is host assigned "HostSessionID" field.
-        }DUMMYSTRUCTNAME;
-        UINT64 SessionID = 0;   //unique session id is built by TSN+HSN.
-    };
+    //the TSN and HSN comes from session open.
+    //All commands during this session shoud use them to communicate with device.
+    UINT32 TSN;         //session SN of TPer, returned by StartSession "SPSessionID" field.
+    UINT32 HSN;         //session SN of Host, this is host assigned "HostSessionID" field.
     UINT32 SeqNo = 0;
     UINT16 Reserved = 0;
     UINT16 AckType = 0;

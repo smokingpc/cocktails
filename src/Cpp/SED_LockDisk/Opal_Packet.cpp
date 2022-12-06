@@ -113,7 +113,7 @@ size_t COpalPacket::ToOpalBytes(BYTE* buffer, size_t max_len)
 size_t COpalPacket::OpalDataLen() { return sizeof(COpalPacket); }
 void COpalPacket::Reset()
 {
-    SessionID = 0;   //unique session id is built by TSN+HSN.
+    //SessionID = 0;   //unique session id is built by TSN+HSN.
     SeqNo = 0;
     Reserved = 0;
     AckType = 0;
