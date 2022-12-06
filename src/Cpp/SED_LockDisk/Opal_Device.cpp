@@ -51,20 +51,11 @@ static void FillScsiCmd(PSCSI_PASS_THROUGH_DIRECT_WITH_SENSE cmd, PVOID buffer, 
     cmd->DataIn = data_inout;
 }
 
-
-UINT32 volatile COpalDevice::HostSession = 0;
-
 COpalDevice::COpalDevice(tstring devpath)
 {
     DevPath = devpath;
 }
 COpalDevice::~COpalDevice(){}
-UINT32 COpalDevice::GetHostSessionID()
-{
-    return InterlockedIncrement(&HostSession);
-    //return 105; //??  copied from sedutils....
-}
-
 COpalNvme::COpalNvme(tstring devpath) : COpalDevice(devpath)
 {
     Discovery0();
@@ -151,7 +142,7 @@ DWORD COpalNvme::Identify()
 
 bool COpalNvme::LockGlobalRange(const char *pwd)
 {
-    UINT32 host_sid = GetHostSessionID();
+    UINT32 host_sid = DEFAULT_HOST_SID;
     UINT32 tper_sid = StartSession(host_sid, OPAL_UID_TAG::LOCKINGSP, TRUE, (char*) pwd);
     DWORD error = ERROR_SUCCESS;
     BYTE* buffer = new BYTE[PAGE_SIZE];
@@ -194,7 +185,7 @@ bool COpalNvme::LockGlobalRange(const wchar_t* pwd)
 
 bool COpalNvme::UnlockGlobalRange(const char* pwd)
 {
-    UINT32 host_sid = GetHostSessionID();
+    UINT32 host_sid = DEFAULT_HOST_SID;
     host_sid = 0;
     UINT32 tper_sid = StartSession(host_sid, OPAL_UID_TAG::LOCKINGSP, TRUE, (char*)pwd);
     DWORD error = ERROR_SUCCESS;
@@ -304,11 +295,11 @@ UINT32 COpalNvme::StartSession(UINT32 host_sid, OPAL_UID_TAG provider, BOOLEAN i
     //OPAL_UID_TAG sp = IsEnterprise()? OPAL_UID_TAG::ENT_LOCKINGSP : OPAL_UID_TAG::LOCKINGSP;
     UINT32 tper_sid = 0;
     DWORD error = ERROR_SUCCESS;
-    CCmdStartSession start(host_sid, GetBaseComID());
+    CCmdStartSession start(GetBaseComID());
 
     BYTE* cmd_buf = new BYTE[PAGE_SIZE];
     memset(cmd_buf, 0, PAGE_SIZE);
-    start.PrepareCmd(provider, OPAL_UID_TAG::ADMIN1, is_write, pwd);
+    start.PrepareCmd(host_sid, provider, OPAL_UID_TAG::ADMIN1, is_write, pwd);
     start.BuildOpalBuffer(cmd_buf, PAGE_SIZE);
     error = DoScsiSecurityProtocolOut(1, GetBaseComID(), cmd_buf, PAGE_SIZE);
     delete[] cmd_buf;
@@ -385,76 +376,8 @@ bool COpalNvme::QueryTPerProperties(BYTE* resp, size_t resp_size)
     //QueryTPerProperties use HSN==TSN==0,
     //use other values will fail this command.
     CCmdQueryProperties cmd(0, GetBaseComID());
-#if 0
-    COpalCommand cmd(SMUID, PROPERTIES, GetHostSessionID(), 0, GetBaseComID());
-    COpalNamePair hostprop;
-    COpalDataAtom name;
-    COpalDataAtom value;
-    COpalList value_list;
-    COpalNamePair value_pair;
-    UINT16 data_size = BIG_BUFFER_SIZE;
 
-    UINT32 temp = 1;
-    value.PutUint(temp);
-    {
-        name.PutString((char*)"MaxComPacketSize", (int) strlen("MaxComPacketSize"));
-        value.PutUint(data_size);
-        value_pair.Set(name, &value);
-        value_list.PushOpalItem(value_pair);
-    }
-    {
-        name.PutString((char*)"MaxResponseComPacketSize", strlen("MaxResponseComPacketSize"));
-        value.PutUint(data_size);
-        value_pair.Set(name, &value);
-        value_list.PushOpalItem(value_pair);
-    }
-    {
-        name.PutString((char*)"MaxPacketSize", strlen("MaxPacketSize"));
-        data_size = BIG_BUFFER_SIZE - sizeof(COpalComPacket);
-        value.PutUint(data_size);
-        value_pair.Set(name, &value);
-        value_list.PushOpalItem(value_pair);
-    }
-    {
-        name.PutString((char*)"MaxIndTokenSize", strlen("MaxIndTokenSize"));
-        data_size = BIG_BUFFER_SIZE - sizeof(COpalComPacket) - sizeof(COpalPacket) - sizeof(COpalSubPacket);
-        value.PutUint(data_size);
-        value_pair.Set(name, &value);
-        value_list.PushOpalItem(value_pair);
-    }
-    {
-        name.PutString((char*)"MaxPackets", strlen("MaxPackets"));
-        value.PutUint((UINT8)1);
-        value_pair.Set(name, &value);
-        value_list.PushOpalItem(value_pair);
-    }
-    {
-        name.PutString((char*)"MaxSubPackets", strlen("MaxSubPackets"));
-        value.PutUint((UINT8)1);
-        value_pair.Set(name, &value);
-        value_list.PushOpalItem(value_pair);
-    }
-    {
-        name.PutString((char*)"MaxMethods", strlen("MaxMethods"));
-        value.PutUint((UINT8)1);
-        value_pair.Set(name, &value);
-        value_list.PushOpalItem(value_pair);
-    }
-
-    name.PutUint((UINT8) HOSTPROPERTIES);
-    hostprop.Set(name, &value_list);
-
-    cmd.PushCmdArg(hostprop);
-    //cmd.CompleteCmd();
-
-    //to read Properties, we should use queried BaseComID to replace ExtComID in ComPacket;
-    cmd.SetBaseComID(GetBaseComID());
-#endif
     BYTE cmd_buf[PAGE_SIZE] = {0};
-    //BYTE *cmd_buf = new BYTE[PAGE_SIZE];
-    //RtlZeroMemory(cmd_buf, PAGE_SIZE);
-    //BYTE* temp2 = (BYTE*)ROUND_UP_ALIGN_2N((size_t)cmd_buf, PAGE_SIZE);
-
     cmd.PrepareCmd(PAGE_SIZE);
 
     size_t cmd_size = cmd.BuildOpalBuffer(cmd_buf, PAGE_SIZE);
@@ -495,8 +418,7 @@ DWORD COpalNvme::SendCommand(DWORD ioctl, PVOID cmd_buf, size_t cmd_size)
 
     //send cmd
     BOOL ok = DeviceIoControl(DevHandle,
-        //IOCTL_SCSI_PASS_THROUGH_DIRECT,
-        ioctl,
+        ioctl,        //IOCTL_SCSI_PASS_THROUGH_DIRECT,
         cmd_buf,
         (DWORD)cmd_size,
         cmd_buf,

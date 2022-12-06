@@ -255,19 +255,23 @@ UINT32 COpalCommand::CalcPayloadLenInBytes()
 #pragma endregion
 
 #pragma region ======== CCmdStartSession ========
-CCmdStartSession::CCmdStartSession(UINT32 host_sid, USHORT comid)
-    : COpalCommand(OPAL_UID_TAG::SMUID, OPAL_METHOD_TAG::STARTSESSION, host_sid, 0, comid)
+CCmdStartSession::CCmdStartSession(USHORT comid)
+    : COpalCommand(OPAL_UID_TAG::SMUID, OPAL_METHOD_TAG::STARTSESSION, 0, 0, comid)
 {
 }
 CCmdStartSession::~CCmdStartSession()
 {}
-void CCmdStartSession::PrepareCmd(OPAL_UID_TAG target_sp, OPAL_UID_TAG sign_auth, BOOLEAN is_write, char* pwd)
+void CCmdStartSession::PrepareCmd(UINT32 host_sid, OPAL_UID_TAG target_sp, OPAL_UID_TAG sign_auth, BOOLEAN is_write, char* pwd)
 {
     Payload.Set(GetSpUID(Invoker), GetMethodUID(Method));
     
     COpalNamePair* pair = nullptr;
     COpalDataAtom* name = nullptr;
-    COpalDataAtom *value = new COpalDataAtom(Host_Sid);
+    COpalDataAtom *value = nullptr;
+    
+    //In StartSession Command, we have only push HostSID in ArgList.
+    //Don't put them in Packet::TSN and Packet::HSN. It will cause command failed.
+    value = new COpalDataAtom(host_sid);        //tell device "this session I want to use this host_sid"
     Payload.PushOpalItem(value);
     //set Target Service Provider for following commands
     value = new COpalDataAtom(GetSpUID(target_sp));
@@ -299,15 +303,11 @@ void CCmdStartSession::PrepareCmd(OPAL_UID_TAG target_sp, OPAL_UID_TAG sign_auth
     value = new COpalDataAtom(GetSpUID(sign_auth));
     pair = new COpalNamePair(name, value);
     Payload.PushOpalItem(pair);
-
-    //In StartSession Command, we have only push HostSID in ArgList.
-    //Don't put them in Packet::TSN and Packet::HSN. It will cause command failed.
-    Host_Sid = Tper_Sid = 0;
 }
 #pragma endregion
 
 #pragma region ======== CCmdEndSession ========
-CCmdEndSession::CCmdEndSession(UINT32 tper_sid, UINT32 host_sid, USHORT comid)
+CCmdEndSession::CCmdEndSession(UINT32 host_sid, UINT32 tper_sid, USHORT comid)
     : COpalCommand(host_sid, tper_sid, comid)
 {}
 CCmdEndSession::~CCmdEndSession()
@@ -350,18 +350,16 @@ void CLockGlobalRange::PrepareCmd(BOOLEAN rlock, BOOLEAN wlock)
 
     Payload.Set(GetSpUID(Invoker), GetMethodUID(Method));
 
-    //value = new COpalDataAtom(GetSpUID(target_sp));
-    //Payload.PushOpalItem(value);
-    //cmd arg == [ <%Range UID%>, {VALUES : [{READLOCKED: 1 or 0}, {WRITELOCKED : 1 or 0}]} ]
+    //cmd arg == [ {VALUES : [{READLOCKED: 1 or 0}, {WRITELOCKED : 1 or 0}]}]
     list = new COpalList();
     {
         name = new COpalDataAtom(OPAL_DATA_TOKEN::READLOCKED);
         value = new COpalDataAtom((OPAL_DATA_TOKEN)rlock);
-        Payload.PushOpalItem(new COpalNamePair(name, value));
+        list->PushOpalItem(new COpalNamePair(name, value));
 
         name = new COpalDataAtom(OPAL_DATA_TOKEN::WRITELOCKED);
         value = new COpalDataAtom((OPAL_DATA_TOKEN)wlock);
-        Payload.PushOpalItem(new COpalNamePair(name, value));
+        list->PushOpalItem(new COpalNamePair(name, value));
     }
     name = new COpalDataAtom(OPAL_DATA_TOKEN::VALUES);
     pair = new COpalNamePair(name, list);

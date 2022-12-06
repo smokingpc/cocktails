@@ -235,3 +235,4 @@ enum OPAL_STATUS {
 
 #define OPAL_UID_LEN        8
 #define DISCOVERY0_COMID    (UINT16)0x0001
+#define DEFAULT_HOST_SID     0x0101               //hardcode my host session id...

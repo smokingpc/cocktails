@@ -22,10 +22,6 @@ public:
 protected:
     OPAL_DEVICE_INFO DevInfo;
     FEATURE_CODE DevFeature = FEATURE_CODE::NO_FEATURE;
-    
-    //following fields comes from TCG_Storage_Opal_SSC_Application_Note.pdf
-    //it explains communication packets and blocks structure.
-    UINT32 HostSession = 0;
 };
 
 

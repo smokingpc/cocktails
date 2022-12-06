@@ -117,10 +117,10 @@ protected:
 class CCmdStartSession : public COpalCommand
 {
 public:
-    CCmdStartSession(UINT32 host_sid, USHORT comid);
+    CCmdStartSession(USHORT comid);
     //CCmdStartSession(UINT32 host_sid, UINT32 tper_sid, USHORT comid);
     virtual ~CCmdStartSession();
-    void PrepareCmd(OPAL_UID_TAG target_sp, OPAL_UID_TAG sign_auth, BOOLEAN is_write, char *pwd);
+    void PrepareCmd(UINT32 host_sid, OPAL_UID_TAG target_sp, OPAL_UID_TAG sign_auth, BOOLEAN is_write, char *pwd);
 };
 
 class CCmdEndSession : public COpalCommand

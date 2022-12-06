@@ -24,15 +24,10 @@ public:
     virtual bool LockGlobalRange(const wchar_t* pwd) = 0;
     virtual bool UnlockGlobalRange(const wchar_t* pwd) = 0;
 
-    static UINT32 GetHostSessionID();
-
 protected:
     OPAL_DEVICE_INFO DevInfo;
     FEATURE_CODE DevFeature = FEATURE_CODE::NO_FEATURE;
     
-    //following fields comes from TCG_Storage_Opal_SSC_Application_Note.pdf
-    //it explains communication packets and blocks structure.
-    static volatile UINT32 HostSession;
     virtual UINT32 StartSession(UINT32 host_sid, OPAL_UID_TAG provider, BOOLEAN is_write, char* pwd) = 0;
     virtual void EndSession(UINT32 host_sid, UINT32 tper_sid) = 0;
 };
