@@ -84,10 +84,61 @@ size_t EnumerateDeviceInterface(list<wstring> &result, const GUID* class_guid)
 
     return result.size();
 }
+size_t EnumerateDeviceInterface2(list<wstring>& result, const GUID* class_guid)
+{
+    HDEVINFO infoset;
+    SP_DEVICE_INTERFACE_DATA ifdata;
+    DWORD id = 0;
+
+    infoset = SetupDiGetClassDevsW(
+        class_guid,
+        NULL,
+        NULL,
+        DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+
+    wprintf(L"==> SetupDiGetClassDevsW\n");
+    if(infoset == INVALID_HANDLE_VALUE)
+        goto END;
+
+    wprintf(L"==> SetupDiEnumDeviceInterfaces\n");
+    ZeroMemory(&ifdata, sizeof(SP_DEVICE_INTERFACE_DATA));
+    ifdata.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+    while (SetupDiEnumDeviceInterfaces(infoset, NULL, class_guid, id++, &ifdata))
+    {
+        BYTE buffer[1024] = {0};
+        PSP_DEVICE_INTERFACE_DETAIL_DATA detail = (PSP_DEVICE_INTERFACE_DETAIL_DATA)buffer;
+
+        detail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+        if (!SetupDiGetDeviceInterfaceDetail(
+            infoset, &ifdata, detail, 1024, NULL, NULL))
+        {
+            wprintf(L"SetupDiGetDeviceInterfaceDetail Failed, error=%d...\n", GetLastError());
+            continue;
+        }
+
+        wprintf(L"Got interface{%s} Flag=0x%08X\n", detail->DevicePath, ifdata.Flags);
+        result.push_back(detail->DevicePath);
+    }
+    wprintf(L"==> SetupDiEnumDeviceInterfaces loop done, lasterror=%d\n", GetLastError());
+
+END:
+    if((NULL != infoset) && (infoset != INVALID_HANDLE_VALUE))
+        SetupDiDestroyDeviceInfoList(infoset);
+    return result.size();
+}
 
 int main()
 {
     list<wstring> list;
+
+    size_t count = EnumerateDeviceInterface2(list, &GUID_DEVINTERFACE_STORAGEPORT);
+    if (0 == count)
+    {
+        wprintf(L"no interface found, exit...\n\n");
+        return -1;
+    }
+
+#if 0
     //size_t count = EnumerateDeviceInterface(list, &GUID_TEST_GUID);
     //size_t count = EnumerateDeviceInterface(list, &GUID_DEVINTERFACE_DISK);
     size_t count = EnumerateDeviceInterface(list, &GUID_DEVINTERFACE_STORAGEPORT);
@@ -111,5 +162,6 @@ int main()
         bool ok = (hdevice != INVALID_HANDLE_VALUE);
         wprintf(L"open device [%s][%d] for [%s]\n", (ok==true?L"ok":L"failed"), GetLastError(), path.c_str());
     }
+#endif
     wprintf(L"exit.....\n");
 }
