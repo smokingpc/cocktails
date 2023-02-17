@@ -53,6 +53,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SED_LockDisk", "SED_LockDis
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueryDiskSizeByDiskDevPath", "QueryDiskSizeByDiskDevPath\QueryDiskSizeByDiskDevPath.vcxproj", "{D5C32B97-628F-400E-8836-79CE103BDFBC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StorageQueryProperty", "StorageQueryProperty\StorageQueryProperty.vcxproj", "{9B64042B-0D5B-49BE-A88A-454505A01E16}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -263,6 +265,14 @@ Global
 		{D5C32B97-628F-400E-8836-79CE103BDFBC}.Release|x64.Build.0 = Release|x64
 		{D5C32B97-628F-400E-8836-79CE103BDFBC}.Release|x86.ActiveCfg = Release|Win32
 		{D5C32B97-628F-400E-8836-79CE103BDFBC}.Release|x86.Build.0 = Release|Win32
+		{9B64042B-0D5B-49BE-A88A-454505A01E16}.Debug|x64.ActiveCfg = Debug|x64
+		{9B64042B-0D5B-49BE-A88A-454505A01E16}.Debug|x64.Build.0 = Debug|x64
+		{9B64042B-0D5B-49BE-A88A-454505A01E16}.Debug|x86.ActiveCfg = Debug|Win32
+		{9B64042B-0D5B-49BE-A88A-454505A01E16}.Debug|x86.Build.0 = Debug|Win32
+		{9B64042B-0D5B-49BE-A88A-454505A01E16}.Release|x64.ActiveCfg = Release|x64
+		{9B64042B-0D5B-49BE-A88A-454505A01E16}.Release|x64.Build.0 = Release|x64
+		{9B64042B-0D5B-49BE-A88A-454505A01E16}.Release|x86.ActiveCfg = Release|Win32
+		{9B64042B-0D5B-49BE-A88A-454505A01E16}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
