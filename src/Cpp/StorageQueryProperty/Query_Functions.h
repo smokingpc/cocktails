@@ -46,3 +46,13 @@ BOOL QueryDeviceCopyOffloadProperty(tstring& devpath);
 BOOL QueryDeviceResiliencyProperty(tstring& devpath);
 #endif
 
+BOOL QueryDeviceMediumProductType(tstring& devpath);
+BOOL QueryAdapterRpmbProperty(tstring& devpath);
+BOOL QueryAdapterCryptoProperty(tstring& devpath);
+BOOL QueryDeviceIoCapabilityProperty(tstring& devpath);
+BOOL QueryAdapterProtocolSpecificProperty(tstring& devpath);
+BOOL QueryDeviceProtocolSpecificPropert(tstring& devpath);
+BOOL QueryAdapterTemperatureProperty(tstring& devpath);
+BOOL QueryDeviceTemperatureProperty(tstring& devpath);
+BOOL QueryAdapterPhysicalTopologyProperty(tstring& devpath);
+BOOL QueryDevicePhysicalTopologyProperty(tstring& devpath);

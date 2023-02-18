@@ -7,7 +7,7 @@
 #include <windows.h>
 #include <scsi.h>
 #include <string>
-using namespace std;
+
 typedef std::basic_string<TCHAR> tstring;
 
 #ifndef PAGE_SIZE

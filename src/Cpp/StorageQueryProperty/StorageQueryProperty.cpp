@@ -28,6 +28,18 @@ int _tmain(int argc, _TCHAR* argv[])
     QueryDeviceLBProvisioningProperty(devpath);
     QueryDevicePowerProperty(devpath);
     QueryDeviceCopyOffloadProperty(devpath);
+
+    QueryDeviceMediumProductType(devpath);
+    QueryAdapterRpmbProperty(devpath);
+    QueryAdapterCryptoProperty(devpath);
+    QueryDeviceIoCapabilityProperty(devpath);
+    QueryAdapterProtocolSpecificProperty(devpath);
+    QueryDeviceProtocolSpecificPropert(devpath);
+    QueryAdapterTemperatureProperty(devpath);
+    QueryDeviceTemperatureProperty(devpath);
+    QueryAdapterPhysicalTopologyProperty(devpath);
+    QueryDevicePhysicalTopologyProperty(devpath);
+
     return 0;
 }
 
