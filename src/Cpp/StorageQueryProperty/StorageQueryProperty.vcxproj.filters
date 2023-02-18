@@ -13,21 +13,24 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="QueryFunctions">
+      <UniqueIdentifier>{d4c51547-f252-4d38-93a8-25e70d3b2f49}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StorageQueryProperty.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Query_Functions.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>QueryFunctions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Query_Functions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Query_Functions.h">
+      <Filter>QueryFunctions</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
