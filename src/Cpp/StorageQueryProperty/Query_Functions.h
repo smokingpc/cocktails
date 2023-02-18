@@ -1,9 +1,48 @@
 #pragma once
+//Basic IOCTL_STORAGE_QUERY_PROPERTY querying is supported since WinXP.
 
 BOOL QueryDeviceProperty(tstring& devpath);
 BOOL QueryAdapterProperty(tstring& devpath);
+
+//returned data is SCSI3 SCSIOP_INQUIRY with VPD enable VPD_DEVICE_IDENTIFIERS
+//returned information.
 BOOL QueryDeviceIdProperty(tstring& devpath);
+
 #if 0       //for Driver Use Only
+//Supported since WinVista and Win2008
 BOOL QueryDeviceUniqueIdProperty(tstring& devpath);
 #endif
+
+//Supported since WinVista and Win2008
 BOOL QueryDeviceWriteCacheProperty(tstring& devpath);
+
+#if 0       //reserved for System Use
+BOOL QueryMiniportProperty(tstring& devpath);
+#endif
+
+//Supported since WinVista and Win2008
+BOOL QueryAccessAlignmentProperty(tstring& devpath);
+
+//Supported since Win7 and Win2008 R2
+BOOL QueryDeviceSeekPenaltyProperty(tstring& devpath);
+
+//Supported since Win7 and Win2008 R2
+BOOL QueryDeviceTrimProperty(tstring& devpath);
+
+
+#if 0       //reserved for System Use
+BOOL QueryDeviceWriteAggregationProperty(tstring& devpath);
+BOOL QueryDeviceDeviceTelemetryProperty(tstring& devpath);
+#endif
+
+//Supported since Win8 and Win2012
+BOOL QueryDeviceLBProvisioningProperty(tstring& devpath);
+//Supported since Win8 and Win2012
+BOOL QueryDevicePowerProperty(tstring& devpath);
+//Supported since Win8 and Win2012
+BOOL QueryDeviceCopyOffloadProperty(tstring& devpath);
+
+#if 0       //reserved for System Use
+BOOL QueryDeviceResiliencyProperty(tstring& devpath);
+#endif
+

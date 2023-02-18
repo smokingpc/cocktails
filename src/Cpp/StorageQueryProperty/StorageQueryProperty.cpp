@@ -17,6 +17,17 @@ int _tmain(int argc, _TCHAR* argv[])
         return -1;
     }
 
-
+    tstring devpath = argv[1];
+    QueryDeviceProperty(devpath);
+    QueryAdapterProperty(devpath);
+    QueryDeviceIdProperty(devpath);
+    QueryDeviceWriteCacheProperty(devpath);
+    QueryAccessAlignmentProperty(devpath);
+    QueryDeviceSeekPenaltyProperty(devpath);
+    QueryDeviceTrimProperty(devpath);
+    QueryDeviceLBProvisioningProperty(devpath);
+    QueryDevicePowerProperty(devpath);
+    QueryDeviceCopyOffloadProperty(devpath);
+    return 0;
 }
 
