@@ -56,3 +56,29 @@ BOOL QueryAdapterTemperatureProperty(tstring& devpath);
 BOOL QueryDeviceTemperatureProperty(tstring& devpath);
 BOOL QueryAdapterPhysicalTopologyProperty(tstring& devpath);
 BOOL QueryDevicePhysicalTopologyProperty(tstring& devpath);
+
+#if 0       //reserved for System Use
+BOOL QueryDeviceAttributesProperty(tstring& devpath);
+#endif
+BOOL QueryDeviceManagementStatus(tstring& devpath);
+BOOL QueryAdapterSerialNumberProperty(tstring& devpath);
+
+#if 0       //reserved for System Use
+BOOL QueryDeviceLocationProperty(tstring& devpath);
+#endif
+
+BOOL QueryDeviceNumaProperty(tstring& devpath);
+
+#if 0       //reserved for System Use
+BOOL QueryDeviceZonedDeviceProperty(tstring& devpath);
+#endif
+
+BOOL QueryDeviceUnsafeShutdownCount(tstring& devpath);
+BOOL QueryDeviceEnduranceProperty(tstring& devpath);
+BOOL QueryDeviceLedStateProperty(tstring& devpath);
+
+#if 0       //reserved for System Use
+BOOL QueryDeviceSelfEncryptionProperty(tstring& devpath);
+#endif
+
+BOOL QueryFruIdProperty(tstring& devpath);

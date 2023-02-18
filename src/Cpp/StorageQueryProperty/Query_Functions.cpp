@@ -1036,7 +1036,7 @@ BOOL QueryDevicePhysicalTopologyProperty(tstring& devpath)
     return ok;
 }
 
-BOOL QueryDeviceIoCapabilityProperty(tstring& devpath)
+BOOL QueryDeviceManagementStatus(tstring& devpath)
 {
     BYTE* in_buffer = NULL, * out_buffer = NULL;
     DWORD in_size = 0, out_size = 0, ret_size = 0;
@@ -1046,7 +1046,7 @@ BOOL QueryDeviceIoCapabilityProperty(tstring& devpath)
     memset(in_buffer, 0, in_size);
     PSTORAGE_PROPERTY_QUERY query = (PSTORAGE_PROPERTY_QUERY)in_buffer;
     query->QueryType = PropertyStandardQuery;
-    query->PropertyId = StorageDeviceIoCapabilityProperty;
+    query->PropertyId = StorageDeviceManagementStatus;
 
     //most of returned structure contains extra data followed after structure.
     //You can query "required return size" by setting no out_buffer in DeviceIoControl.
@@ -1054,9 +1054,9 @@ BOOL QueryDeviceIoCapabilityProperty(tstring& devpath)
     out_size = PAGE_SIZE;
     out_buffer = new BYTE[out_size];
     memset(out_buffer, 0, out_size);
-    PSTORAGE_DEVICE_IO_CAPABILITY_DESCRIPTOR result = (PSTORAGE_DEVICE_IO_CAPABILITY_DESCRIPTOR)out_buffer;
+    PSTORAGE_DEVICE_MANAGEMENT_STATUS result = (PSTORAGE_DEVICE_MANAGEMENT_STATUS)out_buffer;
 
-    _tprintf(_T("[StorageDeviceIoCapabilityProperty]\n"));
+    _tprintf(_T("[StorageDeviceManagementStatus]\n"));
     BOOL ok = SendIoctlStorageQuery(devpath,
         in_buffer, in_size,
         out_buffer, out_size,
@@ -1064,7 +1064,8 @@ BOOL QueryDeviceIoCapabilityProperty(tstring& devpath)
     if (ok)
     {
         _tprintf(_T("Version=%d, Size=%d\n"), result->Version, result->Size);
-        _tprintf(_T("LunMaxIoCount=%d, AdapterMaxIoCount=%d\n"), result->LunMaxIoCount, result->AdapterMaxIoCount);
+        _tprintf(_T("Health=%d\n"), result->Health);
+        _tprintf(_T("NumberOfOperationalStatus=%d, NumberOfAdditionalReasons=%d\n"), result->NumberOfOperationalStatus, result->NumberOfAdditionalReasons);
     }
     _tprintf(_T("\n"));
 
@@ -1074,4 +1075,35 @@ BOOL QueryDeviceIoCapabilityProperty(tstring& devpath)
     if (NULL != out_buffer)
         delete[] out_buffer;
     return ok;
+}
+
+BOOL QueryAdapterSerialNumberProperty(tstring& devpath)
+{
+    _tprintf(_T("[QueryAdapterSerialNumberProperty] ==> not implemented!\n"));
+    return FALSE;
+}
+BOOL QueryDeviceNumaProperty(tstring& devpath)
+{
+    _tprintf(_T("[QueryDeviceNumaProperty] ==> not implemented!\n"));
+    return FALSE;
+}
+BOOL QueryDeviceUnsafeShutdownCount(tstring& devpath)
+{
+    _tprintf(_T("[QueryDeviceUnsafeShutdownCount] ==> not implemented!\n"));
+    return FALSE;
+}
+BOOL QueryDeviceEnduranceProperty(tstring& devpath)
+{
+    _tprintf(_T("[QueryDeviceEnduranceProperty] ==> not implemented!\n"));
+    return FALSE;
+}
+BOOL QueryDeviceLedStateProperty(tstring& devpath)
+{
+    _tprintf(_T("[QueryDeviceLedStateProperty] ==> not implemented!\n"));
+    return FALSE;
+}
+BOOL QueryFruIdProperty(tstring& devpath)
+{
+    _tprintf(_T("[QueryFruIdProperty] ==> not implemented!\n"));
+    return FALSE;
 }
