@@ -40,6 +40,14 @@ int _tmain(int argc, _TCHAR* argv[])
     QueryAdapterPhysicalTopologyProperty(devpath);
     QueryDevicePhysicalTopologyProperty(devpath);
 
+    QueryDeviceManagementStatus(devpath);
+    QueryAdapterSerialNumberProperty(devpath);
+    QueryDeviceNumaProperty(devpath);
+    QueryDeviceUnsafeShutdownCount(devpath);
+    QueryDeviceEnduranceProperty(devpath);
+    QueryDeviceLedStateProperty(devpath);
+    QueryFruIdProperty(devpath);
+
     return 0;
 }
 

@@ -1035,7 +1035,6 @@ BOOL QueryDevicePhysicalTopologyProperty(tstring& devpath)
         delete[] out_buffer;
     return ok;
 }
-
 BOOL QueryDeviceManagementStatus(tstring& devpath)
 {
     BYTE* in_buffer = NULL, * out_buffer = NULL;
@@ -1066,6 +1065,31 @@ BOOL QueryDeviceManagementStatus(tstring& devpath)
         _tprintf(_T("Version=%d, Size=%d\n"), result->Version, result->Size);
         _tprintf(_T("Health=%d\n"), result->Health);
         _tprintf(_T("NumberOfOperationalStatus=%d, NumberOfAdditionalReasons=%d\n"), result->NumberOfOperationalStatus, result->NumberOfAdditionalReasons);
+
+
+        for(DWORD i=0;i<result->NumberOfOperationalStatus; i++)
+        {
+            _tprintf(_T("  OperationalStatus[%d]=%d\n"), i, result->OperationalStatus[i]);
+        }
+        for (DWORD i = 0; i < result->NumberOfAdditionalReasons; i++)
+        {
+            PSTORAGE_OPERATIONAL_REASON reason = &result->AdditionalReasons[i];
+            _tprintf(_T("  ==>AdditionalReason[%d]\n"), i);
+            _tprintf(_T("    Reason=%d\n"), reason->Reason);
+            if(DiskOpReasonScsiSenseCode == reason->Reason)
+            {
+                _tprintf(_T("    SenseKey=%d, ASC=%d, ASCQ=%d\n"), reason->RawBytes.ScsiSenseKey.SenseKey, reason->RawBytes.ScsiSenseKey.ASC, reason->RawBytes.ScsiSenseKey.ASCQ);
+            }
+            else if(DiskOpReasonScsiSenseCode == reason->Reason)
+            { 
+                _tprintf(_T("    CriticalHealth=%d, ErrorThresholdStatus=%d\n"), reason->RawBytes.NVDIMM_N.CriticalHealth, reason->RawBytes.NVDIMM_N.ErrorThresholdStatus);
+                _tprintf(_T("    ModuleHealth=%02X %02X\n"), reason->RawBytes.NVDIMM_N.ModuleHealth[0], reason->RawBytes.NVDIMM_N.ModuleHealth[1]);
+            }
+            else
+            {
+                _tprintf(_T("    RawBytes.AsUlong=%08X\n"), reason->RawBytes.AsUlong);
+            }
+        }
     }
     _tprintf(_T("\n"));
 
@@ -1076,34 +1100,267 @@ BOOL QueryDeviceManagementStatus(tstring& devpath)
         delete[] out_buffer;
     return ok;
 }
-
 BOOL QueryAdapterSerialNumberProperty(tstring& devpath)
 {
-    _tprintf(_T("[QueryAdapterSerialNumberProperty] ==> not implemented!\n"));
-    return FALSE;
+    BYTE* in_buffer = NULL, * out_buffer = NULL;
+    DWORD in_size = 0, out_size = 0, ret_size = 0;
+
+    in_size = sizeof(STORAGE_PROPERTY_QUERY);
+    in_buffer = new BYTE[in_size];
+    memset(in_buffer, 0, in_size);
+    PSTORAGE_PROPERTY_QUERY query = (PSTORAGE_PROPERTY_QUERY)in_buffer;
+    query->QueryType = PropertyStandardQuery;
+    query->PropertyId = StorageAdapterSerialNumberProperty;
+
+    //most of returned structure contains extra data followed after structure.
+    //You can query "required return size" by setting no out_buffer in DeviceIoControl.
+    //I am lazy so just use 1 page to retrieve returned data.
+    out_size = PAGE_SIZE;
+    out_buffer = new BYTE[out_size];
+    memset(out_buffer, 0, out_size);
+    PSTORAGE_ADAPTER_SERIAL_NUMBER result = (PSTORAGE_ADAPTER_SERIAL_NUMBER)out_buffer;
+
+    _tprintf(_T("[StorageAdapterSerialNumberProperty]\n"));
+    BOOL ok = SendIoctlStorageQuery(devpath,
+        in_buffer, in_size,
+        out_buffer, out_size,
+        &ret_size);
+    if (ok)
+    {
+        _tprintf(_T("Version=%d, Size=%d\n"), result->Version, result->Size);
+        _tprintf(_T("SerialNumber=%s\n"), result->SerialNumber);
+    }
+    _tprintf(_T("\n"));
+
+    if (NULL != in_buffer)
+        delete[] in_buffer;
+
+    if (NULL != out_buffer)
+        delete[] out_buffer;
+    return ok;
 }
 BOOL QueryDeviceNumaProperty(tstring& devpath)
 {
-    _tprintf(_T("[QueryDeviceNumaProperty] ==> not implemented!\n"));
-    return FALSE;
+    BYTE* in_buffer = NULL, * out_buffer = NULL;
+    DWORD in_size = 0, out_size = 0, ret_size = 0;
+
+    in_size = sizeof(STORAGE_PROPERTY_QUERY);
+    in_buffer = new BYTE[in_size];
+    memset(in_buffer, 0, in_size);
+    PSTORAGE_PROPERTY_QUERY query = (PSTORAGE_PROPERTY_QUERY)in_buffer;
+    query->QueryType = PropertyStandardQuery;
+    query->PropertyId = StorageDeviceNumaProperty;
+
+    //most of returned structure contains extra data followed after structure.
+    //You can query "required return size" by setting no out_buffer in DeviceIoControl.
+    //I am lazy so just use 1 page to retrieve returned data.
+    out_size = PAGE_SIZE;
+    out_buffer = new BYTE[out_size];
+    memset(out_buffer, 0, out_size);
+    PSTORAGE_DEVICE_NUMA_PROPERTY result = (PSTORAGE_DEVICE_NUMA_PROPERTY)out_buffer;
+
+    _tprintf(_T("[StorageDeviceNumaProperty]\n"));
+    BOOL ok = SendIoctlStorageQuery(devpath,
+        in_buffer, in_size,
+        out_buffer, out_size,
+        &ret_size);
+    if (ok)
+    {
+        _tprintf(_T("Version=%d, Size=%d\n"), result->Version, result->Size);
+        _tprintf(_T("NumaNode=%d\n"), result->NumaNode);
+    }
+    _tprintf(_T("\n"));
+
+    if (NULL != in_buffer)
+        delete[] in_buffer;
+
+    if (NULL != out_buffer)
+        delete[] out_buffer;
+    return ok;
 }
 BOOL QueryDeviceUnsafeShutdownCount(tstring& devpath)
 {
-    _tprintf(_T("[QueryDeviceUnsafeShutdownCount] ==> not implemented!\n"));
-    return FALSE;
+    BYTE* in_buffer = NULL, * out_buffer = NULL;
+    DWORD in_size = 0, out_size = 0, ret_size = 0;
+
+    in_size = sizeof(STORAGE_PROPERTY_QUERY);
+    in_buffer = new BYTE[in_size];
+    memset(in_buffer, 0, in_size);
+    PSTORAGE_PROPERTY_QUERY query = (PSTORAGE_PROPERTY_QUERY)in_buffer;
+    query->QueryType = PropertyStandardQuery;
+    query->PropertyId = StorageDeviceUnsafeShutdownCount;
+
+    //most of returned structure contains extra data followed after structure.
+    //You can query "required return size" by setting no out_buffer in DeviceIoControl.
+    //I am lazy so just use 1 page to retrieve returned data.
+    out_size = PAGE_SIZE;
+    out_buffer = new BYTE[out_size];
+    memset(out_buffer, 0, out_size);
+    PSTORAGE_DEVICE_UNSAFE_SHUTDOWN_COUNT result = (PSTORAGE_DEVICE_UNSAFE_SHUTDOWN_COUNT)out_buffer;
+
+    _tprintf(_T("[StorageDeviceUnsafeShutdownCount]\n"));
+    BOOL ok = SendIoctlStorageQuery(devpath,
+        in_buffer, in_size,
+        out_buffer, out_size,
+        &ret_size);
+    if (ok)
+    {
+        _tprintf(_T("Version=%d, Size=%d\n"), result->Version, result->Size);
+        _tprintf(_T("UnsafeShutdownCount=%d\n"), result->UnsafeShutdownCount);
+    }
+    _tprintf(_T("\n"));
+
+    if (NULL != in_buffer)
+        delete[] in_buffer;
+
+    if (NULL != out_buffer)
+        delete[] out_buffer;
+    return ok;
 }
 BOOL QueryDeviceEnduranceProperty(tstring& devpath)
 {
-    _tprintf(_T("[QueryDeviceEnduranceProperty] ==> not implemented!\n"));
-    return FALSE;
+    BYTE* in_buffer = NULL, * out_buffer = NULL;
+    DWORD in_size = 0, out_size = 0, ret_size = 0;
+
+    in_size = sizeof(STORAGE_PROPERTY_QUERY);
+    in_buffer = new BYTE[in_size];
+    memset(in_buffer, 0, in_size);
+    PSTORAGE_PROPERTY_QUERY query = (PSTORAGE_PROPERTY_QUERY)in_buffer;
+    query->QueryType = PropertyStandardQuery;
+    query->PropertyId = StorageDeviceEnduranceProperty;
+
+    //most of returned structure contains extra data followed after structure.
+    //You can query "required return size" by setting no out_buffer in DeviceIoControl.
+    //I am lazy so just use 1 page to retrieve returned data.
+    out_size = PAGE_SIZE;
+    out_buffer = new BYTE[out_size];
+    memset(out_buffer, 0, out_size);
+    PSTORAGE_HW_ENDURANCE_DATA_DESCRIPTOR result = (PSTORAGE_HW_ENDURANCE_DATA_DESCRIPTOR)out_buffer;
+
+    _tprintf(_T("[StorageDeviceEnduranceProperty]\n"));
+    BOOL ok = SendIoctlStorageQuery(devpath,
+        in_buffer, in_size,
+        out_buffer, out_size,
+        &ret_size);
+    if (ok)
+    {
+        _tprintf(_T("Version=%d, Size=%d\n"), result->Version, result->Size);
+        _tprintf(_T("ValidFields="));
+
+        if((result->EnduranceInfo.ValidFields & 0x00000001) == 0x00000001)
+            _tprintf(_T("GroupId, "));
+        if ((result->EnduranceInfo.ValidFields & 0x00000002) == 0x00000002)
+            _tprintf(_T("Flags, "));
+        if ((result->EnduranceInfo.ValidFields & 0x00000004) == 0x00000004)
+            _tprintf(_T("LifePercentage, "));
+        if ((result->EnduranceInfo.ValidFields & 0x00000008) == 0x00000008)
+            _tprintf(_T("BytesReadCount, "));
+        if ((result->EnduranceInfo.ValidFields & 0x00000010) == 0x00000010)
+            _tprintf(_T("ByteWriteCount"));
+
+        _tprintf(_T("\n"));
+        if ((result->EnduranceInfo.ValidFields & 0x00000001) == 0x00000001)
+            _tprintf(_T("  GroupId=%d\n"), result->EnduranceInfo.GroupId);
+        if ((result->EnduranceInfo.ValidFields & 0x00000002) == 0x00000002)
+            _tprintf(_T("  Flags.Shared=%d\n"), result->EnduranceInfo.Flags.Shared);
+        if ((result->EnduranceInfo.ValidFields & 0x00000004) == 0x00000004)
+            _tprintf(_T("  LifePercentage=%d\n"), result->EnduranceInfo.LifePercentage);
+        if ((result->EnduranceInfo.ValidFields & 0x00000008) == 0x00000008)
+        { 
+            UINT64 *value = (UINT64*)result->EnduranceInfo.BytesReadCount;
+            _tprintf(_T("  BytesReadCount lowbytes=%016llX, highbytes=%016llX\n"), value[0], value[1]);
+        }
+        if ((result->EnduranceInfo.ValidFields & 0x00000010) == 0x00000010)
+        {
+            UINT64* value = (UINT64*)result->EnduranceInfo.ByteWriteCount;
+            _tprintf(_T("  ByteWriteCount lowbytes=%016llX, highbytes=%016llX\n"), value[0], value[1]);
+        }
+
+    }
+    _tprintf(_T("\n"));
+
+    if (NULL != in_buffer)
+        delete[] in_buffer;
+
+    if (NULL != out_buffer)
+        delete[] out_buffer;
+    return ok;
 }
 BOOL QueryDeviceLedStateProperty(tstring& devpath)
 {
-    _tprintf(_T("[QueryDeviceLedStateProperty] ==> not implemented!\n"));
-    return FALSE;
+    BYTE* in_buffer = NULL, * out_buffer = NULL;
+    DWORD in_size = 0, out_size = 0, ret_size = 0;
+
+    in_size = sizeof(STORAGE_PROPERTY_QUERY);
+    in_buffer = new BYTE[in_size];
+    memset(in_buffer, 0, in_size);
+    PSTORAGE_PROPERTY_QUERY query = (PSTORAGE_PROPERTY_QUERY)in_buffer;
+    query->QueryType = PropertyStandardQuery;
+    query->PropertyId = StorageDeviceLedStateProperty;
+
+    //most of returned structure contains extra data followed after structure.
+    //You can query "required return size" by setting no out_buffer in DeviceIoControl.
+    //I am lazy so just use 1 page to retrieve returned data.
+    out_size = PAGE_SIZE;
+    out_buffer = new BYTE[out_size];
+    memset(out_buffer, 0, out_size);
+    PSTORAGE_DEVICE_LED_STATE_DESCRIPTOR result = (PSTORAGE_DEVICE_LED_STATE_DESCRIPTOR)out_buffer;
+
+    _tprintf(_T("[StorageDeviceLedStateProperty]\n"));
+    BOOL ok = SendIoctlStorageQuery(devpath,
+        in_buffer, in_size,
+        out_buffer, out_size,
+        &ret_size);
+    if (ok)
+    {
+        _tprintf(_T("Version=%d, Size=%d\n"), result->Version, result->Size);
+        _tprintf(_T("State=%016llX\n"), result->State);
+    }
+    _tprintf(_T("\n"));
+
+    if (NULL != in_buffer)
+        delete[] in_buffer;
+
+    if (NULL != out_buffer)
+        delete[] out_buffer;
+    return ok;
 }
 BOOL QueryFruIdProperty(tstring& devpath)
 {
-    _tprintf(_T("[QueryFruIdProperty] ==> not implemented!\n"));
-    return FALSE;
+    BYTE* in_buffer = NULL, * out_buffer = NULL;
+    DWORD in_size = 0, out_size = 0, ret_size = 0;
+
+    in_size = sizeof(STORAGE_PROPERTY_QUERY);
+    in_buffer = new BYTE[in_size];
+    memset(in_buffer, 0, in_size);
+    PSTORAGE_PROPERTY_QUERY query = (PSTORAGE_PROPERTY_QUERY)in_buffer;
+    query->QueryType = PropertyStandardQuery;
+    query->PropertyId = StorageFruIdProperty;
+
+    //most of returned structure contains extra data followed after structure.
+    //You can query "required return size" by setting no out_buffer in DeviceIoControl.
+    //I am lazy so just use 1 page to retrieve returned data.
+    out_size = PAGE_SIZE;
+    out_buffer = new BYTE[out_size];
+    memset(out_buffer, 0, out_size);
+    PSTORAGE_FRU_ID_DESCRIPTOR result = (PSTORAGE_FRU_ID_DESCRIPTOR)out_buffer;
+
+    _tprintf(_T("[StorageFruIdProperty]\n"));
+    BOOL ok = SendIoctlStorageQuery(devpath,
+        in_buffer, in_size,
+        out_buffer, out_size,
+        &ret_size);
+    if (ok)
+    {
+        _tprintf(_T("Version=%d, Size=%d\n"), result->Version, result->Size);
+        _tprintf(_T("IdentifierSize=%d\n"), result->IdentifierSize);
+    }
+    _tprintf(_T("\n"));
+
+    if (NULL != in_buffer)
+        delete[] in_buffer;
+
+    if (NULL != out_buffer)
+        delete[] out_buffer;
+    return ok;
 }
