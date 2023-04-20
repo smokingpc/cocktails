@@ -1,4 +1,8 @@
-package test
+package win32test
+
+//該死的package name不可以帶underscore, space, dash
+//但是目錄名與檔名可以
+//package關鍵字帶的名字可以跟目錄以及檔名不同
 
 //1.CGO出錯時，到terminal去跑 go list -json -compiled -e  會看到問題提示
 //2.CGO需要跟CMAKE一樣的compiler 變數 (CC = 或 CXX = )

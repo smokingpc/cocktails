@@ -1,2 +1,2 @@
-GoLang can be only built with Visual Studio Code.
-VS Pro can't do that....  Orz
+Some GoLang projects can be only built with Visual Studio Code.
+Some project using CMAKE can be built by VisualStudio Pro.
