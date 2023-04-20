@@ -1,5 +1,5 @@
-//package helloworld
-package main
+// package helloworld
+package hello_world
 
 //Like python, import package you want...
 import "fmt"

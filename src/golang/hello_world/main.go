@@ -2,9 +2,13 @@
 //同一階層目錄代表同一個package，跟python類似
 //如果要分package要分拆subdir，package名稱要跟subdir名稱一致
 
-//每個package主模組要標main
+// 每個package主模組要標main
 package main
 
+import (
+	"hello_world/hello_world"
+)
+
 func main() {
-	MyFirstTry()
+	hello_world.MyFirstTry()
 }
