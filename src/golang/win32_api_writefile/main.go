@@ -5,7 +5,6 @@ package main
 //但是目錄名與檔名可以
 //e.g."win32_api_writefile/test" => "<%workspace name%>/<%package name%>"
 import (
-	test1 "win32_api_writefile/test-1"
 	test2 "win32_api_writefile/test-2"
 )
 
@@ -18,6 +17,4 @@ func main() {
 	datablob := []byte(testdata)
 	test2.MyWriteFile(handle, datablob)
 	test2.MyCloseFile(handle)
-
-	test1.MyMessageBox(testdata)
 }
