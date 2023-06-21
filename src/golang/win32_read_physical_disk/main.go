@@ -26,5 +26,18 @@ func main() {
 	native.ReadFile(handle, buffer, nil, nil)
 	fmt.Printf("[3rd]\n%v\n", buffer)
 
+	var high int32 = 0x00000009
+	var low uint32 = 0xFC000000
+
+	_, _ = native.SetFilePointer(handle,
+		int32(low),
+		&high,
+		native.FILE_BEGIN)
+
+	native.ReadFile(handle, buffer, nil, nil)
+	fmt.Printf("[4th]\n%v\n", buffer)
+	native.ReadFile(handle, buffer, nil, nil)
+	fmt.Printf("[5th]\n%v\n", buffer)
+
 	native.CloseHandle(handle)
 }

@@ -5,6 +5,8 @@
 #include <string>
 
 #define SIZE_1MB    1048576
+#define SIZE_256KB    (1024*256)
+#define SIZE_4KB    (4096)
 
 void Usage()
 {
@@ -22,13 +24,17 @@ void DumpDataFromPhysicalDisk(char *disk_devpath, int size_in_mb, char *output_f
     {
         if(file != INVALID_HANDLE_VALUE)
         {
-            UCHAR *buffer = new UCHAR[SIZE_1MB];
-            for(int i=0; i<size_in_mb; i++)
+            //UCHAR *buffer = new UCHAR[SIZE_1MB];
+            UCHAR *buffer = new UCHAR[SIZE_4KB];
+            int size_in_4kb = (size_in_mb * SIZE_1MB)/ SIZE_4KB;
+            //for(int i=0; i<size_in_mb; i++)
+            printf("size_in_mb=%d, size_in_4kb=%d\n", size_in_mb, size_in_4kb);
+            for (int i = 0; i < size_in_4kb; i++)
             {
                 DWORD ret_size = 0;
                 DWORD written_size = 0;
-                memset(buffer, 0, SIZE_1MB);
-                BOOL ok = ReadFile(disk, buffer, SIZE_1MB, &ret_size, NULL);
+                memset(buffer, 0, SIZE_4KB);
+                BOOL ok = ReadFile(disk, buffer, SIZE_4KB, &ret_size, NULL);
                 if(!ok || 0 == ret_size)
                 {
                     printf("Read disk failed, LastError=%d\n", GetLastError());
@@ -54,7 +60,7 @@ void DumpDataFromPhysicalDisk(char *disk_devpath, int size_in_mb, char *output_f
     else
         printf("Open Disk(%s) FAILED!!\n", disk_devpath);
 
-    printf("Total Read/Write data size = %d MB\n", counter);
+    printf("Total Read/Write data size = %d blocks(1 block = 4K)\n", counter);
 }
 
 int main(int argc, char *argv[])
