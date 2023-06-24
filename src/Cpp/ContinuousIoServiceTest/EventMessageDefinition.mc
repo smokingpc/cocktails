@@ -19,8 +19,15 @@ MessageIdTypedef=DWORD
 MessageId=0x1
 Severity=Error
 Facility=Runtime
-SymbolicName=SVC_ERROR
+SymbolicName=SVC_EVENT_ERROR
 Language=English
-An error has occurred (%2).
+An error has occurred (%2)
+.
 
+MessageId=0x2
+Severity=Informational
+Facility=Runtime
+SymbolicName=SVC_EVENT_INFO
+Language=English
+Information (%2)
 .

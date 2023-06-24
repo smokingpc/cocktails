@@ -4,27 +4,7 @@ HANDLE TargetFile = INVALID_HANDLE_VALUE;
 SERVICE_STATUS_HANDLE StatusHandle = NULL;
 HANDLE EventSrc = INVALID_HANDLE_VALUE;
 DWORD SvcCheckPoint = 1;
-
-bool InitService()
-{
-    EventSrc = RegisterEventSource(NULL, SERVICE_NAME);
-    if (NULL == EventSrc || INVALID_HANDLE_VALUE == EventSrc)
-        return false;
-
-    StatusHandle = RegisterServiceCtrlHandlerEx(SERVICE_NAME, (LPHANDLER_FUNCTION_EX)SvcCtrlHandler, 0);
-    if (NULL == StatusHandle)
-    {
-        ReportSvcEvent((LPTSTR)_T("RegisterServiceCtrlHandlerEx failed."));
-        return false;
-    }
-}
-
-void ShutdownService()
-{
-    if(INVALID_HANDLE_VALUE != EventSrc && NULL != EventSrc)
-        DeregisterEventSource(EventSrc);
-}
-
+HANDLE EventStop = INVALID_HANDLE_VALUE;
 
 VOID WINAPI SvcCtrlHandler(DWORD ctrl_code, DWORD type, LPVOID data, LPVOID ctx)
 {
@@ -32,6 +12,7 @@ VOID WINAPI SvcCtrlHandler(DWORD ctrl_code, DWORD type, LPVOID data, LPVOID ctx)
     {
     case SERVICE_CONTROL_PRESHUTDOWN:
     case SERVICE_CONTROL_STOP:
+        SetEvent(EventStop);
         break;
     case SERVICE_CONTROL_INTERROGATE:
         break;
@@ -79,37 +60,70 @@ VOID ReportSvcStatus(DWORD state, DWORD exit_code, DWORD wait_hint)
 VOID ReportSvcEvent(DWORD event_id, LPTSTR msg)
 {
 //https://learn.microsoft.com/en-us/windows/win32/eventlog/reporting-an-event
-    HANDLE hEventSource;
-    LPCTSTR msg_array[2] = {NULL};
-    //TCHAR buffer[256] = {0};
+    LPCTSTR msg_array[3] = {NULL};
 
-    if (NULL != hEventSource)
+    if (NULL == EventSrc)
+        return;
+
+    msg_array[0] = SERVICE_NAME;
+    msg_array[1] = msg;
+    msg_array[2] = _T("Test");
+
+    ReportEvent(EventSrc,       // event log handle
+        EVENTLOG_ERROR_TYPE,    // event type
+        0,                      // event category
+        event_id,               // event identifier
+        NULL,                   // no security identifier
+        _countof(msg_array),    // how many elements in message array?
+        0,                      // no binary data
+        msg_array,              // array of strings
+        NULL);                  // no binary data
+}
+
+void DoContinuousIo(LPTSTR filepath)
+{
+    HANDLE file = CreateFile(filepath, GENERIC_ALL, 0, NULL, CREATE_ALWAYS, 0, NULL);
+
+    if(INVALID_HANDLE_VALUE == file)
+        return;
+    while(WAIT_OBJECT_0 != WaitForSingleObject(EventStop, IO_INTERVAL))
     {
-        //StringCchPrintf(Buffer, 80, TEXT("%s failed with %d"), szFunction, GetLastError());
-
-        msg_array[0] = SERVICE_NAME;
-        msg_array[1] = msg;
-
-        ReportEvent(hEventSource,        // event log handle
-            EVENTLOG_ERROR_TYPE, // event type
-            0,                   // event category
-            event_id,           // event identifier
-            NULL,                // no security identifier
-            2,                   // size of lpszStrings array
-            0,                   // no binary data
-            msg_array,         // array of strings
-            NULL);               // no binary data
-
-        DeregisterEventSource(hEventSource);
+        //do I/O
+        
     }
 }
 
+bool InitService()
+{
+    EventSrc = RegisterEventSource(NULL, SERVICE_NAME);
+    if (NULL == EventSrc || INVALID_HANDLE_VALUE == EventSrc)
+        return false;
+
+    StatusHandle = RegisterServiceCtrlHandlerEx(SERVICE_NAME, (LPHANDLER_FUNCTION_EX)SvcCtrlHandler, 0);
+    if (NULL == StatusHandle)
+    {
+        ReportSvcEvent(SVC_EVENT_ERROR, (LPTSTR)_T("RegisterServiceCtrlHandlerEx failed."));
+        return false;
+    }
+
+    EventStop = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (NULL == EventStop || INVALID_HANDLE_VALUE == EventStop)
+        return false;
+
+    return true;
+}
+void ShutdownService()
+{
+    if (INVALID_HANDLE_VALUE != EventSrc && NULL != EventSrc)
+        DeregisterEventSource(EventSrc);
+}
 void ServiceMain(DWORD argc, LPTSTR *argv)
 {
     LPTSTR filepath = argv[0];
     if(!InitService())
         goto END;
 
+    DoContinuousIo(filepath);
 
 END:
     ShutdownService();

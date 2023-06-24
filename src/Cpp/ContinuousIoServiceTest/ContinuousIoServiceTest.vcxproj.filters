@@ -32,6 +32,9 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EventMessageDefinition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ContinuousIoServiceTest.rc">
@@ -39,7 +42,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ContinuousIoServiceTest.mc">
+    <None Include="EventMessageDefinition.mc">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
