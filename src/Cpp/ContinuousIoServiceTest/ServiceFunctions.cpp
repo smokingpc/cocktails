@@ -12,6 +12,8 @@ VOID WINAPI SvcCtrlHandler(DWORD ctrl_code, DWORD type, LPVOID data, LPVOID ctx)
     {
     case SERVICE_CONTROL_PRESHUTDOWN:
     case SERVICE_CONTROL_STOP:
+        ReportSvcStatus(SERVICE_STOP_PENDING, 0, 0);
+        DebugBreak();
         SetEvent(EventStop);
         break;
     case SERVICE_CONTROL_INTERROGATE:
@@ -83,14 +85,33 @@ VOID ReportSvcEvent(DWORD event_id, LPTSTR msg)
 void DoContinuousIo(LPTSTR filepath)
 {
     HANDLE file = CreateFile(filepath, GENERIC_ALL, 0, NULL, CREATE_ALWAYS, 0, NULL);
-
+    BYTE *buffer = (BYTE*)IO_DATA;
+    BOOL write_ok = FALSE;
+    DWORD written = 0;
+    DWORD error = 0;
     if(INVALID_HANDLE_VALUE == file)
         return;
+
     while(WAIT_OBJECT_0 != WaitForSingleObject(EventStop, IO_INTERVAL))
     {
         //do I/O
-        
+        write_ok = WriteFile(file, buffer, IO_SIZE, &written, NULL);
+        if(!write_ok)
+        {
+            error = GetLastError();
+            DebugBreak();
+            break;
+        }
     }
+    
+    Sleep(1000*15);
+    write_ok = WriteFile(file, buffer, IO_SIZE, &written, NULL);
+    if (!write_ok)
+    {
+        error = GetLastError();
+        DebugBreak();
+    }
+    CloseHandle(file);
 }
 
 bool InitService()
@@ -120,9 +141,12 @@ void ShutdownService()
 void ServiceMain(DWORD argc, LPTSTR *argv)
 {
     LPTSTR filepath = argv[0];
+    if(argc < 2)
+        filepath = DEFAULT_IO_TARGET;
     if(!InitService())
         goto END;
 
+    ReportSvcStatus(SERVICE_RUNNING, 0, 0);
     DoContinuousIo(filepath);
 
 END:

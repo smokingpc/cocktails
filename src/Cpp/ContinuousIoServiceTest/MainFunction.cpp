@@ -10,27 +10,20 @@
 
 #include "CommonHeader.h"
 
-//void Usage()
+//bool ValidateArgs(int argc, TCHAR* argv[])
 //{
-//    _tprintf(_T("Usage: CleanAndInitDisk.exe [physical_drive_devpath] [gpt|mbr]\n"));
-//    _tprintf(_T("e.g.: If you want to init physical disk 3 to GPT type ,\n"));
-//    _tprintf(_T("      execute this tool as : CleanAndInitDisk.exe \\\\.\\PhysicalDrive3 gpt \n"));
+//    if(argc < 2)
+//        return false;
+//
+//    return true;
 //}
-
-bool ValidateArgs(int argc, TCHAR* argv[])
-{
-    if(argc < 2)
-        return false;
-
-    return true;
-}
 
 int _tmain(int argc, TCHAR* argv[]) 
 {
-    if(!ValidateArgs(argc, argv))
-    {
-        return -1;
-    }
+    //if(!ValidateArgs(argc, argv))
+    //{
+    //    return -1;
+    //}
 
     SERVICE_TABLE_ENTRY dispatch[] = {
         { SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION)ServiceMain },
