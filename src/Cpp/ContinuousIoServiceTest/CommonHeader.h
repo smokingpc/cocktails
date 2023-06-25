@@ -10,7 +10,7 @@
 #define SERVICE_NAME  (LPTSTR)_T("SpcIoTest")
 #define IO_INTERVAL     100     //do I/O per 100 ms
 #define IO_SIZE         64
-#define IO_DATA         "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+-"
+#define IO_DATA         "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890+\n"
 #define DEFAULT_IO_TARGET   (LPTSTR)_T("X:\\TestIo.bin")
 //sizeof also count the NULL-terminator in....
 //it is NOT strlen
