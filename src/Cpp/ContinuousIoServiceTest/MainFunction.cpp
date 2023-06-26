@@ -20,11 +20,6 @@
 
 int _tmain(int argc, TCHAR* argv[]) 
 {
-    //if(!ValidateArgs(argc, argv))
-    //{
-    //    return -1;
-    //}
-
     SERVICE_TABLE_ENTRY dispatch[] = {
         { SERVICE_NAME, (LPSERVICE_MAIN_FUNCTION)ServiceMain },
         { NULL, NULL }

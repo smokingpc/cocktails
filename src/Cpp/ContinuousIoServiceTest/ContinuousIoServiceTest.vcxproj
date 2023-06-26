@@ -173,14 +173,13 @@
   <ItemGroup>
     <ClInclude Include="CommonHeader.h" />
     <ClInclude Include="EventMessageDefinition.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="ServiceFunctions.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="ContinuousIoServiceTest.rc" />
+    <None Include="EventMessageDefinition.mc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="EventMessageDefinition.mc" />
+    <ResourceCompile Include="EventMessageDefinition.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
