@@ -9,7 +9,7 @@ void CheckAndSetShutdownParams()
     _stprintf_s(msg, _countof(msg), _T("[SpcIoTest] GetProcessShutdownParameters()=> level=0x%08X, flag=0x%08X\n"), level, flag);
     ReportSvcInfoEvent(msg);
 
-    level = 0x100;
+    level = 0xFF;
     flag = 0;
     SetProcessShutdownParameters(level, flag);
 
