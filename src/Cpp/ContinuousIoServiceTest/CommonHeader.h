@@ -6,6 +6,7 @@
 
 #include "EventMessageDefinition.h"
 #include "ServiceFunctions.h"
+#include "DebugUtils.h"
 
 #define SERVICE_NAME  (LPTSTR)_T("SpcIoTest")
 

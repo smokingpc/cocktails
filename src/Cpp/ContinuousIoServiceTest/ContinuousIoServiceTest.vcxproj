@@ -167,11 +167,13 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DebugUtils.cpp" />
     <ClCompile Include="MainFunction.cpp" />
     <ClCompile Include="ServiceFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonHeader.h" />
+    <ClInclude Include="DebugUtils.h" />
     <ClInclude Include="EventMessageDefinition.h" />
     <ClInclude Include="ServiceFunctions.h" />
   </ItemGroup>

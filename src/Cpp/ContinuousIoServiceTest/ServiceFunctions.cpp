@@ -13,7 +13,6 @@ VOID WINAPI SvcCtrlHandler(DWORD ctrl_code, DWORD type, LPVOID data, LPVOID ctx)
     DWORD hint = 0;
     switch (ctrl_code)
     {
-    case SERVICE_CONTROL_SHUTDOWN:
     case SERVICE_CONTROL_PRESHUTDOWN:
         DebugBreak();
     case SERVICE_CONTROL_STOP:
@@ -68,7 +67,7 @@ VOID ReportSvcStatus(DWORD state, DWORD exit_code, DWORD wait_hint)
     SetServiceStatus(StatusHandle, &status);
 }
 
-VOID ReportSvcInfoEvent(DWORD event_id, LPTSTR msg)
+VOID ReportSvcEvent(WORD event_type, DWORD event_id, LPTSTR msg)
 {
     //https://learn.microsoft.com/en-us/windows/win32/eventlog/reporting-an-event
     LPCTSTR msg_array[2] = { NULL };
@@ -80,28 +79,7 @@ VOID ReportSvcInfoEvent(DWORD event_id, LPTSTR msg)
     msg_array[1] = msg;
 
     ReportEvent(EventSrc,       // event log handle
-        EVENTLOG_INFORMATION_TYPE,    // event type
-        0,                      // event category
-        event_id,               // event identifier
-        NULL,                   // no security identifier
-        _countof(msg_array),    // how many elements in message array?
-        0,                      // no binary data
-        msg_array,              // array of strings
-        NULL);                  // no binary data
-}
-VOID ReportSvcErrorEvent(DWORD event_id, LPTSTR msg)
-{
-//https://learn.microsoft.com/en-us/windows/win32/eventlog/reporting-an-event
-    LPCTSTR msg_array[2] = {NULL};
-
-    if (NULL == EventSrc)
-        return;
-
-    msg_array[0] = SERVICE_NAME;
-    msg_array[1] = msg;
-
-    ReportEvent(EventSrc,       // event log handle
-        EVENTLOG_ERROR_TYPE,    // event type
+        event_type,    // event type
         0,                      // event category
         event_id,               // event identifier
         NULL,                   // no security identifier
@@ -128,20 +106,20 @@ void DoContinuousIo(LPTSTR filepath)
         if(!write_ok)
         {
             error = GetLastError();
-            ReportSvcErrorEvent(SVC_EVENT_ERROR, (LPTSTR)_T("DoContinuousIo failed in event loop."));
-            DebugBreak();
+            ReportSvcErrorEvent((LPTSTR)_T("DoContinuousIo failed in event loop."));
+//            DebugBreak();
             break;
         }
         FlushFileBuffers(file);
     }
     
     write_ok = WriteFile(file, buffer, IO_SIZE, &written, NULL);
-    DebugBreak();
+//    DebugBreak();
     if (!write_ok)
     {
-        ReportSvcErrorEvent(SVC_EVENT_ERROR, (LPTSTR)_T("DoContinuousIo failed after loop exit."));
+        ReportSvcErrorEvent((LPTSTR)_T("DoContinuousIo failed after loop exit."));
         error = GetLastError();
-        DebugBreak();
+//        DebugBreak();
     }
     CloseHandle(file);
 }
@@ -155,7 +133,7 @@ bool InitService()
     StatusHandle = RegisterServiceCtrlHandlerEx(SERVICE_NAME, (LPHANDLER_FUNCTION_EX)SvcCtrlHandler, 0);
     if (NULL == StatusHandle)
     {
-        ReportSvcErrorEvent(SVC_EVENT_ERROR, (LPTSTR)_T("RegisterServiceCtrlHandlerEx failed."));
+        ReportSvcErrorEvent((LPTSTR)_T("RegisterServiceCtrlHandlerEx failed."));
         return false;
     }
 
@@ -163,6 +141,7 @@ bool InitService()
     if (NULL == EventStop || INVALID_HANDLE_VALUE == EventStop)
         return false;
 
+    CheckAndSetShutdownParams();
     return true;
 }
 void ShutdownService()
@@ -182,7 +161,7 @@ void ServiceMain(DWORD argc, LPTSTR *argv)
         goto END;
 
     ReportSvcStatus(SERVICE_RUNNING, 0, 0);
-    ReportSvcInfoEvent(SVC_EVENT_INFO, (LPTSTR)_T("SERVICE_RUNNING!"));
+    ReportSvcInfoEvent((LPTSTR)_T("SERVICE_RUNNING!"));
     DoContinuousIo(filepath);
 
 END:
