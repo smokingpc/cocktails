@@ -9,16 +9,21 @@ DWORD SvcState = SERVICE_STOPPED;
 
 VOID WINAPI SvcCtrlHandler(DWORD ctrl_code, DWORD type, LPVOID data, LPVOID ctx)
 {
+//hint means "how long should SCM wait my service changing the state?"
+    DWORD hint = 0;
     switch (ctrl_code)
     {
+    case SERVICE_CONTROL_SHUTDOWN:
     case SERVICE_CONTROL_PRESHUTDOWN:
         DebugBreak();
     case SERVICE_CONTROL_STOP:
-        ReportSvcStatus(SERVICE_STOP_PENDING, 0, 120000);
+        ReportSvcStatus(SERVICE_STOP_PENDING, 0, SERVICE_WAITHINT);
         SetEvent(EventStop);
         break;
     case SERVICE_CONTROL_INTERROGATE:
-        ReportSvcStatus(SvcState, 0, 0);
+        if(SERVICE_START_PENDING == SvcState || SERVICE_STOP_PENDING == SvcState)
+            hint = SERVICE_WAITHINT;
+        ReportSvcStatus(SvcState, 0, hint);
         break;
     default:
         break;
@@ -46,7 +51,7 @@ VOID ReportSvcStatus(DWORD state, DWORD exit_code, DWORD wait_hint)
         break;
     case SERVICE_RUNNING:
         SvcCheckPoint = 0;
-        status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_PRESHUTDOWN;
+        status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_PRESHUTDOWN;
         status.dwCheckPoint = 0;
         break;
     case SERVICE_STOPPED:
@@ -55,7 +60,7 @@ VOID ReportSvcStatus(DWORD state, DWORD exit_code, DWORD wait_hint)
         status.dwCheckPoint = 0;
         break;
     default:
-        status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_PRESHUTDOWN;
+        status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN | SERVICE_ACCEPT_PRESHUTDOWN;
         status.dwCheckPoint = ++SvcCheckPoint;
     }
 
@@ -130,7 +135,6 @@ void DoContinuousIo(LPTSTR filepath)
         FlushFileBuffers(file);
     }
     
-    //Sleep(1000*30);
     write_ok = WriteFile(file, buffer, IO_SIZE, &written, NULL);
     DebugBreak();
     if (!write_ok)
@@ -172,7 +176,7 @@ void ServiceMain(DWORD argc, LPTSTR *argv)
     if(argc < 2)
         filepath = DEFAULT_IO_TARGET;
 
-    ReportSvcStatus(SERVICE_START_PENDING, 0, 30000);
+    ReportSvcStatus(SERVICE_START_PENDING, 0, SERVICE_WAITHINT);
 
     if(!InitService())
         goto END;
