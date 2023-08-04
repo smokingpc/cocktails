@@ -14,6 +14,7 @@ BOOL WINAPI ConsoleCtrlHandler(DWORD signal)
     if (signal == CTRL_C_EVENT) 
     {
         _tprintf(_T("Ctrl-C pressed...\n"));
+        PostQuitMessage(0);
         SetEvent(EventStop);
     }
 
@@ -86,7 +87,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 DWORD WINAPI ThreadWindow(LPVOID arg)
 {
     const wchar_t *CLASS_NAME = L"ConsoleRegisterDeviceEvents";
-
+    BOOL ok = FALSE;
     WNDCLASS wc = { 0 };
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = NULL;
@@ -97,9 +98,9 @@ DWORD WINAPI ThreadWindow(LPVOID arg)
         NULL,
         CLASS_NAME,
         NULL,
-        WS_MINIMIZE,
-        0, 0, 0, 0, 
-        HWND_MESSAGE,   //message only window, no GUI.
+        WS_EX_APPWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        NULL, 
         NULL,
         NULL,
         NULL);
@@ -107,25 +108,23 @@ DWORD WINAPI ThreadWindow(LPVOID arg)
     _tprintf(_T("CreateWindow => hwnd=%p\n"), hwnd);
 
     DEV_BROADCAST_DEVICEINTERFACE filter = {0};
-
     filter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
     filter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
-    filter.dbcc_classguid = GUID_DEVINTERFACE_DISK;
+    filter.dbcc_classguid = GUID_DEVINTERFACE_STORAGEPORT;
 
     HDEVNOTIFY notify = RegisterDeviceNotification(
                 hwnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
     _tprintf(_T("RegisterDeviceNotification=> notify=%p\n"), notify);
     _tprintf(_T("Window Message Pumping begin...\n"));
-    while(WaitForSingleObject(EventStop, 5) != WAIT_OBJECT_0)
+    MSG msg = { 0 };
+    while(GetMessage(&msg, hwnd, 0, 0))
     {
     //windows message pump loop
-        MSG msg = {0};
-        if(GetMessage(&msg, hwnd, 0, 0) > 0)
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        if(WaitForSingleObject(EventStop, 0) == WAIT_OBJECT_0)
+            break;
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
     _tprintf(_T("Window Message Pumping end...\n"));
 
