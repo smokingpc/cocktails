@@ -5,17 +5,16 @@
 #include <stdlib.h>
 #include <Dbt.h>
 
-HANDLE EventStop = INVALID_HANDLE_VALUE;
 HANDLE ThreadHandle = INVALID_HANDLE_VALUE;
 DWORD ThreadId = 0;
+HWND MsgHwnd = NULL;
 
 BOOL WINAPI ConsoleCtrlHandler(DWORD signal)
 {
     if (signal == CTRL_C_EVENT) 
     {
         _tprintf(_T("Ctrl-C pressed...\n"));
-        PostQuitMessage(0);
-        SetEvent(EventStop);
+        PostMessage(MsgHwnd, WM_QUIT, 0, 0);
     }
 
     //this event is handled(consumed) by app...
@@ -67,6 +66,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
+    case WM_QUIT:
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
@@ -94,7 +94,7 @@ DWORD WINAPI ThreadWindow(LPVOID arg)
     wc.lpszClassName = CLASS_NAME;
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(
+    MsgHwnd = CreateWindowEx(
         NULL,
         CLASS_NAME,
         NULL,
@@ -105,7 +105,7 @@ DWORD WINAPI ThreadWindow(LPVOID arg)
         NULL,
         NULL);
 
-    _tprintf(_T("CreateWindow => hwnd=%p\n"), hwnd);
+    _tprintf(_T("CreateWindow => hwnd=%p\n"), MsgHwnd);
 
     DEV_BROADCAST_DEVICEINTERFACE filter = {0};
     filter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
@@ -113,16 +113,14 @@ DWORD WINAPI ThreadWindow(LPVOID arg)
     filter.dbcc_classguid = GUID_DEVINTERFACE_STORAGEPORT;
 
     HDEVNOTIFY notify = RegisterDeviceNotification(
-                hwnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
+        MsgHwnd, &filter, DEVICE_NOTIFY_WINDOW_HANDLE);
 
     _tprintf(_T("RegisterDeviceNotification=> notify=%p\n"), notify);
     _tprintf(_T("Window Message Pumping begin...\n"));
     MSG msg = { 0 };
-    while(GetMessage(&msg, hwnd, 0, 0))
+    while(GetMessage(&msg, MsgHwnd, 0, 0) > 0)
     {
     //windows message pump loop
-        if(WaitForSingleObject(EventStop, 0) == WAIT_OBJECT_0)
-            break;
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -135,14 +133,11 @@ DWORD WINAPI ThreadWindow(LPVOID arg)
 int _tmain(int argc, TCHAR* argv[])
 {
     _tprintf(_T("**App started\n"));
-    EventStop = CreateEvent(NULL, TRUE, FALSE, NULL);
     SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
     ThreadHandle = CreateThread(NULL, 0, ThreadWindow, NULL, 0, &ThreadId);
     _tprintf(_T("Created ThreadWindows, thread=%p ...\n"), ThreadHandle);
-    WaitForSingleObject(EventStop, INFINITE);
-    Sleep(3000);
-
-    CloseHandle(EventStop);
+    //PostThreadMessage(ThreadId, WM_CREATE, 0, 0);
+    WaitForSingleObject(ThreadHandle, INFINITE);
     CloseHandle(ThreadHandle);
     _tprintf(_T("**App closed\n"));
 }
