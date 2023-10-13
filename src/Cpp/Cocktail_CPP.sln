@@ -63,6 +63,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueryDiskScsiAddress", "Que
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleCtrlHandlerTest", "ConsoleCtrlHandlerTest\ConsoleCtrlHandlerTest.vcxproj", "{BB3EB12E-1A3E-42D9-9C5D-95E55C2DADB2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BackgroundExecute", "BackgroundExecute\BackgroundExecute.vcxproj", "{9F2BAC73-E199-4935-B6E9-9E4547A9A42A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -313,6 +315,14 @@ Global
 		{BB3EB12E-1A3E-42D9-9C5D-95E55C2DADB2}.Release|x64.Build.0 = Release|x64
 		{BB3EB12E-1A3E-42D9-9C5D-95E55C2DADB2}.Release|x86.ActiveCfg = Release|Win32
 		{BB3EB12E-1A3E-42D9-9C5D-95E55C2DADB2}.Release|x86.Build.0 = Release|Win32
+		{9F2BAC73-E199-4935-B6E9-9E4547A9A42A}.Debug|x64.ActiveCfg = Debug|x64
+		{9F2BAC73-E199-4935-B6E9-9E4547A9A42A}.Debug|x64.Build.0 = Debug|x64
+		{9F2BAC73-E199-4935-B6E9-9E4547A9A42A}.Debug|x86.ActiveCfg = Debug|Win32
+		{9F2BAC73-E199-4935-B6E9-9E4547A9A42A}.Debug|x86.Build.0 = Debug|Win32
+		{9F2BAC73-E199-4935-B6E9-9E4547A9A42A}.Release|x64.ActiveCfg = Release|x64
+		{9F2BAC73-E199-4935-B6E9-9E4547A9A42A}.Release|x64.Build.0 = Release|x64
+		{9F2BAC73-E199-4935-B6E9-9E4547A9A42A}.Release|x86.ActiveCfg = Release|Win32
+		{9F2BAC73-E199-4935-B6E9-9E4547A9A42A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
