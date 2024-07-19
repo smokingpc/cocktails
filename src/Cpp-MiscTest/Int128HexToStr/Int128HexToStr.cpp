@@ -22,7 +22,6 @@ void HexInt128ToDecStr(TCHAR *outbuf, size_t outbuf_cch, BYTE* int128_be)
     int idx = 0;
     BYTE quotient_be[16] = { 0 };
     BYTE temp = 0;
-    bool is_empty = true;
 
     do
     {
@@ -38,17 +37,8 @@ void HexInt128ToDecStr(TCHAR *outbuf, size_t outbuf_cch, BYTE* int128_be)
     _itot_s(temp, temp_str, 2, 10);
     outbuf[0] = temp_str[0];
     
-    for(int i=0; i<16; i++)
-    {
-        if(quotient_be[i] != 0)
-        {
-            is_empty = false;
-            break;
-        }
-    }
-
     //calculation finished if quotient is empty
-    if (is_empty)
+    if (0 == memcmp(quotient_be, EmptyInt128, 16))
         return;
     else
         HexInt128ToDecStr(outbuf + 1, outbuf_cch - 1, quotient_be);
@@ -73,7 +63,7 @@ void HexInt64ToDecStr(TCHAR* outbuf, size_t outbuf_cch, BYTE* int64_be)
     outbuf[0] = temp_str[0];
 
     //calculation finished if quotient is empty
-    if(0 == *(UINT64*)quotient_be)
+    if(0 == memcmp(quotient_be, EmptyInt64, 8))
         return;
     else
         HexInt64ToDecStr(outbuf+1, outbuf_cch-1, quotient_be);
