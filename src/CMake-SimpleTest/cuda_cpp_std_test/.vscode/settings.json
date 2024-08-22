@@ -1,0 +1,13 @@
+{
+    "cmake.outputLogEncoding": "ansi",
+    "cmake.buildDirectory": "${workspaceFolder}/out/build/${buildKitTargetArch}-${buildType}",
+    "cmake.preferredGenerators": [
+        "Ninja"
+    ],
+    "cmake.configureSettings": {
+        "CUDA_BUILD_ARCH": "TURING"
+    },
+    "files.associations": {
+        "cstdint": "cpp"
+    }
+}

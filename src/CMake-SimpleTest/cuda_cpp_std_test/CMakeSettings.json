@@ -1,0 +1,45 @@
+{
+  "configurations": [
+    {
+        "buildCommandArgs": "-v",
+        "buildRoot": "${projectDir}\\out\\build\\${name}",
+        "configurationType": "Debug",
+        "ctestCommandArgs": "",
+        "generator": "Ninja",
+        "inheritEnvironments": [ "msvc_x64_x64" ],
+        "installRoot": "${projectDir}\\out\\install\\${name}",
+        "intelliSenseMode": "windows-msvc-x64",
+        "intellisenseOptions": { "additionalCompilerArgs": "" },
+        "name": "x64-Debug",
+        "variables": [
+            {
+                "name": "CUDA_BUILD_ARCH",
+                "type": "STRING",
+                "value": "TURING"
+            },
+            {
+                "name": "__FOR_INTELLICODE__",
+                "type": "BOOL",
+                "value": "1"
+            }
+        ]
+    },
+    {
+        "name": "x64-Release",
+        "generator": "Ninja",
+        "configurationType": "Release",
+        "buildRoot": "${projectDir}\\out\\build\\${name}",
+        "installRoot": "${projectDir}\\out\\install\\${name}",
+        "buildCommandArgs": "-v",
+        "ctestCommandArgs": "",
+        "inheritEnvironments": [ "msvc_x64_x64" ],
+        "variables": [
+            {
+                "name": "CUDA_BUILD_ARCH",
+                "type": "STRING",
+                "value": "TURING"
+            }
+        ]
+    }
+  ]
+}
