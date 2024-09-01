@@ -7,6 +7,19 @@
 #include <winioctl.h>
 #include <string>
 #include <iostream>
+#include <nvme.h>
+
+typedef struct nvme_dsm_range {
+    union {
+        NVME_LBA_RANGE Range;
+        struct {
+            UINT32 cattr;
+            UINT32 nlb;
+            UINT64 slba;
+        }DUMMYSTRUCTNAME;
+    }DUMMYUNIONNAME;
+};
+static_assert(sizeof(nvme_dsm_range) == sizeof(NVME_LBA_RANGE), "ERROR");
 
 int _tmain(int argc, TCHAR* argv[])
 {
