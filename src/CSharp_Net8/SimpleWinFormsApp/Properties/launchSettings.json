@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SimpleWinFormsApp": {
+      "commandName": "Project",
+      "commandLineArgs": "aa bb cc dd ee 11 22 33"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35312.102
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleConsoleApp", "SimpleConsoleApp\SimpleConsoleApp.csproj", "{7DF22566-7552-411E-94AE-6C3AD2124284}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleWinFormsApp", "SimpleWinFormsApp\SimpleWinFormsApp.csproj", "{EC501BD1-0AAD-4116-AF29-6DE1692F5871}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7DF22566-7552-411E-94AE-6C3AD2124284}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DF22566-7552-411E-94AE-6C3AD2124284}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DF22566-7552-411E-94AE-6C3AD2124284}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DF22566-7552-411E-94AE-6C3AD2124284}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC501BD1-0AAD-4116-AF29-6DE1692F5871}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC501BD1-0AAD-4116-AF29-6DE1692F5871}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC501BD1-0AAD-4116-AF29-6DE1692F5871}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC501BD1-0AAD-4116-AF29-6DE1692F5871}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {38587AB8-1982-46C9-83C4-881C4970A693}
+	EndGlobalSection
+EndGlobal
