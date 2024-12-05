@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vector_test", "vector_test\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LockTest", "LockTest\LockTest.vcxproj", "{8C5200AE-9BF0-4EE6-9D36-E9DF3D322023}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BinaryDataInStrTest", "BinaryDataInStrTest\BinaryDataInStrTest.vcxproj", "{21E7B7F4-EA05-4038-A271-9554DB2FA050}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{8C5200AE-9BF0-4EE6-9D36-E9DF3D322023}.Release|x64.Build.0 = Release|x64
 		{8C5200AE-9BF0-4EE6-9D36-E9DF3D322023}.Release|x86.ActiveCfg = Release|Win32
 		{8C5200AE-9BF0-4EE6-9D36-E9DF3D322023}.Release|x86.Build.0 = Release|Win32
+		{21E7B7F4-EA05-4038-A271-9554DB2FA050}.Debug|x64.ActiveCfg = Debug|x64
+		{21E7B7F4-EA05-4038-A271-9554DB2FA050}.Debug|x64.Build.0 = Debug|x64
+		{21E7B7F4-EA05-4038-A271-9554DB2FA050}.Debug|x86.ActiveCfg = Debug|Win32
+		{21E7B7F4-EA05-4038-A271-9554DB2FA050}.Debug|x86.Build.0 = Debug|Win32
+		{21E7B7F4-EA05-4038-A271-9554DB2FA050}.Release|x64.ActiveCfg = Release|x64
+		{21E7B7F4-EA05-4038-A271-9554DB2FA050}.Release|x64.Build.0 = Release|x64
+		{21E7B7F4-EA05-4038-A271-9554DB2FA050}.Release|x86.ActiveCfg = Release|Win32
+		{21E7B7F4-EA05-4038-A271-9554DB2FA050}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
