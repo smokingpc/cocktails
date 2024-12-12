@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ManifestTest", "ManifestTes
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServiceWatchdog", "ServiceWatchdog\ServiceWatchdog.vcxproj", "{7B3E909E-E2A6-488D-8069-E6BDF545FE84}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StartAndIgnoreProcessTest", "StartAndIgnoreProcessTest\StartAndIgnoreProcessTest.vcxproj", "{6F63EA16-BEF3-490D-9A29-AF2590060713}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -71,6 +73,14 @@ Global
 		{7B3E909E-E2A6-488D-8069-E6BDF545FE84}.Release|x64.Build.0 = Release|x64
 		{7B3E909E-E2A6-488D-8069-E6BDF545FE84}.Release|x86.ActiveCfg = Release|Win32
 		{7B3E909E-E2A6-488D-8069-E6BDF545FE84}.Release|x86.Build.0 = Release|Win32
+		{6F63EA16-BEF3-490D-9A29-AF2590060713}.Debug|x64.ActiveCfg = Debug|x64
+		{6F63EA16-BEF3-490D-9A29-AF2590060713}.Debug|x64.Build.0 = Debug|x64
+		{6F63EA16-BEF3-490D-9A29-AF2590060713}.Debug|x86.ActiveCfg = Debug|Win32
+		{6F63EA16-BEF3-490D-9A29-AF2590060713}.Debug|x86.Build.0 = Debug|Win32
+		{6F63EA16-BEF3-490D-9A29-AF2590060713}.Release|x64.ActiveCfg = Release|x64
+		{6F63EA16-BEF3-490D-9A29-AF2590060713}.Release|x64.Build.0 = Release|x64
+		{6F63EA16-BEF3-490D-9A29-AF2590060713}.Release|x86.ActiveCfg = Release|Win32
+		{6F63EA16-BEF3-490D-9A29-AF2590060713}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
