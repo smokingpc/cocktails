@@ -79,7 +79,7 @@ void WINAPI ShutdownService()
 {
 }
 
-VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv[])
+VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[])
 {
     // Perform service-specific initialization and work.
     if(!InitService())

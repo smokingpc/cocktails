@@ -13,7 +13,7 @@
 
 VOID SvcInstall();
 VOID WINAPI SvcCtrlHandler(DWORD dwCtrl);
-VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv[]);
+VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[]);
 BOOL WINAPI InitService();
 void WINAPI ShutdownService();
 VOID ReportSvcStatus(DWORD current_state, DWORD win32_exit, DWORD svc_exit, DWORD wait = DEFAULT_SVC_WAIT);
