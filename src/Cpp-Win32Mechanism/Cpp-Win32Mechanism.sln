@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StartAndIgnoreProcessTest",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServiceArgTest", "ServiceArgTest\ServiceArgTest.vcxproj", "{3235C06E-3813-4AE1-8BC4-CD2AEE7AECF5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MsiExtractor", "MsiExtractor\MsiExtractor.vcxproj", "{29BFD432-A56E-4593-8CF6-0182C93F2C83}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -91,6 +93,14 @@ Global
 		{3235C06E-3813-4AE1-8BC4-CD2AEE7AECF5}.Release|x64.Build.0 = Release|x64
 		{3235C06E-3813-4AE1-8BC4-CD2AEE7AECF5}.Release|x86.ActiveCfg = Release|Win32
 		{3235C06E-3813-4AE1-8BC4-CD2AEE7AECF5}.Release|x86.Build.0 = Release|Win32
+		{29BFD432-A56E-4593-8CF6-0182C93F2C83}.Debug|x64.ActiveCfg = Debug|x64
+		{29BFD432-A56E-4593-8CF6-0182C93F2C83}.Debug|x64.Build.0 = Debug|x64
+		{29BFD432-A56E-4593-8CF6-0182C93F2C83}.Debug|x86.ActiveCfg = Debug|Win32
+		{29BFD432-A56E-4593-8CF6-0182C93F2C83}.Debug|x86.Build.0 = Debug|Win32
+		{29BFD432-A56E-4593-8CF6-0182C93F2C83}.Release|x64.ActiveCfg = Release|x64
+		{29BFD432-A56E-4593-8CF6-0182C93F2C83}.Release|x64.Build.0 = Release|x64
+		{29BFD432-A56E-4593-8CF6-0182C93F2C83}.Release|x86.ActiveCfg = Release|Win32
+		{29BFD432-A56E-4593-8CF6-0182C93F2C83}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
