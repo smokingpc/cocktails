@@ -6,7 +6,8 @@ HANDLE                  SvcStopEvent = NULL;
 DWORD                   SvcCheckPoint = 1;
 HANDLE                  EventSource = NULL;
 
-static VOID ReportSvcStatus(DWORD current_state,
+VOID ReportSvcStatus(
+    DWORD current_state,
     DWORD win32_exit,
     DWORD svc_exit,
     DWORD wait)
@@ -95,9 +96,12 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[])
     { 
         //do anything you want...
     }
+    ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
 
     //TODO: Stop the thread here if you created.
     ShutdownService();
+
+    ReportSvcStatus(SERVICE_STOPPED, EXIT_INIT_FAILED, 0);
 }
 
 VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
@@ -107,7 +111,6 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
     switch (dwCtrl)
     {
     case SERVICE_CONTROL_STOP:
-        ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
         // Signal the service to stop.
         SetEvent(SvcStopEvent);
         return;
