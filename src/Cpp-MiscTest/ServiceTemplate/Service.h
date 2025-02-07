@@ -12,12 +12,22 @@
 #define EXIT_SETUPJOB_FAILED  -5
 
 VOID SvcInstall();
-VOID WINAPI SvcCtrlHandler(DWORD dwCtrl);
+DWORD WINAPI SvcCtrlHandlerEx(
+    DWORD ctrl_code,
+    DWORD event_type,
+    LPVOID event_data,
+    LPVOID context);
+
 VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[]);
 BOOL WINAPI InitService();
-void WINAPI ShutdownService();
-VOID ReportSvcStatus(DWORD current_state, DWORD win32_exit, DWORD svc_exit, DWORD wait = DEFAULT_SVC_WAIT);
+VOID WINAPI ShutdownService();
+VOID ReportCurrentSvcStatus();
+VOID ReportSvcStatus(
+    DWORD current_state, 
+    DWORD win32_exit, 
+    DWORD svc_exit, 
+    DWORD wait = DEFAULT_SVC_WAIT);
 VOID ReportEventLog(DWORD event_id, LPTSTR msg, DWORD last_error = 0);
 BOOL SetupEventReporter();
-void TeardownEventReporter();
+VOID TeardownEventReporter();
 
