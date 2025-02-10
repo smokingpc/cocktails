@@ -1,3 +1,4 @@
+#include <initguid.h>
 #include "pch.h"
 
 DWORD HandleDeviceCustomEvent(DWORD event_type, PDEV_BROADCAST_HDR hdr)
@@ -6,11 +7,15 @@ DWORD HandleDeviceCustomEvent(DWORD event_type, PDEV_BROADCAST_HDR hdr)
     //which I opened a handle.
     //"dbh" stands for Device Broadcast Handle data
     PDEV_BROADCAST_HANDLE dbh = (PDEV_BROADCAST_HANDLE)hdr;
-    PMY_CUSTOM_EVENT mydata = (PMY_CUSTOM_EVENT)dbh->dbch_data;
 
-    //do something that you want to handle....
-    UNREFERENCED_PARAMETER(dbh);
-    UNREFERENCED_PARAMETER(mydata);
+    //customized event should be checked by this guid.
+    //only GUID matched indicates this event is customized event you want.
+    if(IsEqualGUID(dbh->dbch_eventguid, GUID_MY_CUSTOM_EVENT))
+    {
+        PMY_CUSTOM_EVENT mydata = (PMY_CUSTOM_EVENT)dbh->dbch_data;
+        //do something that you want to handle....
+        UNREFERENCED_PARAMETER(mydata);
+    }
 
     return NO_ERROR;
 }
@@ -49,4 +54,19 @@ DWORD HandleDeviceInterfaceEvent(DWORD event_type, PDEV_BROADCAST_HDR hdr)
     }
 
     return NO_ERROR;
+}
+
+DWORD HandleControlDeviceEvent(
+    DWORD event_type,
+    LPVOID event_data)
+{
+    DWORD ret = NO_ERROR;
+
+    PDEV_BROADCAST_HDR hdr = (PDEV_BROADCAST_HDR)event_data;
+    if ((DBT_DEVTYP_HANDLE == hdr->dbch_devicetype) && (DBT_CUSTOMEVENT == event_type))
+        ret = HandleDeviceCustomEvent(event_type, hdr);
+    else if (DBT_DEVTYP_DEVICEINTERFACE == hdr->dbch_devicetype)
+        ret = HandleDeviceInterfaceEvent(event_type, hdr);
+
+    return ret;
 }

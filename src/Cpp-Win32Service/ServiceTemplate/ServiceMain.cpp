@@ -168,8 +168,6 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[])
     // Update service status only in ServiceMain, not in EventHandler or other function.
     // It make logic lines concerntrated.
 
-
-
     // Report initial status to the SCM
     ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 0);
 
@@ -202,41 +200,58 @@ DWORD WINAPI SvcCtrlHandlerEx(
     LPVOID context)
 {
     // Handle the requested control code. 
+    // ctrl_code => translated from WM_XXXX message.
+    // event_type => translated from WPARAM of WM_XXXX message.
+    // event_data => translated from LPARAM of WM_XXXX message.
+    // context => assigned in RegisterServiceCtrlHandlerEx()
+    //[Note]
+    //Actually, svchost handles WM_XXX (e.g. WM_WTSSESSION_CHANGE) message and translate it 
+    // to ServiceControlHandler events. 
+    //Windows message WM_XXX always comes with LPARAM and WPARAM.
+    // svchost translate WPARAM to "event_type" arg, and LPARAM to "event_data" argument.
+    // that's why you have these two arguments in SvcCtrlHandlerEx (HANDLER_EX type)
+    // Most of WM_XXX message can be handled in service also. If you can't find reference
+    // description on MSDN for them, just lookup it in Windows Message (WM_XXX) section.
+    UNREFERENCED_PARAMETER(context);
+
     DWORD ret = NO_ERROR;
     switch (ctrl_code)
     {
     case SERVICE_CONTROL_STOP:
-        ret = HandleControlStop(event_type, event_data, context);
+        ret = HandleControlStop(event_type, event_data);
         break;
     case SERVICE_CONTROL_DEVICEEVENT:   //Device changed(e.g. pluged in, removed...etc)
-        ret = HandleControlDeviceEvent(event_type, event_data, context);
+        ret = HandleControlDeviceEvent(event_type, event_data);
         break;
     case SERVICE_CONTROL_INTERROGATE:
-        ret = HandleControlInterrogate(event_type, event_data, context);
+        ret = HandleControlInterrogate(event_type, event_data);
         break;
     case SERVICE_CONTROL_PRESHUTDOWN:
-        ret = HandleControlPreshutdown(event_type, event_data, context);
+        ret = HandleControlPreshutdown(event_type, event_data);
         break;
     case SERVICE_CONTROL_SHUTDOWN:
-        ret = HandleControlShutdown(event_type, event_data, context);
+        ret = HandleControlShutdown(event_type, event_data);
         break;
+#if 0
+//obsoleted and instead by Pnp functions.
     case SERVICE_CONTROL_NETBINDADD:
-        ret = HandleControlNetBindAdd(event_type, event_data, context);
+        ret = HandleControlNetBindAdd(event_type, event_data);
         break;
     case SERVICE_CONTROL_NETBINDREMOVE:
-        ret = HandleControlNetBindRemove(event_type, event_data, context);
+        ret = HandleControlNetBindRemove(event_type, event_data);
         break;
     case SERVICE_CONTROL_NETBINDENABLE:
-        ret = HandleControlNetBindEnable(event_type, event_data, context);
+        ret = HandleControlNetBindEnable(event_type, event_data);
         break;
     case SERVICE_CONTROL_NETBINDDISABLE:
-        ret = HandleControlNetBindDisable(event_type, event_data, context);
+        ret = HandleControlNetBindDisable(event_type, event_data);
         break;
+#endif
     case SERVICE_CONTROL_POWEREVENT:
-        ret = HandleControlPowerEvent(event_type, event_data, context);
+        ret = HandleControlPowerEvent(event_type, event_data);
         break;
     case SERVICE_CONTROL_SESSIONCHANGE:
-        ret = HandleSessionChangeEvent(event_type, event_data, context);
+        ret = HandleSessionChangeEvent(event_type, event_data);
         break;
     default:
         break;

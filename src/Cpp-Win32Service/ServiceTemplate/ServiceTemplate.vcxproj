@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{9e042897-1e3c-47cd-a838-e9c1d75dd3ac}</ProjectGuid>
-    <RootNamespace>Win32ServiceStatusTest</RootNamespace>
+    <ProjectGuid>{AAA063B5-CA31-4221-92E6-9B31A3BB0980}</ProjectGuid>
+    <RootNamespace>ServiceTemplate</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -82,8 +82,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)..\..\output\$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(ProjectDir)$(Configuration)\$(Platform)\</IntDir>
+    <OutDir>$(SolutionDir)..\..\output\$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -147,12 +147,50 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DeviceEventHandlers.cpp" />
+    <ClCompile Include="PowerEventHandlers.cpp" />
+    <ClCompile Include="RegisterServiceEvents.cpp" />
+    <ClCompile Include="ServiceEventHandler.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Service.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="ServiceMain.cpp" />
+    <ClCompile Include="SessionEventHandlers.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CommonInclude.h" />
+    <ClInclude Include="DeviceEventHandlers.h" />
+    <ClInclude Include="PowerEventHandlers.h" />
+    <ClInclude Include="RegisterServiceEvents.h" />
+    <ClInclude Include="ServiceEventHandler.h" />
+    <ClInclude Include="EventMessage.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="Service.h" />
+    <ClInclude Include="SessionEventHandlers.h" />
+    <ClInclude Include="Utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="EventMessage.mc">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mc.exe $(ProjectDir)EventMessage.mc </Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling EventMessages</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EventMessage.rc;EventMessage.h;MSG0409.bin</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mc.exe $(ProjectDir)EventMessage.mc </Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compiling EventMessages</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">EventMessage.rc;EventMessage.h;MSG0409.bin</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">mc.exe $(ProjectDir)EventMessage.mc </Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling EventMessages</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EventMessage.rc;EventMessage.h;MSG0409.bin</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">mc.exe $(ProjectDir)EventMessage.mc </Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling EventMessages</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">EventMessage.rc;EventMessage.h;MSG0409.bin</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="EventMessage.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
