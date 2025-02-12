@@ -30,7 +30,7 @@ void TeardownDumpSetting()
 void CreateDumpFile(PEXCEPTION_POINTERS ex)
 {
     HANDLE file = CreateFile(DumpFilePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
-    DebugBreak();
+    //DebugBreak();
     if(INVALID_HANDLE_VALUE != file)
     {
         ExParam.ThreadId = GetCurrentThreadId();
@@ -47,14 +47,30 @@ void CreateDumpFile(PEXCEPTION_POINTERS ex)
     }
 }
 
+DWORD WINAPI StackOverflowHandlerThread(_In_ LPVOID lpParameter)
+{
+    PEXCEPTION_POINTERS ex = (PEXCEPTION_POINTERS)lpParameter;
+    CreateDumpFile(ex);
+    return ERROR_SUCCESS;
+}
+
 LONG WINAPI ExceptionHandler(PEXCEPTION_POINTERS ex)
 {
     switch (ex->ExceptionRecord->ExceptionCode)
     {
     case STATUS_HEAP_CORRUPTION:
     case STATUS_STACK_BUFFER_OVERRUN:
-    case STATUS_STACK_OVERFLOW: //only VEH can catch this exeception.
         CreateDumpFile(ex);
+        break;
+    case STATUS_STACK_OVERFLOW: //only VEH can catch this exeception.
+    {
+    //in stack overflow status_code, MiniDumpWriteDump() won't succeed
+    //because this function also need consume much stack and heap.
+    //So we have to put this exception to another thread with clean stack.
+        DWORD tid = 0;
+        HANDLE thread = CreateThread(NULL, 0, StackOverflowHandlerThread, ex, STACK_SIZE_PARAM_IS_A_RESERVATION, &tid);
+        WaitForSingleObject(thread, INFINITE);
+    }
         break;
     default:
         break;
@@ -67,33 +83,26 @@ LONG WINAPI ExceptionHandler(PEXCEPTION_POINTERS ex)
 DWORD WINAPI ThreadProc(_In_ LPVOID lpParameter)
 {
     //MAKE IT CRASH
-    char crash1[1024*1024] = { 0 };
-    printf(crash1);
-    char crash2[8192] = { 0 };
-    printf(crash2);
-    char crash3[8192] = { 0 };
-    printf(crash3);
-    char crash4[8192] = { 0 };
-    printf(crash4);
-    char crash5[8192] = { 0 };
-    printf(crash5);
-    return 0;
+    //DebugBreak();
+
+    char crash1[1024] = { 0 };
+    return ThreadProc(crash1);
 }
 
 int _tmain(int argc, TCHAR* argv[])
 {
     SetupDumpSetting();
 
-    UINT mode = GetErrorMode();
-    mode |= SEM_NOGPFAULTERRORBOX;  //don't popup error window when crash.
-    SetErrorMode(mode);
+    //UINT mode = GetErrorMode();
+    //mode |= SEM_NOGPFAULTERRORBOX;  //don't popup error window when crash.
+    //SetErrorMode(mode);
 
     //register VEH
     VEH = AddVectoredExceptionHandler(TRUE, ExceptionHandler);
     SetUnhandledExceptionFilter(ExceptionHandler);
 
     DWORD tid = 0;
-    HANDLE thread = CreateThread(NULL, 1024, ThreadProc, NULL, STACK_SIZE_PARAM_IS_A_RESERVATION, &tid);
+    HANDLE thread = CreateThread(NULL, 4096, ThreadProc, NULL, STACK_SIZE_PARAM_IS_A_RESERVATION, &tid);
     Sleep(1000*10);
 
     SetUnhandledExceptionFilter(NULL);
