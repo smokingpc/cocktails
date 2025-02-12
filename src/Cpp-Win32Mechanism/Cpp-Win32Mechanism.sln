@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MsiExtractor", "MsiExtracto
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DefaultCodePageTest", "DefaultCodePageTest\DefaultCodePageTest.vcxproj", "{38B2194E-D90B-4439-A461-6C0A1282DD8C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExceptionHandlerTest", "ExceptionHandlerTest\ExceptionHandlerTest.vcxproj", "{D2C0643F-B63D-43D0-B856-239C667E1DFF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -92,6 +94,14 @@ Global
 		{38B2194E-D90B-4439-A461-6C0A1282DD8C}.Release|x64.Build.0 = Release|x64
 		{38B2194E-D90B-4439-A461-6C0A1282DD8C}.Release|x86.ActiveCfg = Release|Win32
 		{38B2194E-D90B-4439-A461-6C0A1282DD8C}.Release|x86.Build.0 = Release|Win32
+		{D2C0643F-B63D-43D0-B856-239C667E1DFF}.Debug|x64.ActiveCfg = Debug|x64
+		{D2C0643F-B63D-43D0-B856-239C667E1DFF}.Debug|x64.Build.0 = Debug|x64
+		{D2C0643F-B63D-43D0-B856-239C667E1DFF}.Debug|x86.ActiveCfg = Debug|Win32
+		{D2C0643F-B63D-43D0-B856-239C667E1DFF}.Debug|x86.Build.0 = Debug|Win32
+		{D2C0643F-B63D-43D0-B856-239C667E1DFF}.Release|x64.ActiveCfg = Release|x64
+		{D2C0643F-B63D-43D0-B856-239C667E1DFF}.Release|x64.Build.0 = Release|x64
+		{D2C0643F-B63D-43D0-B856-239C667E1DFF}.Release|x86.ActiveCfg = Release|Win32
+		{D2C0643F-B63D-43D0-B856-239C667E1DFF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
