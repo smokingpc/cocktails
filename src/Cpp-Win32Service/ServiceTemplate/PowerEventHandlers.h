@@ -1,4 +1,15 @@
 #pragma once
+
+enum class AOAC_STATE {
+    STANDBY = 0,
+    ACTIVE = 1,
+};
+enum class MONITOR_STATE {
+    OFF = 0,
+    ON = 1,
+    DIMMED = 2,
+};
+
 DWORD HandleModernStandbyEvent(PPOWERBROADCAST_SETTING setting);
 
 //console display event handler handled 3 different events:

@@ -4,10 +4,35 @@ DWORD HandleModernStandbyEvent(PPOWERBROADCAST_SETTING setting)
 {
     //going into S0 Low Power Idle state. (enter AOAC state)
     //wakeup from S0 Low Power Idle state. (leave AOAC state)
+    AOAC_STATE*state = (AOAC_STATE*)&setting->Data;
+
+    switch(*state)
+    {
+        //system entering ACTIVE state.
+        //After register power event, this event will be fired once immediately.
+    case AOAC_STATE::ACTIVE:
+        break;
+        //system entering ModernStandby mode
+    case AOAC_STATE::STANDBY:
+        break;
+    }
+
     return NO_ERROR;
 }
 DWORD HandleConsoleDisplayEvent(PPOWERBROADCAST_SETTING setting)
 {
+    MONITOR_STATE* state = (MONITOR_STATE*)&setting->Data;
+    switch(*state)
+    {
+    case MONITOR_STATE::ON:
+        break;
+    case MONITOR_STATE::OFF:
+        break;
+    //(notebook)console monitor become darker(low light mode) but still on.
+    case MONITOR_STATE::DIMMED:
+        break;
+    }
+
     return NO_ERROR;
 }
 DWORD HandleLegacySuspendEvent(PPOWERBROADCAST_SETTING setting)
@@ -63,7 +88,7 @@ DWORD HandleControlPowerEvent(
     case PBT_POWERSETTINGCHANGE:    //modern standby 
         if (GUID_MONITOR_POWER_ON == setting->PowerSetting)
             ret = HandleModernStandbyEvent(setting);
-        else if (GUID_MONITOR_POWER_ON == setting->PowerSetting)
+        else if (GUID_CONSOLE_DISPLAY_STATE == setting->PowerSetting)
             ret = HandleConsoleDisplayEvent(setting);
         break;
     }
