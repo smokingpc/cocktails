@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <DbgHelp.h>
+#include <vector>
 
 #pragma comment(lib, "Dbghelp.lib")
 
@@ -67,11 +68,12 @@ LONG WINAPI ExceptionHandler(PEXCEPTION_POINTERS ex)
     //    CreateDumpFile(ex);
     //    break;
 #endif
+    case 0xe06d7363:    //C++ exceptions
     case EXCEPTION_BREAKPOINT:
     case EXCEPTION_ACCESS_VIOLATION:
     case STATUS_HEAP_CORRUPTION:
     case EXCEPTION_STACK_OVERFLOW:      //only VEH can catch this exeception.
-    DebugBreak();
+    //DebugBreak();
     {
     //in stack overflow status_code, MiniDumpWriteDump() won't succeed
     //because this function also need consume much stack and heap.
@@ -82,6 +84,7 @@ LONG WINAPI ExceptionHandler(PEXCEPTION_POINTERS ex)
     }
         break;
     default:
+        CreateDumpFile(ex);
         break;
     }
 
@@ -92,9 +95,12 @@ LONG WINAPI ExceptionHandler(PEXCEPTION_POINTERS ex)
 DWORD WINAPI ThreadProc(_In_ LPVOID lpParameter)
 {
     //MAKE IT CRASH
-    char crash1[1024] = { 0 };
-    return ThreadProc(crash1);
+    //char crash1[1024] = { 0 };
+    //return ThreadProc(crash1);
+    std::vector<int> test{};
+    //DebugBreak();
 
+    int data = test.at(0);
     return 0;
 }
 
