@@ -97,10 +97,11 @@ DWORD WINAPI ThreadProc(_In_ LPVOID lpParameter)
     //MAKE IT CRASH
     //char crash1[1024] = { 0 };
     //return ThreadProc(crash1);
-    std::vector<int> test{};
+//    std::vector<int> test{};
     //DebugBreak();
 
-    int data = test.at(0);
+//    int data = test.at(0);
+    throw std::exception("Test");
     return 0;
 }
 
@@ -111,7 +112,7 @@ int _tmain(int argc, TCHAR* argv[])
     //register VEH
     VEH = AddVectoredExceptionHandler(TRUE, ExceptionHandler);
     SetUnhandledExceptionFilter(ExceptionHandler);
-
+    throw std::exception("Test");
     DWORD tid = 0;
     HANDLE thread = CreateThread(NULL, 4096, ThreadProc, NULL, STACK_SIZE_PARAM_IS_A_RESERVATION, &tid);
     Sleep(1000*10);
