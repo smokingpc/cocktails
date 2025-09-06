@@ -39,16 +39,20 @@ int _tmain(int argc, TCHAR* argv[])
 	string data = "";
 	string regex = "";
 
-	data = "abc, def, x-y zz";
-	regex = "([0-9a-zA-Z\\-\\s]+)";
+	data = "x-y zz";
+	regex = "[0-9a-zA-Z\\-\\s]+";
 	MatchRegex(data, regex);
+	
+	data = "abc, def, x-y zz"; 
+	regex = "([0-9a-zA-Z\\-\\s]+)";
 	ParseRegexByGroups(data, regex);
 
 	data = "abc, def, xyz";
-	regex = "([0-9a-zA-Z]+)";
+	//regex = "([0-9a-zA-Z]+)";
+	regex = "([^,]+)";
 	ParseRegexByGroups(data, regex);
 	data = "0918326408, 28825252";
-	regex = "([0-9]+)";
+	regex = "([^,]+)";
 	ParseRegexByGroups(data, regex);
 
 	data = "Date: 2023-12-25, Time: 14:30:45";
