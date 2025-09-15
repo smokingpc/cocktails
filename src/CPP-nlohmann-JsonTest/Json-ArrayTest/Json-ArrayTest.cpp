@@ -22,4 +22,18 @@ int _tmain(int argc, TCHAR* argv[])
 	string output2 = jobj2.dump(4, 32, false);
 	printf("JSON output2:\n%s\n", output.c_str());
 
+	for (auto& item : jobj)
+	{
+		printf("%s, ", item.get<string>().c_str());
+	}
+
+	try
+	{
+		string json3 = "[ 'aaa', 'bbb', 'ccc']";
+		nlohmann::json jobj3 = nlohmann::json::parse(json3);
+	}
+	catch (std::exception& e)
+	{
+		printf("exception => %s\n", e.what());
+	}
 }

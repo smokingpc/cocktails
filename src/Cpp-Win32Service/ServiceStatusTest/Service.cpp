@@ -83,11 +83,13 @@ void UpdateSvcStatus(
     // Fill in the SERVICE_STATUS structure.
     SvcStatus.dwServiceType = SVCTYPE;
     SvcStatus.dwCurrentState = current_state;
-    //SvcStatus.dwWin32ExitCode = win32_exit;
-    //SvcStatus.dwServiceSpecificExitCode = svc_exit;
-    SvcStatus.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;
-    SvcStatus.dwServiceSpecificExitCode = 55688;
+    SvcStatus.dwWin32ExitCode = win32_exit;
+    SvcStatus.dwServiceSpecificExitCode = svc_exit;
     SvcStatus.dwWaitHint = wait;
+    
+    //to make service auto restart in non-crashing case, we must setup 
+    //FailureAction Flag. If not set this flag, FailureAction only works when crash.
+    //ChangeServiceConfig2(handle, SERVICE_CONFIG_FAILURE_ACTIONS_FLAG, struct SERVICE_FAILURE_ACTIONS_FLAG);
 
     if ((current_state == SERVICE_RUNNING) ||
         (current_state == SERVICE_STOPPED))
