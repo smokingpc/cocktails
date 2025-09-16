@@ -1,10 +1,9 @@
 #include "pch.h"
 #pragma comment(lib, "advapi32.lib")
 
-VOID SvcInstall()
+using namespace std;
+VOID SvcInstall(bool noncrash_restart)
 {
-    SC_HANDLE scm = NULL;
-    SC_HANDLE service = NULL;
     TCHAR exe_path[MAX_PATH] = {0};
 
     if (!GetModuleFileName(NULL, exe_path, MAX_PATH))
@@ -24,7 +23,7 @@ VOID SvcInstall()
 
     // Get a handle to the SCM database. 
 
-    scm = OpenSCManager(
+    CAutoSvcHandle scm = OpenSCManagerW(
         NULL,                    // local computer
         NULL,                    // ServicesActive database 
         SC_MANAGER_ALL_ACCESS);  // full access rights 
@@ -36,7 +35,7 @@ VOID SvcInstall()
     }
 
     // Create the service
-    service = CreateService(
+    CAutoSvcHandle service = CreateService(
         scm,              // SCM database 
         SVCNAME,                   // name of service 
         SVCNAME,                   // service name to display 
@@ -52,19 +51,36 @@ VOID SvcInstall()
         NULL);                     // no password 
 
     if (service == NULL)
-    {
         printf("CreateService failed (%d)\n", GetLastError());
-        CloseServiceHandle(scm);
-        return;
-    }
     else 
         printf("Service installed successfully\n");
 
-    CloseServiceHandle(service);
-    CloseServiceHandle(scm);
+    //noncrash_restart : if service exit with Win32ErrorCode != 0, following steps
+    //can make SCM restart this service automatically even service is not crashed.
+    //In original FailureActions, SCM only restart service which is crashed.
+    if (noncrash_restart)
+    {
+        //setup FailureActions. In "Recovery" tab of "Service Management" mmc, you can see
+        //3 Failure Actions settings.
+        unique_ptr<BYTE> ptr(new BYTE[LARGE_BUFFER_SIZE]);
+        memset(ptr.get(), 0, LARGE_BUFFER_SIZE);
+        SERVICE_FAILURE_ACTIONS *actions = (SERVICE_FAILURE_ACTIONS*)ptr.get();
+        actions->lpsaActions = (SC_ACTION*)(ptr.get() + sizeof(SERVICE_FAILURE_ACTIONS));
+        actions->cActions = MAX_FAILURE_ACTIONS;
+        actions->lpsaActions[0].Type = SC_ACTION_RESTART;
+        actions->lpsaActions[0].Delay = FAILURE_ACTION_DELAY;
+        actions->lpsaActions[1].Type = SC_ACTION_RESTART;
+        actions->lpsaActions[1].Delay = FAILURE_ACTION_DELAY;
+        actions->lpsaActions[2].Type = SC_ACTION_RESTART;
+        actions->lpsaActions[2].Delay = FAILURE_ACTION_DELAY;
+        ChangeServiceConfig2(service, SERVICE_CONFIG_FAILURE_ACTIONS, actions);
+
+        SERVICE_FAILURE_ACTIONS_FLAG flag = { 0 };
+        flag.fFailureActionsOnNonCrashFailures = TRUE;
+        ChangeServiceConfig2(service, SERVICE_CONFIG_FAILURE_ACTIONS_FLAG, &flag);
+
+    }
 }
-
-
 
 //   Entry point of EXE
 int __cdecl _tmain(int argc, TCHAR* argv[])

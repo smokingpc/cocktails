@@ -11,7 +11,11 @@
 #define EXIT_SHUTDOWN_FAILED  -4
 #define EXIT_SETUPJOB_FAILED  -5
 
-VOID SvcInstall();
+#define LARGE_BUFFER_SIZE     4096
+#define MAX_FAILURE_ACTIONS     3
+#define FAILURE_ACTION_DELAY    (30*1000)   //delay to apply failure action, in milliseconds.
+
+VOID SvcInstall(bool noncrash_restart = false);
 DWORD WINAPI SvcCtrlHandlerEx(
     DWORD ctrl_code,
     DWORD event_type,

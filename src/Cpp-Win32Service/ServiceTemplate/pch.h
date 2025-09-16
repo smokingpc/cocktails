@@ -8,6 +8,9 @@
 #include <Wtsapi32.h>
 #include <Dbt.h>
 
+#include <memory>
+
+#include "AutoSvcHandle.hpp"
 #include "Service.h"
 #include "ServiceEventHandler.h"
 #include "RegisterServiceEvents.h"
