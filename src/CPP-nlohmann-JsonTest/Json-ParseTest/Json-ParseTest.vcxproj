@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{04999ca0-4608-42b3-b5e9-e3be8bca7804}</ProjectGuid>
-    <RootNamespace>JsonArrayTest</RootNamespace>
+    <ProjectGuid>{a507327b-b6f1-48c9-8a86-ac32de0df36d}</ProjectGuid>
+    <RootNamespace>JsonParseTest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -147,7 +147,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Json-ArrayTest.cpp" />
+    <ClCompile Include="Json-ParseTest.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -95,6 +95,7 @@ DWORD ListConnectionInfo(ADDRESS_FAMILY af)
 		return 0;
 	}
 
+	size = sizeof(MIB_TCPTABLE_OWNER_PID);
 	buffer = new UCHAR[size];
 	if (nullptr == buffer)
 	{
@@ -104,12 +105,15 @@ DWORD ListConnectionInfo(ADDRESS_FAMILY af)
 
 	memset(buffer, 0, size);
 	ret = GetExtendedTcpTable(buffer, &size, FALSE, af, TCP_TABLE_OWNER_PID_CONNECTIONS, 0);
-	if (ret != ERROR_SUCCESS)
-	{
-		_tprintf(_T("GetExtendedTcpTable() failed-3. err=%d\n"), ret);
-		return 0;
-	}
+	//if (ret != ERROR_SUCCESS)
+	//{
+	//	_tprintf(_T("GetExtendedTcpTable() failed-3. err=%d\n"), ret);
+	//	return 0;
+	//}
 	table = (PMIB_TCPTABLE_OWNER_PID)buffer;
+	size_t size1 = sizeof(MIB_TCPTABLE_OWNER_PID);
+	size_t size2 = sizeof(_MIB_TCPROW_OWNER_PID);
+
 	_tprintf(_T("Allocated Buffer (%d) bytes, entries(%d)\n"), size, table->dwNumEntries);
 	if (AF_INET)
 		return IterateIPv4Connections(table);
