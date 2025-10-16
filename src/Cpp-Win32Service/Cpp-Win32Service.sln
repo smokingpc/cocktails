@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServiceWatchdog", "ServiceW
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServiceTemplate", "ServiceTemplate\ServiceTemplate.vcxproj", "{AAA063B5-CA31-4221-92E6-9B31A3BB0980}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "QueryServiceStatusTest", "QueryServiceStatusTest\QueryServiceStatusTest.vcxproj", "{F2D2F207-1F51-4298-B39A-EE922840FD27}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -51,6 +53,14 @@ Global
 		{AAA063B5-CA31-4221-92E6-9B31A3BB0980}.Release|x64.Build.0 = Release|x64
 		{AAA063B5-CA31-4221-92E6-9B31A3BB0980}.Release|x86.ActiveCfg = Release|Win32
 		{AAA063B5-CA31-4221-92E6-9B31A3BB0980}.Release|x86.Build.0 = Release|Win32
+		{F2D2F207-1F51-4298-B39A-EE922840FD27}.Debug|x64.ActiveCfg = Debug|x64
+		{F2D2F207-1F51-4298-B39A-EE922840FD27}.Debug|x64.Build.0 = Debug|x64
+		{F2D2F207-1F51-4298-B39A-EE922840FD27}.Debug|x86.ActiveCfg = Debug|Win32
+		{F2D2F207-1F51-4298-B39A-EE922840FD27}.Debug|x86.Build.0 = Debug|Win32
+		{F2D2F207-1F51-4298-B39A-EE922840FD27}.Release|x64.ActiveCfg = Release|x64
+		{F2D2F207-1F51-4298-B39A-EE922840FD27}.Release|x64.Build.0 = Release|x64
+		{F2D2F207-1F51-4298-B39A-EE922840FD27}.Release|x86.ActiveCfg = Release|Win32
+		{F2D2F207-1F51-4298-B39A-EE922840FD27}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

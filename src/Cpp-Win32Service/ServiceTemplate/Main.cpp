@@ -83,7 +83,7 @@ VOID SvcInstall(bool noncrash_restart)
 }
 
 //   Entry point of EXE
-int __cdecl _tmain(int argc, TCHAR* argv[])
+int _tmain(int argc, TCHAR* argv[])
 {
     SetupEventReporter();
 

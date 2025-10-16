@@ -9,20 +9,20 @@ public:
 
     CAutoSvcHandle& operator=(SC_HANDLE& handle)
     {
-        if (!this->IsValidHandle())
+        if (!this->IsNull())
             CloseServiceHandle(SvcHandle);
         this->SvcHandle = handle;
         return *this;
     }
     CAutoSvcHandle& operator=(const CAutoSvcHandle&) = delete; //don't allow copy
     operator SC_HANDLE() const { return SvcHandle; }
-    inline bool IsValidHandle()
+    inline bool IsNull()
     {
         return (NULL == SvcHandle);
     }
     ~CAutoSvcHandle()
     {
-        if (!this->IsValidHandle())
+        if (!this->IsNull())
         {
             CloseServiceHandle(SvcHandle);
             SvcHandle = NULL;
