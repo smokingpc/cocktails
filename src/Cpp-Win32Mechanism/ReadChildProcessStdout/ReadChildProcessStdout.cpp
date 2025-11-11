@@ -6,19 +6,23 @@
 
 void ReadAndPrintChildStdout(HANDLE child_stdout)
 {
-    char buffer[65] = { 0 };
+    //char buffer[65] = { 0 };
     DWORD ret_size = 0;
+    DWORD filesize = GetFileSize(child_stdout, NULL);
 
+    if (0 == filesize)
+    {
+        printf("console output == 0, abort...\n");
+        return;
+    }
+    char* buffer = new char[filesize];
+    ZeroMemory(buffer, filesize);
     while(TRUE == ReadFile(child_stdout, buffer, 64, &ret_size, NULL))
     {
         printf(buffer);
-        ZeroMemory(buffer, 65);
+        ZeroMemory(buffer, filesize);
     }
-    //BOOL ok = ReadFile(child_stdout, buffer, 16, &ret_size, NULL);
-    //if(!ok)
-    //    printf("Read from child stdout failed, lasterror=(0x%08X)\n", GetLastError());
-    //else
-    //    printf("%s\n", buffer);
+    delete[] buffer;
 }
 
 int main(int argc , char* argv[])
@@ -72,7 +76,7 @@ int main(int argc , char* argv[])
         CloseHandle(procinfo.hThread);
     if (NULL != procinfo.hProcess && INVALID_HANDLE_VALUE != procinfo.hProcess)
         CloseHandle(procinfo.hProcess);
-    CloseHandle(startinfo.hStdOutput);
+    CloseHandle(write_pipe);
 
     ReadAndPrintChildStdout(read_pipe);
     if (NULL != read_pipe && INVALID_HANDLE_VALUE != read_pipe)
