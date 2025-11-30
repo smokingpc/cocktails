@@ -38,14 +38,14 @@ protected:
 //   Entry point of EXE
 int _tmain(int argc, TCHAR* argv[]) 
 {
-    if (argc < 4)
+    if (argc < 2)
     {
         _tprintf(_T("Usage:  StartServiceTest.exe [service name] [SCM desired access] [Service desired service]\n"));
         return -1;
     }
     TCHAR* svcname = argv[1];
-    DWORD scm_access = 0;
-    DWORD svc_access = 0;
+    DWORD scm_access = SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE;
+    DWORD svc_access = SERVICE_START | SERVICE_QUERY_STATUS;
 
     if (argc > 2)
         scm_access = _ttol(argv[2]);
@@ -73,7 +73,7 @@ int _tmain(int argc, TCHAR* argv[])
 
     if (!StartService(svc, 0, NULL))
     {
-
+        _tprintf(_T("StartService failed, err: %d\n"), GetLastError());
     }
 
     return 0;
