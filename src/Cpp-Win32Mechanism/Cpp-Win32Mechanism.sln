@@ -23,6 +23,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExceptionHandlerTest", "Exc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GetSpecialDirTest", "GetSpecialDirTest\GetSpecialDirTest.vcxproj", "{5A2AE16E-4FFA-4080-9A38-7B201A36B41D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GetCurrentExePathTest", "GetCurrentExePathTest\GetCurrentExePathTest.vcxproj", "{C6E37B6F-C339-41DE-81F3-6A25C9A7ACFD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -111,6 +113,14 @@ Global
 		{5A2AE16E-4FFA-4080-9A38-7B201A36B41D}.Release|x64.Build.0 = Release|x64
 		{5A2AE16E-4FFA-4080-9A38-7B201A36B41D}.Release|x86.ActiveCfg = Release|Win32
 		{5A2AE16E-4FFA-4080-9A38-7B201A36B41D}.Release|x86.Build.0 = Release|Win32
+		{C6E37B6F-C339-41DE-81F3-6A25C9A7ACFD}.Debug|x64.ActiveCfg = Debug|x64
+		{C6E37B6F-C339-41DE-81F3-6A25C9A7ACFD}.Debug|x64.Build.0 = Debug|x64
+		{C6E37B6F-C339-41DE-81F3-6A25C9A7ACFD}.Debug|x86.ActiveCfg = Debug|Win32
+		{C6E37B6F-C339-41DE-81F3-6A25C9A7ACFD}.Debug|x86.Build.0 = Debug|Win32
+		{C6E37B6F-C339-41DE-81F3-6A25C9A7ACFD}.Release|x64.ActiveCfg = Release|x64
+		{C6E37B6F-C339-41DE-81F3-6A25C9A7ACFD}.Release|x64.Build.0 = Release|x64
+		{C6E37B6F-C339-41DE-81F3-6A25C9A7ACFD}.Release|x86.ActiveCfg = Release|Win32
+		{C6E37B6F-C339-41DE-81F3-6A25C9A7ACFD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
