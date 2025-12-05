@@ -29,7 +29,7 @@ void ParseRegexByGroups(string& src, string& regex)
 	for (std::sregex_iterator iter = iter_begin; iter != iter_end; ++iter)
 	{
 		std::smatch match = *iter;
-		printf("\t%s\n", match.str().c_str());
+		printf("\t%s\n", match[1].str().c_str());
 	}
 }
 

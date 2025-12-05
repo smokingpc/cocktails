@@ -22,4 +22,6 @@ int main()
 
     vector2.push_back(str1);
     vector2.emplace_back(str2);
+    vector2.push_back(string("abcdefg"));
+    vector2.erase(std::remove(vector2.begin(), vector2.end(), string("aaa")), vector2.end());
 }
