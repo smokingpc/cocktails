@@ -17,7 +17,7 @@ using json_node = std::pair<const std::string, boost_ptree::ptree>;
 
 void IterateNormalJson(const string &key, boost_ptree::ptree &pt)
 {
-	pt.
+	//pt.
 }
 
 void IterateJsonArray(boost_ptree::ptree &pt)
