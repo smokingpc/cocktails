@@ -41,12 +41,6 @@ VOID ReportSvcStatus(
 
 BOOL WINAPI InitService()
 {
-    std::unique_ptr<TCHAR> path(new TCHAR[GENERIC_BUFFER_SIZE]);
-    memset(path.get(), 0, GENERIC_BUFFER_SIZE * sizeof(TCHAR));
-    if (GetCurrentModulePath(path.get(), GENERIC_BUFFER_SIZE)) {
-        SetupEventReporter(SVCNAME, path.get());
-    }
-
     // Register the handler function for the service
     SvcStatusHandle = RegisterServiceCtrlHandlerEx(
         SVCNAME,
@@ -149,8 +143,6 @@ void WINAPI ShutdownService()
         CloseHandle(SvcStopEvent);
         SvcStopEvent = NULL;
     }
-
-    TeardownEventReporter();
 }
 
 VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[])
@@ -162,6 +154,7 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[])
 
     // Report initial status to the SCM
     ReportSvcStatus(SERVICE_START_PENDING, win32_exit, 0);
+    SetupEventReporter(SVCNAME);
 
     // Perform service-specific initialization and work.
     if(InitService())
@@ -180,6 +173,7 @@ VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[])
     }
     ReportSvcStatus(SERVICE_STOP_PENDING, win32_exit, 0);
     ShutdownService();
+    TeardownEventReporter();
     ReportSvcStatus(SERVICE_STOPPED, win32_exit, 0);
 }
 

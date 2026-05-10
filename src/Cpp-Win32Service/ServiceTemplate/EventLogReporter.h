@@ -7,4 +7,5 @@
 
 VOID ReportEventLog(DWORD event_id, LPTSTR msg, DWORD last_error = 0);
 BOOL SetupEventReporter(TCHAR* source_name, TCHAR* source_filepath);
+BOOL SetupEventReporter(TCHAR* source_name);
 VOID TeardownEventReporter();

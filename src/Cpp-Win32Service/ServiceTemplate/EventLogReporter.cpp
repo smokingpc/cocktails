@@ -35,6 +35,17 @@ BOOL SetupEventReporter(TCHAR *source_name, TCHAR* source_filepath)
     EventSource = RegisterEventSource(NULL, source_name);
     return (NULL != EventSource);
 }
+
+BOOL SetupEventReporter(TCHAR* source_name) 
+{
+    std::unique_ptr<TCHAR> path(new TCHAR[GENERIC_BUFFER_SIZE]);
+    memset(path.get(), 0, GENERIC_BUFFER_SIZE * sizeof(TCHAR));
+    if (GetCurrentModulePath(path.get(), GENERIC_BUFFER_SIZE)) {
+        return SetupEventReporter(SVCNAME, path.get());
+    }
+    return FALSE;
+}
+
 void TeardownEventReporter()
 {
     DeregisterEventSource(EventSource);
