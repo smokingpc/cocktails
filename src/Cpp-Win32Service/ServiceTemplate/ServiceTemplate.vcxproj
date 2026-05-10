@@ -147,7 +147,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="RegHelper.cpp" />
     <ClCompile Include="DeviceEventHandlers.cpp" />
+    <ClCompile Include="EventLogReporter.cpp" />
     <ClCompile Include="PowerEventHandlers.cpp" />
     <ClCompile Include="RegisterServiceEvents.cpp" />
     <ClCompile Include="ServiceEventHandler.cpp" />
@@ -158,14 +160,16 @@
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="RegHelper.h" />
     <ClInclude Include="AutoSvcHandle.hpp" />
     <ClInclude Include="DeviceEventHandlers.h" />
+    <ClInclude Include="EventLogReporter.h" />
     <ClInclude Include="PowerEventHandlers.h" />
     <ClInclude Include="RegisterServiceEvents.h" />
     <ClInclude Include="ServiceEventHandler.h" />
     <ClInclude Include="EventMessage.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Service.h" />
+    <ClInclude Include="ServiceMain.h" />
     <ClInclude Include="SessionEventHandlers.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>

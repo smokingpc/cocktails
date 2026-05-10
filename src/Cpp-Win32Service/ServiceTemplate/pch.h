@@ -11,11 +11,13 @@
 #include <memory>
 
 #include "AutoSvcHandle.hpp"
-#include "Service.h"
+#include "RegHelper.h"
+#include "ServiceMain.h"
 #include "ServiceEventHandler.h"
 #include "RegisterServiceEvents.h"
 #include "DeviceEventHandlers.h"
 #include "PowerEventHandlers.h"
 #include "SessionEventHandlers.h"
 #include "Utils.h"
-#include "EventMessage.h"
+#include "EventLogReporter.h"
+

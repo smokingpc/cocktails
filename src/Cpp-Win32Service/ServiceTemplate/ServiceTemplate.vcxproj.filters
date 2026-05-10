@@ -45,12 +45,18 @@
     <ClCompile Include="SessionEventHandlers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EventLogReporter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RegHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Service.h">
+    <ClInclude Include="ServiceMain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EventMessage.h">
@@ -75,6 +81,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AutoSvcHandle.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RegHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EventLogReporter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

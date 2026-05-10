@@ -4,7 +4,6 @@ SERVICE_STATUS          SvcStatus = {0};
 SERVICE_STATUS_HANDLE   SvcStatusHandle = NULL;
 HANDLE                  SvcStopEvent = NULL;
 DWORD                   SvcCheckPoint = 1;
-HANDLE                  EventSource = NULL;
 HPOWERNOTIFY            PowerNotifyHandle = NULL;
 HDEVNOTIFY              DeviceNotifyHandle = NULL;
 HDEVNOTIFY              DeviceCustomEventHandle = NULL;
@@ -40,24 +39,14 @@ VOID ReportSvcStatus(
     SetServiceStatus(SvcStatusHandle, &SvcStatus);
 }
 
-BOOL SetupEventReporter()
-{
-    //register EventSource and get handle.
-    //It is used to call ReportEvent(), which report to event log of system.
-    EventSource = RegisterEventSource(NULL, SVCNAME);
-    if (NULL == EventSource)
-        return FALSE;
-
-    return TRUE;
-}
-void TeardownEventReporter()
-{
-    DeregisterEventSource(EventSource);
-    EventSource = NULL;
-}
-
 BOOL WINAPI InitService()
 {
+    std::unique_ptr<TCHAR> path(new TCHAR[GENERIC_BUFFER_SIZE]);
+    memset(path.get(), 0, GENERIC_BUFFER_SIZE * sizeof(TCHAR));
+    if (GetCurrentModulePath(path.get(), GENERIC_BUFFER_SIZE)) {
+        SetupEventReporter(SVCNAME, path.get());
+    }
+
     // Register the handler function for the service
     SvcStatusHandle = RegisterServiceCtrlHandlerEx(
         SVCNAME,
@@ -160,37 +149,38 @@ void WINAPI ShutdownService()
         CloseHandle(SvcStopEvent);
         SvcStopEvent = NULL;
     }
+
+    TeardownEventReporter();
 }
 
 VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[])
 {
+    DWORD win32_exit = NO_ERROR;
     //[Recommendation]    
     // Update service status only in ServiceMain, not in EventHandler or other function.
     // It make logic lines concerntrated.
 
     // Report initial status to the SCM
-    ReportSvcStatus(SERVICE_START_PENDING, NO_ERROR, 0);
+    ReportSvcStatus(SERVICE_START_PENDING, win32_exit, 0);
 
     // Perform service-specific initialization and work.
-    if(!InitService())
+    if(InitService())
     {
-        ShutdownService();
-        ReportSvcStatus(SERVICE_STOPPED, EXIT_INIT_FAILED, 0);
-        return;
+        //[Recommendation] create another thread to run your job.
+        ReportSvcStatus(SERVICE_RUNNING, win32_exit, 0);
+        while(WaitForSingleObject(SvcStopEvent, INFINITE) != WAIT_OBJECT_0)
+        { 
+            //do anything you want...
+        }
     }
-
-    //[Recommendation] create another thread to run your job.
-    ReportSvcStatus(SERVICE_RUNNING, NO_ERROR, 0);
-    while(WaitForSingleObject(SvcStopEvent, INFINITE) != WAIT_OBJECT_0)
-    { 
-        //do anything you want...
+    else 
+    {
+        ReportEventLog(SVC_ERROR, EVTMSG("Start service failed"), GetLastError());
+        win32_exit = EXIT_INIT_FAILED;
     }
-    ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
-
-    //TODO: Stop the thread here if you created.
+    ReportSvcStatus(SERVICE_STOP_PENDING, win32_exit, 0);
     ShutdownService();
-
-    ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
+    ReportSvcStatus(SERVICE_STOPPED, win32_exit, 0);
 }
 
 DWORD WINAPI SvcCtrlHandlerEx(
@@ -259,24 +249,3 @@ DWORD WINAPI SvcCtrlHandlerEx(
     return ret;
 }
 
-VOID ReportEventLog(DWORD event_id, LPTSTR msg, DWORD last_error)
-{
-    LPCTSTR report[2] = {0};
-    TCHAR buffer[SMALL_BUFFER_SIZE] = {0};
-
-    StringCchPrintf(buffer, SMALL_BUFFER_SIZE, _T("%s, error = %d"), msg, last_error);
-
-    report[0] = SVCNAME;
-    report[1] = buffer;
-
-    ReportEvent(EventSource,        // event log handle
-        EVENTLOG_ERROR_TYPE, // event type
-        0,                   // event category
-        event_id,           // event identifier
-        NULL,                // no security identifier
-        2,                   // size of lpszStrings array
-        0,                   // no binary data
-        report,              // array of report strings
-        NULL);               // no binary data
-
-}

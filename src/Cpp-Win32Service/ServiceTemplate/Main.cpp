@@ -85,11 +85,9 @@ VOID SvcInstall(bool noncrash_restart)
 //   Entry point of EXE
 int _tmain(int argc, TCHAR* argv[])
 {
-    SetupEventReporter();
-
     // If command-line parameter is "install", install the service. 
     // Otherwise, the service is probably being started by the SCM.
-    if (lstrcmpi(argv[1], TEXT("install")) == 0)
+    if (lstrcmpi(argv[1], TEXT("-install")) == 0)
     {
         SvcInstall();
         return 0;
@@ -101,11 +99,13 @@ int _tmain(int argc, TCHAR* argv[])
         { SVCNAME, (LPSERVICE_MAIN_FUNCTION)ServiceMain },
         { NULL, NULL }
     };
-
     // This call returns when the service has stopped. 
     // The process should simply terminate when the call returns.
-    if (!StartServiceCtrlDispatcher(DispatchTable))
-        ReportEventLog(SVC_ERROR, EVTMSG("Start service failed"), GetLastError());
+    if (!StartServiceCtrlDispatcher(DispatchTable)) {
+    //todo: write error log
+        return ERROR_FAILED_SERVICE_CONTROLLER_CONNECT;
+    }
 
-    TeardownEventReporter();
+    //don't do anything after StartServiceCtrlDispatcher() returned!!
+    return ERROR_SUCCESS;
 }

@@ -12,6 +12,8 @@
 #define EXIT_SETUPJOB_FAILED  -5
 
 #define LARGE_BUFFER_SIZE     4096
+#define GENERIC_BUFFER_SIZE     1024
+#define SMALL_BUFFER_SIZE     256
 #define MAX_FAILURE_ACTIONS     3
 #define FAILURE_ACTION_DELAY    (30*1000)   //delay to apply failure action, in milliseconds.
 
@@ -31,7 +33,4 @@ VOID ReportSvcStatus(
     DWORD win32_exit, 
     DWORD svc_exit, 
     DWORD wait = DEFAULT_SVC_WAIT);
-VOID ReportEventLog(DWORD event_id, LPTSTR msg, DWORD last_error = 0);
-BOOL SetupEventReporter();
-VOID TeardownEventReporter();
 

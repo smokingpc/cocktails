@@ -6,27 +6,42 @@ public:
     CAutoSvcHandle() {}
     CAutoSvcHandle(const CAutoSvcHandle&) = delete; //don't allow copy
     CAutoSvcHandle(SC_HANDLE handle) { SvcHandle = handle; }
+    ~CAutoSvcHandle()
+    {
+        this->Close();
+    }
 
     CAutoSvcHandle& operator=(SC_HANDLE& handle)
     {
-        if (!this->IsNull())
-            CloseServiceHandle(SvcHandle);
+        this->Close();
         this->SvcHandle = handle;
         return *this;
     }
     CAutoSvcHandle& operator=(const CAutoSvcHandle&) = delete; //don't allow copy
     operator SC_HANDLE() const { return SvcHandle; }
-    inline bool IsNull()
+    inline bool IsValid()
     {
         return (NULL == SvcHandle);
     }
-    ~CAutoSvcHandle()
+    void Close() 
     {
-        if (!this->IsNull())
+        if (!this->IsValid())
         {
             CloseServiceHandle(SvcHandle);
             SvcHandle = NULL;
         }
+    }
+    SC_HANDLE Reset() 
+    {
+        SC_HANDLE ret = this->SvcHandle;
+        this->SvcHandle = NULL;
+        return ret;
+    }
+    void Borrow(CAutoSvcHandle& old) 
+    {
+        SC_HANDLE handle = old.Reset();
+        this->Close();
+        this->SvcHandle = handle;
     }
 protected:
     SC_HANDLE SvcHandle = NULL;
