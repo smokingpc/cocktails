@@ -4,7 +4,7 @@ DWORD HandleModernStandbyEvent(PPOWERBROADCAST_SETTING setting)
 {
     //going into S0 Low Power Idle state. (enter AOAC state)
     //wakeup from S0 Low Power Idle state. (leave AOAC state)
-    AOAC_STATE*state = (AOAC_STATE*)&setting->Data;
+    AOAC_STATE *state = (AOAC_STATE*)&setting->Data;
 
     switch(*state)
     {
