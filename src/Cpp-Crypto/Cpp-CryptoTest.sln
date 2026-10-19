@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.36602.28
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GetSigningTimestamp", "GetSigningTimestamp\GetSigningTimestamp.vcxproj", "{732277D4-934D-4F38-B24D-AC7E0DFBC1DD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SmartCardTest", "SmartCardTest\SmartCardTest.vcxproj", "{AFB205BC-8AD1-4801-A973-1C46207911CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{732277D4-934D-4F38-B24D-AC7E0DFBC1DD}.Release|x64.Build.0 = Release|x64
 		{732277D4-934D-4F38-B24D-AC7E0DFBC1DD}.Release|x86.ActiveCfg = Release|Win32
 		{732277D4-934D-4F38-B24D-AC7E0DFBC1DD}.Release|x86.Build.0 = Release|Win32
+		{AFB205BC-8AD1-4801-A973-1C46207911CE}.Debug|x64.ActiveCfg = Debug|x64
+		{AFB205BC-8AD1-4801-A973-1C46207911CE}.Debug|x64.Build.0 = Debug|x64
+		{AFB205BC-8AD1-4801-A973-1C46207911CE}.Debug|x86.ActiveCfg = Debug|Win32
+		{AFB205BC-8AD1-4801-A973-1C46207911CE}.Debug|x86.Build.0 = Debug|Win32
+		{AFB205BC-8AD1-4801-A973-1C46207911CE}.Release|x64.ActiveCfg = Release|x64
+		{AFB205BC-8AD1-4801-A973-1C46207911CE}.Release|x64.Build.0 = Release|x64
+		{AFB205BC-8AD1-4801-A973-1C46207911CE}.Release|x86.ActiveCfg = Release|Win32
+		{AFB205BC-8AD1-4801-A973-1C46207911CE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
